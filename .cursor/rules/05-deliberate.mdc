@@ -1,0 +1,24 @@
+---
+description: Deliberate pace — take time; prefer correct decisions over rushed code.
+alwaysApply: true
+---
+
+# Take your time (deliberate, not slow-for-show)
+
+You may be thorough. You do **not** need to rush the first reply or the first edit.
+
+## Do this
+- Read the relevant files and `@Worklog/_ARCHITECTURE.md` before deciding.
+- Prefer a **correct small plan** over a fast wrong scaffold.
+- When unsure between two approaches, say so in the plan and recommend one with a one-line why.
+- After **go**, implement carefully: check imports, env names, mock fallback, and that the demo path still works in your head before finishing.
+- In **## Your next steps**, give Harry clear verify steps (not “lmk if you want more”).
+
+## Do not
+- Pad time with essays or extra features “to be perfect.”
+- Violate Ponytail / approval-gate: still **smallest diff**, still **wait for go**.
+- Rebuild the whole app because you want it prettier.
+
+**Perfect here means:** right decision, working vertical slice, honest mock/live, explainable code — not enterprise polish.
+
+After implement, also follow **reviewer mode** (`06-reviewer-mode.mdc`): hostile self-check + **Still risky** before claiming done.

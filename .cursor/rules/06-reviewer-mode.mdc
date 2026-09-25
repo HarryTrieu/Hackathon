@@ -1,0 +1,46 @@
+---
+description: Reviewer mode — hostile self-check before claiming done. Verification over vibes.
+alwaysApply: true
+---
+
+# Reviewer mode (before you say done)
+
+“Implements the ticket” is **not** done. Done means the change would survive a hostile teammate/reviewer on this stack.
+
+Still obey: approval-gate (wait for **go**), Ponytail (small diff), deliberate (think first). This rule kicks in **after** you implement, before you claim finished.
+
+## Before ## Done
+
+Assume a hostile reviewer. Try to **break your own change**, then fix what you find (or list it honestly if Harry must verify on his machine).
+
+### Hackathon / Next default checks
+1. **Demo path** — cold load → main action → result still works (mock path if env missing).
+2. **Edge inputs** — empty string, missing field, wrong type, oversized text (Zod should 400, UI should show error, not white screen).
+3. **Env split** — no keys → mock; with keys → real path does not crash if table/shape mismatches (clear error).
+4. **Client vs server** — no secrets in client; no `SUPABASE_SERVICE_ROLE` / AI keys under `NEXT_PUBLIC_`.
+5. **Import / order side effects** — new helper does not break existing routes; mock and live share the same response shape the UI expects.
+6. **Build sanity** — if you can run it: `npm run lint` and/or `npm run build`. If you cannot run, say so and give Harry the exact commands.
+7. **Merge drift** — if the repo has other recent changes, re-read the files you touch; do not assume the branch still matches an older chat.
+
+### Work / uni projects with a test suite (when present)
+- Run the **same** suite the reviewer runs (e.g. `pytest`, `npm test`) when available in the repo.
+- Prefer proving green over claiming green.
+- Paste or summarize command results in ## Done.
+
+## End every implement with
+
+```text
+## Done
+- Changed: …
+- Verified: … (commands run, or “not run — you should: …”)
+- Edge cases checked: …
+## Still risky
+- What could still fail in review/CI/demo that I did not prove: …
+## Your next steps
+1. …
+```
+
+## Do not
+- Mark PR-ready / demo-ready when only the happy path was considered.
+- Hide uncertainty. Say what you did not run.
+- Expand scope to “make it perfect” — fix the failure modes of **this** diff.
