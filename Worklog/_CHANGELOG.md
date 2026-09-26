@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 23:45 · Hot: most Helpful first
+- Did: `rankHot` sorts by `helpful_count` descending (newer post breaks ties) instead of helpful-with-recency-gravity
+- Files: `lib/rank.js`
+- Test: eslint 0; live data top order s3 (156), s1 (124), l5 (103), s2 (98), d2 (91)
+
 ### 2026-09-26 23:30 · For you: media posts first
 - Did: `rankForYou` now puts posts with an image or link preview above text-only posts; tag/goal/unit score still orders posts inside each group. Hot and New unchanged
 - Files: `lib/rank.js`
