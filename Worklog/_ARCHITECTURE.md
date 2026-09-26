@@ -24,7 +24,8 @@
 | `lib/mentors.js` | Mentor questions, seed listings, intro, local fallbacks |
 | `lib/mentor-ai.js` | Server: listings loader, matcher, persona chat, preview |
 | `lib/gemini.js` | Server: shared Gemini REST call with lite fallback |
-| `app/api/mentors`, `match`, `mentor-chat`, `mentor-preview`, `session-request`, `helpful` | Mentor marketplace APIs |
+| `lib/theme.jsx` | Dark mode toggle (localStorage + system preference) |
+| `app/api/mentors`, `match`, `mentor-chat`, `mentor-preview`, `session-request`, `helpful`, `reports` | Mentor marketplace APIs |
 | `app/api/review/route.js` | Human review actions on flagged posts |
 | `app/review/page.js` | Flagged-post queue, approve or remove |
 | `lib/enrich.js` | Gemini labelling + deterministic mock |

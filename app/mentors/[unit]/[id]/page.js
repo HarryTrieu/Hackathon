@@ -11,6 +11,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { MentorChat } from "@/components/mentor-chat";
+import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
 import { GRADE_LABELS, STYLE_QUESTIONS, mergeLocalApplications } from "@/lib/mentors";
@@ -155,9 +156,10 @@ export default function MentorDetailPage() {
         >
           <ArrowLeft className="size-4" />
         </Link>
-        <p className="text-sm text-muted-foreground">
+        <p className="min-w-0 flex-1 text-sm text-muted-foreground">
           <span className="font-mono font-semibold text-foreground">{code}</span> mentors
         </p>
+        {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
 
       <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-5">

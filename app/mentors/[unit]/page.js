@@ -13,7 +13,7 @@ import { mergeLocalApplications } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
 
 const STARTERS = [
-  "I want someone calm and patient who explains step by step with real examples.",
+  "I want a mentor with a calm way of talking, who can explain Marketing so it actually makes sense.",
   "My exam is in two weeks. I need someone direct who focuses on exam prep.",
   "I'd like a mentor who can explain things in Vietnamese.",
   "Not sure yet. Ask me a few questions to find my match.",

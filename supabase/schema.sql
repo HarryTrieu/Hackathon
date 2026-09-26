@@ -110,6 +110,17 @@ create table if not exists session_requests (
   created_at timestamptz not null default now()
 );
 
+-- User reports on mentor profiles, AI chats and posts. Humans resolve on /review.
+create table if not exists reports (
+  id uuid primary key default gen_random_uuid(),
+  target_type text not null check (target_type in ('mentor', 'chat', 'post')),
+  target_id text not null,
+  reporter_id text not null references profiles(id),
+  reason text not null,
+  status text not null default 'open' check (status in ('open', 'resolved')),
+  created_at timestamptz not null default now()
+);
+
 create table if not exists post_likes (
   post_id text not null references posts(id) on delete cascade,
   profile_id text not null references profiles(id),
@@ -121,6 +132,7 @@ alter table mentor_profiles enable row level security;
 alter table mentor_chats enable row level security;
 alter table session_requests enable row level security;
 alter table post_likes enable row level security;
+alter table reports enable row level security;
 alter table profiles enable row level security;
 alter table posts enable row level security;
 alter table connect_requests enable row level security;

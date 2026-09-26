@@ -22,6 +22,7 @@ import { SEED_MENTORS } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
 import { getSeedReplies } from "@/lib/seed";
 import { rememberVote, useLikedPosts } from "@/lib/use-liked";
+import { ReportButton } from "@/components/report-button";
 import { cn } from "@/lib/utils";
 
 function relativeTime(hoursAgo) {
@@ -319,6 +320,7 @@ export function PostCard({ post, author, reason }) {
                 Ask {author.name.split(" ")[0]}&apos;s AI
               </Link>
             )}
+            <ReportButton targetType="post" targetId={post.id} className="ml-auto px-2 py-1" />
           </div>
 
           {repliesOpen && <RepliesPanel postId={post.id} />}

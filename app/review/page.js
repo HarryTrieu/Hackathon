@@ -19,6 +19,7 @@ import { getProfile, POSTS } from "@/lib/seed";
 
 export default function ReviewPage() {
   const [flagged, setFlagged] = useState(null);
+  const [reports, setReports] = useState(null);
   const [source, setSource] = useState("seed");
   const [note, setNote] = useState(null);
 
@@ -37,6 +38,12 @@ export default function ReviewPage() {
           setFlagged(POSTS.filter((p) => p.flag_reason));
         }
       });
+    fetch("/api/reports")
+      .then((res) => (res.ok ? res.json() : { reports: [] }))
+      .then((data) => {
+        if (!cancelled) setReports(data.reports ?? []);
+      })
+      .catch(() => !cancelled && setReports([]));
     return () => {
       cancelled = true;
     };
@@ -75,11 +82,54 @@ export default function ReviewPage() {
           </Badge>
         </div>
         <p className="mt-0.5 text-sm text-muted-foreground">
-          AI only flags posts, it never hides or deletes them. A person decides here.
+          AI only flags. People report on profiles, chats and posts. A person decides here.
         </p>
       </div>
 
       <MentorApplications />
+
+      <section className="border-b px-4 py-4">
+        <h2 className="text-sm font-semibold">User reports</h2>
+        <p className="mb-3 text-xs text-muted-foreground">
+          From the Report button on a mentor profile, AI chat, or community post.
+        </p>
+        {reports === null && <Skeleton className="h-20 w-full rounded-xl" />}
+        {reports?.length === 0 && (
+          <p className="text-sm text-muted-foreground">No open reports.</p>
+        )}
+        <div className="space-y-3">
+          {reports?.map((r) => (
+            <Card key={r.id} className="gap-2">
+              <CardContent className="flex flex-col gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="outline">{r.target_type}</Badge>
+                  <span className="font-mono text-xs">{r.target_id}</span>
+                  <span className="text-xs text-muted-foreground">
+                    by {getProfile(r.reporter_id)?.name ?? r.reporter_id}
+                  </span>
+                </div>
+                <p className="text-sm">{r.reason}</p>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={async () => {
+                    await fetch("/api/reports", {
+                      method: "POST",
+                      headers: { "content-type": "application/json" },
+                      body: JSON.stringify({ id: r.id, action: "resolve" }),
+                    });
+                    setReports((prev) => prev.filter((x) => x.id !== r.id));
+                    setNote("Report marked resolved.");
+                  }}
+                >
+                  <ShieldCheck data-icon="inline-start" />
+                  Mark resolved
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
 
       {note && (
         <p className="border-b bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
@@ -101,9 +151,9 @@ export default function ReviewPage() {
             <EmptyMedia variant="icon">
               <ShieldCheck />
             </EmptyMedia>
-            <EmptyTitle>Nothing waiting for review</EmptyTitle>
+            <EmptyTitle>No AI-flagged posts</EmptyTitle>
             <EmptyDescription>
-              When the AI flags a post, it shows up here for a human decision.
+              AI only flags. It never hides a post. A person decides here.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

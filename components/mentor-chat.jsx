@@ -6,6 +6,7 @@ import { Bot, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/user-avatar";
+import { ReportButton } from "@/components/report-button";
 import { MAX_CHATS_PER_DAY, introMessage, sampleQuestions } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
 
@@ -80,9 +81,12 @@ export function MentorChat({ mentor, persona, unitName }) {
           <Bot className="size-4 text-primary" />
           Chat with {first}&apos;s AI
         </p>
-        <span className="text-xs text-muted-foreground">
-          {remaining === null ? "..." : `${remaining} of ${MAX_CHATS_PER_DAY} messages left today`}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            {remaining === null ? "..." : `${remaining} of ${MAX_CHATS_PER_DAY} messages left today`}
+          </span>
+          <ReportButton targetType="chat" targetId={mentor.id} />
+        </div>
       </div>
       <p className="border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">
         AI preview trained on {first}&apos;s own answers, not {first} in person.

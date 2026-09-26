@@ -14,7 +14,7 @@ const MatchRequest = z.object({
       })
     )
     .min(1, "Describe what you are looking for.")
-    .max(12),
+    .max(24),
 });
 
 export async function POST(request) {

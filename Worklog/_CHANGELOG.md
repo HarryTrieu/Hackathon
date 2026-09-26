@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 20:10 · Spec catch-up: 10 mentee questions, reports, dark mode
+- Did: matcher now walks the 10-question mentee bank one at a time and skips answers already in the description; Report buttons on mentor profile, AI chat and posts, queue on /review; dark mode with teal accent kept
+- Files: `lib/mentors.js`, `lib/mentor-ai.js`, `lib/theme.jsx`, `components/report-button.jsx`, `components/theme-toggle.jsx`, `app/api/reports/route.js`, nav, review, post-card, mentor chat, globals.css
+- Test: eslint 0. Live matcher: vague "ask me" gets the hardest-right-now question with chips; a specific calm + Vietnamese description returns ranked results with a Hannah reason; one chip ("Calm") asks the next unanswered question; "Just show me the mentors" returns 3 matches. Report POST 200, short reason 400, GET lists the open report. Production build not re-run this pass (last page compile hung)
+
 ### 2026-09-26 18:30 · Feature 4: AI mentor marketplace
 - Did: conversational mentor matching with reasons, AI mentor chat (5/day), become-a-mentor application with AI preview approval, human approval on /review, session requests, persisted Helpful votes as mentor reputation, author tag editing, MMK101 + 2 Business mentors
 - Did: shared `lib/gemini.js`; nav gets "Find a mentor", Search removed from nav (route kept)

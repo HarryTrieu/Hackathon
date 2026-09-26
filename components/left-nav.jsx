@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Home, HeartHandshake, User, Users, PenLine, GraduationCap, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PersonaSwitcher } from "@/components/persona-switcher";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
 
@@ -61,7 +62,8 @@ export function LeftNav() {
         Post
       </Button>
 
-      <div className="mt-auto">
+      <div className="mt-auto space-y-2">
+        <ThemeToggle className="w-full justify-start text-foreground/80" />
         <PersonaSwitcher />
       </div>
     </header>
