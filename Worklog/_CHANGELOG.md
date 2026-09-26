@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 22:30 · Saved posts on profile
+- Did: Save on a post card was local state only (lost on reload, shown nowhere). Now persisted per persona in localStorage as post snapshots, and your own profile gets a "Saved" tab (hidden on other people's profiles, empty state when none)
+- Files: `lib/use-saved-posts.js`, `components/saved-posts.jsx`, `components/post-card.jsx`, `app/profile/[id]/page.js`
+- Test: eslint 0; `/profile/p8` (active persona) renders the Saved tab, `/profile/p1` does not. Save → profile click flow not browser-tested. Device-only: saves do not sync across browsers
+
 ### 2026-09-26 22:00 · Fix left-nav Post button
 - Did: Post button did nothing outside Home (composer only lives on the feed) and gave no visible feedback on Home. Now scrolls to and focuses the composer on Home; elsewhere goes to `/?compose=1`, which focuses the composer once and strips the param
 - Files: `components/left-nav.jsx`, `components/composer.jsx` (`focusComposer`)

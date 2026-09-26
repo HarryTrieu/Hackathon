@@ -23,6 +23,7 @@ import { SEED_MENTORS } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
 import { getSeedReplies } from "@/lib/seed";
 import { rememberVote, useLikedPosts } from "@/lib/use-liked";
+import { useSavedPosts } from "@/lib/use-saved-posts";
 import { ReportButton } from "@/components/report-button";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,8 @@ export function PostCard({ post, author, reason, onDeleted }) {
   const { set: likedSet, ready: likesReady } = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
   const [vote, setVote] = useState(null);
-  const [saved, setSaved] = useState(false);
+  const savedPosts = useSavedPosts(persona.id);
+  const saved = savedPosts.has(post.id);
   const [repliesOpen, setRepliesOpen] = useState(false);
   const [tags, setTags] = useState(post.tags);
   const [editingTags, setEditingTags] = useState(false);
@@ -303,7 +305,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setSaved((v) => !v)}
+              onClick={() => savedPosts.toggle({ ...post, tags })}
               className={cn(
                 "text-muted-foreground transition-colors duration-300 ease-out",
                 saved && "text-primary"
