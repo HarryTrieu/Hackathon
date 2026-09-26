@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile, PERSONA_IDS } from "@/lib/seed";
@@ -10,7 +11,16 @@ const STORAGE_KEYS = ["sodu-mentor-apps", "sodu-followed-tags"];
 
 export function PersonaSwitcher() {
   const { persona, personaId, setPersonaId } = usePersona();
+  const pathname = usePathname();
+  const router = useRouter();
   const [resetting, setResetting] = useState(false);
+
+  // On your own profile, follow the switch to the new persona's profile.
+  function switchTo(nextId) {
+    if (nextId === personaId) return;
+    setPersonaId(nextId);
+    if (pathname === `/profile/${personaId}`) router.push(`/profile/${nextId}`);
+  }
   const otherRole = persona.role === "mentor" ? "mentee" : "mentor";
   const otherId = PERSONA_IDS.find((id) => getProfile(id).role === otherRole) ?? PERSONA_IDS[0];
 
@@ -41,14 +51,14 @@ export function PersonaSwitcher() {
         size="sm"
         variant="outline"
         className="w-full rounded-full"
-        onClick={() => setPersonaId(otherId)}
+        onClick={() => switchTo(otherId)}
       >
         Switch to {otherRole} view
       </Button>
       <select
         aria-label="Switch demo persona"
         value={personaId}
-        onChange={(e) => setPersonaId(e.target.value)}
+        onChange={(e) => switchTo(e.target.value)}
         className="h-8 w-full cursor-pointer rounded-lg border bg-background px-2 text-xs outline-none transition-colors hover:border-primary/50 focus-visible:ring-2 focus-visible:ring-ring"
       >
         {PERSONA_IDS.map((id) => {
