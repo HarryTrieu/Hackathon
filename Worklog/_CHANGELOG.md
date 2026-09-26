@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 00:40 · Persona switch follows your own profile
+- Did: switching persona while on `/profile/<current persona>` now navigates to the new persona's profile (dropdown and "Switch to … view" button). Other pages unchanged
+- Files: `components/persona-switcher.jsx`
+- Test: eslint 0; persona profiles return 200. Switch flow not browser-tested
+
 ### 2026-09-27 00:20 · Featured long posts for the AI summary demo
 - Did: 5 long seed posts (f1-f5) with an AI summary, a photo (picsum.photos) and a link preview, each tuned to rank first in For you for one persona: f1 Lan (p8), f2 Aisha (p10), f3 Minh (p7), f4 Duc/Sarah (p2/p1), f5 Hannah (p13). Upserted only f1-f5 into live Supabase (did not re-run the full seed, so live Helpful counts are untouched)
 - Files: `lib/seed.js`
