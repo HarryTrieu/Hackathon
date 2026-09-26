@@ -128,6 +128,7 @@
     @apply bg-background text-foreground;
   }
   html {
-    font-family: "Times New Roman", Times, serif;
+    font-family: "Times New Roman", Times, Georgia, serif;
+    word-spacing: 0.12em;
   }
 }

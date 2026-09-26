@@ -21,10 +21,10 @@ const Draft = z.object({
     format: z.string().min(1),
   }),
   voice: z.object({
-    topics: z.string().trim().min(20),
-    explain: z.string().trim().min(20),
-    lost: z.string().trim().min(20),
-    about: z.string().trim().min(20),
+    topics: z.string().trim().min(1),
+    explain: z.string().trim().min(1),
+    lost: z.string().trim().min(1),
+    about: z.string().trim().min(1),
   }),
 });
 
@@ -38,7 +38,7 @@ export async function POST(request) {
   const parsed = Draft.safeParse(body);
   if (!parsed.success) {
     return Response.json(
-      { error: "Finish Part A and Part B (a few sentences each) before previewing." },
+      { error: "Finish Part A and type something for each Part B question before previewing." },
       { status: 400 }
     );
   }

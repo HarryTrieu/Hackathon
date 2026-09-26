@@ -11,7 +11,7 @@ const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
 const optionsOf = (id) => STYLE_QUESTIONS.find((q) => q.id === id).options;
 const one = (id) => z.enum(optionsOf(id));
 const many = (id) => z.array(z.enum(optionsOf(id))).min(1);
-const answer = z.string().trim().min(20, "Please answer every Part B question in a few sentences.").max(1500);
+const answer = z.string().trim().min(1, "Please answer every Part B question.");
 
 const Application = z.object({
   profile_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown profile."),

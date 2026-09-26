@@ -95,7 +95,7 @@ export function MentorApplications() {
                   View transcript
                 </a>
               ) : (
-                <p className="text-xs text-muted-foreground">No transcript uploaded: ask for one before approving.</p>
+                <p className="text-xs text-muted-foreground">Transcripts are not stored. Ask the applicant to show it during a quick check before approving.</p>
               )}
               <div className="flex gap-2">
                 <Button size="sm" onClick={() => decide(app, "approve")}>

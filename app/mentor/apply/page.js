@@ -78,12 +78,20 @@ function ApplyForm() {
   const eligibleGrade = MIN_GRADES.includes(grade);
   const emailOk = persona.verified || /^[^\s@]+@deakin\.edu\.au$/i.test(email.trim());
   const styleDone = STYLE_QUESTIONS.every((q) => (q.multiple ? style[q.id].length > 0 : style[q.id]));
-  const voiceDone = VOICE_QUESTIONS.every((q) => voice[q.id].trim().length >= 20);
+  const voiceDone = VOICE_QUESTIONS.every((q) => voice[q.id].trim().length >= 1);
   const draft = { profile_id: persona.id, unit_code: unitCode, grade, style, voice };
   const draftKey = JSON.stringify(draft);
   const previewFresh = preview?.key === draftKey;
-  const canPreview = unitCode && eligibleGrade && styleDone && voiceDone;
-  const canSubmit = canPreview && emailOk && conduct && previewFresh;
+  const canPreview = Boolean(unitCode && eligibleGrade && styleDone && voiceDone);
+  const blockers = [
+    !unitCode && "Pick a unit in step 1",
+    !eligibleGrade && "Confirm Distinction or above in step 1",
+    !styleDone && "Answer every Part A question in step 2",
+    !voiceDone && "Write something for each Part B answer in step 3",
+    !emailOk && "Add your Deakin email in step 1",
+    !previewFresh && "Click Preview my AI and read the sample answers",
+    !conduct && "Tick the code of conduct",
+  ].filter(Boolean);
 
   function pick(q, option) {
     setStyle((prev) => {
@@ -130,6 +138,10 @@ function ApplyForm() {
   }
 
   async function submit() {
+    if (blockers.length) {
+      setError(`Still needed: ${blockers.join(". ")}.`);
+      return;
+    }
     setSubmitting(true);
     setError(null);
     try {
@@ -302,7 +314,6 @@ function ApplyForm() {
               value={voice[q.id]}
               onChange={(e) => setVoice((prev) => ({ ...prev, [q.id]: e.target.value }))}
               rows={3}
-              maxLength={1500}
             />
           </label>
         ))}
@@ -409,7 +420,7 @@ function ApplyForm() {
         </Button>
         {!canPreview && (
           <p className="text-xs text-muted-foreground">
-            Choose a unit, an eligible grade, answer every Part A question and write a few sentences for each Part B question.
+            Choose a unit, an eligible grade, answer every Part A question, and type something in each Part B box.
           </p>
         )}
         {previewFresh && (
@@ -451,11 +462,17 @@ function ApplyForm() {
         </label>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
-        <Button className="w-full rounded-full" disabled={!canSubmit || submitting} onClick={submit}>
+        <Button className="w-full rounded-full" disabled={submitting} onClick={submit}>
           {submitting ? <Spinner data-icon="inline-start" /> : <CheckCircle2 data-icon="inline-start" />}
           Publish AI mentor for review
         </Button>
-        {!emailOk && <p className="text-xs text-muted-foreground">Add your Deakin email in step 1 to submit.</p>}
+        {blockers.length > 0 && (
+          <ul className="list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">
+            {blockers.map((b) => (
+              <li key={b}>{b}</li>
+            ))}
+          </ul>
+        )}
       </Section>
     </div>
   );
