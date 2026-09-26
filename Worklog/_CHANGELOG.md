@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 23:30 · For you: media posts first
+- Did: `rankForYou` now puts posts with an image or link preview above text-only posts; tag/goal/unit score still orders posts inside each group. Hot and New unchanged
+- Files: `lib/rank.js`
+- Test: eslint 0; `/` returns 200. Order not checked in a browser
+
 ### 2026-09-26 23:00 · Left-nav Post opens a "Create post" popup
 - Did: replaced scroll-to-composer / `?compose=1` with a Facebook-style modal on every page. Reuses `Composer` (`inDialog`), closes on publish, and the home feed prepends the new post via a `sodu:post-published` window event
 - Files: `components/post-dialog.jsx`, `components/ui/dialog.jsx` (shadcn, base-ui, no new deps), `components/composer.jsx`, `components/left-nav.jsx`, `components/feed.jsx`
