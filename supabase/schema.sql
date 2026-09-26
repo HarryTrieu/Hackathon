@@ -78,6 +78,7 @@ create table if not exists mentor_profiles (
   email_verified boolean not null default false,
   transcript_url text,
   rate_per_hour int,
+  availability text,
   show_experience boolean not null default false,
   experience jsonb not null default '[]',
   style jsonb not null,
@@ -121,6 +122,14 @@ create table if not exists reports (
   created_at timestamptz not null default now()
 );
 
+create table if not exists demo_events (
+  id uuid primary key default gen_random_uuid(),
+  type text not null check (type in ('preview_started', 'contact_clicked')),
+  listing_id text not null,
+  mentee_id text not null,
+  created_at timestamptz not null default now()
+);
+
 create table if not exists post_likes (
   post_id text not null references posts(id) on delete cascade,
   profile_id text not null references profiles(id),
@@ -132,6 +141,7 @@ alter table mentor_profiles enable row level security;
 alter table mentor_chats enable row level security;
 alter table session_requests enable row level security;
 alter table post_likes enable row level security;
+alter table demo_events enable row level security;
 alter table reports enable row level security;
 alter table profiles enable row level security;
 alter table posts enable row level security;

@@ -1,9 +1,7 @@
 // Pushes the labelled demo data into Supabase. Run after schema.sql:
 //   node --env-file=.env.local scripts/seed.mjs
-// Idempotent: upserts by id, safe to re-run.
-
 import { createClient } from "@supabase/supabase-js";
-import { PROFILES, POSTS, REPLIES } from "../lib/seed.js";
+import { pushSeed } from "../lib/push-seed.js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -15,69 +13,12 @@ if (!url || !key) {
 }
 
 const db = createClient(url, key, { auth: { persistSession: false } });
-
-const profileRows = PROFILES.map((p) => ({
-  id: p.id,
-  name: p.name,
-  handle: p.handle,
-  role: p.role,
-  course: p.course,
-  year: p.year,
-  verified: p.verified,
-  skills: p.skills,
-  goals: p.goals,
-  outcome: p.outcome,
-  units: p.units,
-  resources: p.resources,
-  is_demo: true,
-}));
-
-const postRows = POSTS.map((p) => ({
-  id: p.id,
-  author_id: p.author_id,
-  lang: p.lang,
-  text: p.text,
-  tldr: p.tldr,
-  summary_en: p.summary_en,
-  tags: p.tags,
-  unit_codes: p.unit_codes,
-  topic: p.topic,
-  helpful_count: p.helpful_count,
-  image_url: p.image_url ?? null,
-  link_preview: p.link_preview ?? null,
-  flag_reason: p.flag_reason,
-  status: "visible",
-  is_demo: true,
-  mocked: false,
-  created_at: new Date(Date.now() - p.hours_ago * 3600_000).toISOString(),
-}));
-
-const { error: pErr } = await db.from("profiles").upsert(profileRows);
-if (pErr) {
-  console.error("profiles upsert failed:", pErr.message);
+const result = await pushSeed(db);
+if (!result.ok) {
+  console.error("seed failed:", result.error);
   process.exit(1);
 }
-console.log(`profiles: ${profileRows.length} upserted`);
-
-const { error: postErr } = await db.from("posts").upsert(postRows);
-if (postErr) {
-  console.error("posts upsert failed:", postErr.message);
-  process.exit(1);
-}
-console.log(`posts: ${postRows.length} upserted`);
-
-const replyRows = REPLIES.map((r) => ({
-  id: r.id,
-  post_id: r.post_id,
-  author_id: r.author_id,
-  text: r.text,
-  is_demo: true,
-  created_at: new Date(Date.now() - r.hours_ago * 3600_000).toISOString(),
-}));
-const { error: rErr } = await db.from("replies").upsert(replyRows);
-if (rErr) {
-  console.error("replies upsert failed:", rErr.message);
-  process.exit(1);
-}
-console.log(`replies: ${replyRows.length} upserted`);
+console.log(`profiles: ${result.profiles} upserted`);
+console.log(`posts: ${result.posts} upserted`);
+console.log(`replies: ${result.replies} upserted`);
 console.log("Seed complete.");

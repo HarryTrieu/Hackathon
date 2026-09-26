@@ -12,6 +12,7 @@ import {
   Pencil,
   ShieldAlert,
   BadgeCheck,
+  Trash2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -47,23 +48,22 @@ function displayText(post) {
     : post.text;
 }
 
-export function PostCard({ post, author, reason }) {
+export function PostCard({ post, author, reason, onDeleted }) {
   const { persona } = usePersona();
-  const likedSet = useLikedPosts(persona.id);
+  const { set: likedSet, ready: likesReady } = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
-  // Vote override scoped to the persona that cast it.
-  const [vote, setVote] = useState({ personaId: null, value: null });
+  const [vote, setVote] = useState(null);
   const [saved, setSaved] = useState(false);
   const [repliesOpen, setRepliesOpen] = useState(false);
   const [tags, setTags] = useState(post.tags);
   const [editingTags, setEditingTags] = useState(false);
   const [tagDraft, setTagDraft] = useState("");
   const [tagError, setTagError] = useState(null);
+  const [gone, setGone] = useState(false);
   const seedReplyCount = getSeedReplies(post.id).length;
-
-  const wasLiked = likedSet.has(post.id);
-  const helpful = vote.personaId === persona.id && vote.value !== null ? vote.value : wasLiked;
-  const helpfulCount = post.helpful_count + (helpful ? 1 : 0) - (wasLiked ? 1 : 0);
+  const wasLiked = likesReady && likedSet.has(post.id);
+  const helpful = vote === null ? wasLiked : vote;
+  const helpfulCount = Math.max(0, post.helpful_count + (helpful ? 1 : 0) - (wasLiked ? 1 : 0));
   const isAuthor = persona.id === post.author_id;
   // Prefer the mentor listing for a unit this post is about.
   const authorListings = SEED_MENTORS.filter((m) => m.profile_id === post.author_id);
@@ -72,7 +72,7 @@ export function PostCard({ post, author, reason }) {
 
   function toggleHelpful() {
     const next = !helpful;
-    setVote({ personaId: persona.id, value: next });
+    setVote(next);
     rememberVote(persona.id, post.id, next);
     fetch("/api/helpful", {
       method: "POST",
@@ -106,8 +106,25 @@ export function PostCard({ post, author, reason }) {
     }
   }
 
+  async function deletePost() {
+    try {
+      const res = await fetch("/api/posts", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: post.id, author_id: persona.id }),
+      });
+      if (!res.ok) return;
+      setGone(true);
+      onDeleted?.(post.id);
+    } catch {
+      /* keep the card */
+    }
+  }
+
   const text = displayText(post);
   const clampable = text.length > CLAMP_THRESHOLD;
+
+  if (gone) return null;
 
   return (
     <article className="group border-b px-4 py-4 transition-colors duration-300 ease-out hover:bg-foreground/[0.015]">
@@ -243,9 +260,11 @@ export function PostCard({ post, author, reason }) {
                   </Link>
                 ))}
                 {tags.map((tag) => (
-                  <Badge key={tag} variant="secondary" className={CHIP_HOVER}>
-                    {tag}
-                  </Badge>
+                  <Link key={tag} href={`/search?tag=${encodeURIComponent(tag)}`}>
+                    <Badge variant="secondary" className={cn(CHIP_HOVER, "cursor-pointer")}>
+                      {tag}
+                    </Badge>
+                  </Link>
                 ))}
                 {isAuthor && (
                   <button
@@ -319,6 +338,17 @@ export function PostCard({ post, author, reason }) {
                 <MessageCircleQuestion data-icon="inline-start" />
                 Ask {author.name.split(" ")[0]}&apos;s AI
               </Link>
+            )}
+            {isAuthor && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={deletePost}
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <Trash2 data-icon="inline-start" />
+                Delete
+              </Button>
             )}
             <ReportButton targetType="post" targetId={post.id} className="ml-auto px-2 py-1" />
           </div>

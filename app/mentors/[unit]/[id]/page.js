@@ -14,7 +14,7 @@ import { MentorChat } from "@/components/mentor-chat";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
-import { GRADE_LABELS, STYLE_QUESTIONS, mergeLocalApplications } from "@/lib/mentors";
+import { STYLE_QUESTIONS, gradeBand, mergeLocalApplications } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
 
 function SessionRequest({ mentor, persona }) {
@@ -44,6 +44,11 @@ function SessionRequest({ mentor, persona }) {
         setNote(data.error ?? "Could not send the request.");
         return;
       }
+      fetch("/api/events", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ type: "contact_clicked", listing_id: mentor.id, mentee_id: persona.id }),
+      }).catch(() => {});
       setState("sent");
       setNote(
         data.persisted
@@ -159,6 +164,12 @@ export default function MentorDetailPage() {
         <p className="min-w-0 flex-1 text-sm text-muted-foreground">
           <span className="font-mono font-semibold text-foreground">{code}</span> mentors
         </p>
+        <Link href={`/mentors/${code}`} className="text-xs text-primary hover:underline">
+          Back to results
+        </Link>
+        <Link href={`/mentors/${code}`} className="text-xs text-muted-foreground hover:underline">
+          Try another mentor
+        </Link>
         {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
 
@@ -176,9 +187,8 @@ export default function MentorDetailPage() {
               {code} {unit?.name}
             </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <Badge>
-                {GRADE_LABELS[mentor.grade]} ({mentor.grade})
-              </Badge>
+              <Badge>{gradeBand(mentor.grade)} · {code}</Badge>
+              {mentor.is_demo && <Badge variant="outline">Sample data</Badge>}
               {mentor.email_verified && (
                 <Badge variant="secondary">
                   <BadgeCheck data-icon="inline-start" />
@@ -199,6 +209,12 @@ export default function MentorDetailPage() {
             <p className="mt-2 text-lg font-semibold">
               ${mentor.rate_per_hour}
               <span className="text-sm font-normal text-muted-foreground">/hour</span>
+            </p>
+            {mentor.availability && (
+              <p className="text-sm text-muted-foreground">Usually free: {mentor.availability}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              {mentor.preview_chats ?? 0} preview chats · {mentor.contact_requests ?? 0} contact requests
             </p>
           </div>
         </div>

@@ -20,6 +20,7 @@ import { getProfile, POSTS } from "@/lib/seed";
 export default function ReviewPage() {
   const [flagged, setFlagged] = useState(null);
   const [reports, setReports] = useState(null);
+  const [funnel, setFunnel] = useState(null);
   const [source, setSource] = useState("seed");
   const [note, setNote] = useState(null);
 
@@ -38,6 +39,12 @@ export default function ReviewPage() {
           setFlagged(POSTS.filter((p) => p.flag_reason));
         }
       });
+    fetch("/api/events")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data) setFunnel(data);
+      })
+      .catch(() => {});
     fetch("/api/reports")
       .then((res) => (res.ok ? res.json() : { reports: [] }))
       .then((data) => {
@@ -85,6 +92,13 @@ export default function ReviewPage() {
           AI only flags. People report on profiles, chats and posts. A person decides here.
         </p>
       </div>
+
+      {funnel && (
+        <p className="border-b px-4 py-2 text-sm text-muted-foreground">
+          Demo funnel: {funnel.previews} preview chats started, {funnel.contacts} contact requests
+          {funnel.previews ? ` (${funnel.conversion}% conversion)` : ""}.
+        </p>
+      )}
 
       <MentorApplications />
 

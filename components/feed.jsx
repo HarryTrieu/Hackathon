@@ -5,8 +5,11 @@ import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Composer } from "@/components/composer";
+import { HomeHero } from "@/components/home-hero";
 import { PostCard } from "@/components/post-card";
+import { TagChip } from "@/components/tag-chip";
 import { usePersona } from "@/lib/persona-context";
+import { useFollowedTags } from "@/lib/use-followed-tags";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
 
@@ -24,11 +27,13 @@ function CaughtUp() {
 
 export function Feed() {
   const { persona } = usePersona();
+  const followed = useFollowedTags();
   // null = still loading or unavailable, then the seed is the source of truth.
   const [dbPosts, setDbPosts] = useState(null);
   const [source, setSource] = useState("seed");
   // Posts published this session while no DB is configured.
   const [sessionPosts, setSessionPosts] = useState([]);
+  const [hidden, setHidden] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,10 +58,14 @@ export function Feed() {
     // prepend session posts that the base does not already contain.
     const baseIds = new Set(base.map((p) => p.id));
     const extra = sessionPosts.filter((p) => !baseIds.has(p.id));
-    return [...extra, ...base];
-  }, [dbPosts, sessionPosts]);
+    const hiddenIds = new Set(hidden);
+    return [...extra, ...base].filter((p) => !hiddenIds.has(p.id) && p.status !== "removed");
+  }, [dbPosts, sessionPosts, hidden]);
 
-  const forYou = useMemo(() => rankForYou(allPosts, persona), [allPosts, persona]);
+  const forYou = useMemo(
+    () => rankForYou(allPosts, persona, followed.tags),
+    [allPosts, persona, followed.tags]
+  );
   const hot = useMemo(() => rankHot(allPosts), [allPosts]);
   const fresh = useMemo(() => rankNew(allPosts), [allPosts]);
 
@@ -87,13 +96,28 @@ export function Feed() {
           </TabsList>
         </div>
 
+        <HomeHero />
+        {followed.tags.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 border-b px-4 py-2">
+            <span className="text-xs text-muted-foreground">Following</span>
+            {followed.tags.map((tag) => (
+              <TagChip key={tag} tag={tag} />
+            ))}
+          </div>
+        )}
         <Composer onPublished={handlePublished} />
 
         <TabsContent value="for-you">
           {/* key on persona so switching re-mounts and fades the new order in */}
           <div key={persona.id} className="animate-in fade-in duration-500">
             {forYou.map(({ post, author, reason }) => (
-              <PostCard key={post.id} post={post} author={author} reason={reason} />
+              <PostCard
+                key={`${persona.id}-${post.id}`}
+                post={post}
+                author={author}
+                reason={reason}
+                onDeleted={(id) => setHidden((prev) => [...prev, id])}
+              />
             ))}
             <CaughtUp />
           </div>
@@ -101,14 +125,26 @@ export function Feed() {
 
         <TabsContent value="hot">
           {hot.map(({ post, author }) => (
-            <PostCard key={post.id} post={post} author={author} reason={null} />
+            <PostCard
+              key={`${persona.id}-${post.id}`}
+              post={post}
+              author={author}
+              reason={null}
+              onDeleted={(id) => setHidden((prev) => [...prev, id])}
+            />
           ))}
           <CaughtUp />
         </TabsContent>
 
         <TabsContent value="new">
           {fresh.map(({ post, author }) => (
-            <PostCard key={post.id} post={post} author={author} reason={null} />
+            <PostCard
+              key={`${persona.id}-${post.id}`}
+              post={post}
+              author={author}
+              reason={null}
+              onDeleted={(id) => setHidden((prev) => [...prev, id])}
+            />
           ))}
           <CaughtUp />
         </TabsContent>

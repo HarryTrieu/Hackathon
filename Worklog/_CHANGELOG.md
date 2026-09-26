@@ -2,6 +2,10 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 21:20 · Checklist catch-up, tags, avatars, Times, helpful fix
+- Did: match 3s reveal + card hover/gradient; follow/filter tags; most seed posts get media; delete own post; helpful -1 bug (cache mutation); Dicebear avatars; Times New Roman; home CTAs + 3-step; reset demo + switch role; availability, sample labels, stats, visa/MH refusals, filters, 3 extra mentors (12 listings), event funnel
+- Test: eslint 0. Mock hard-chat 5/5 correct. Matcher: calm+VN → Hannah, exam+direct → James, ask-me → follow-up. Production build not run this pass.
+
 ### 2026-09-26 20:10 · Spec catch-up: 10 mentee questions, reports, dark mode
 - Did: matcher now walks the 10-question mentee bank one at a time and skips answers already in the description; Report buttons on mentor profile, AI chat and posts, queue on /review; dark mode with teal accent kept
 - Files: `lib/mentors.js`, `lib/mentor-ai.js`, `lib/theme.jsx`, `components/report-button.jsx`, `components/theme-toggle.jsx`, `app/api/reports/route.js`, nav, review, post-card, mentor chat, globals.css

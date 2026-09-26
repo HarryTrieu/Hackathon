@@ -2,7 +2,7 @@ import Link from "next/link";
 import { BadgeCheck, Briefcase, Heart, Languages, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { UserAvatar } from "@/components/user-avatar";
-import { GRADE_LABELS } from "@/lib/mentors";
+import { gradeBand } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
 
 export function MentorCard({ mentor, reason = null, rank = null, className }) {
@@ -15,21 +15,30 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
     <Link
       href={`/mentors/${mentor.unit_code}/${mentor.profile_id}`}
       className={cn(
-        "block rounded-xl border p-4 transition-all duration-300 ease-out hover:border-primary/40 hover:shadow-sm",
+        "relative block overflow-hidden rounded-xl border p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-primary/50 hover:shadow-md",
         className
       )}
     >
-      <div className="flex items-start gap-3">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-gradient-to-br from-primary/35 via-sky-400/20 to-transparent blur-md"
+      />
+      <div className="relative flex items-start gap-3">
         <UserAvatar profile={profile} className="size-11" textClassName="text-sm" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             {rank && <span className="text-xs font-semibold text-primary">#{rank}</span>}
             <span className="font-bold">{profile.name}</span>
-            <Badge title={GRADE_LABELS[mentor.grade]}>{mentor.grade} in {mentor.unit_code}</Badge>
+            <Badge>{gradeBand(mentor.grade)} · {mentor.unit_code}</Badge>
             {mentor.email_verified && (
               <Badge variant="secondary">
                 <BadgeCheck data-icon="inline-start" />
                 Deakin verified
+              </Badge>
+            )}
+            {mentor.is_demo && (
+              <Badge variant="outline" className="text-muted-foreground">
+                Sample data
               </Badge>
             )}
           </div>
@@ -43,6 +52,7 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
               <Languages className="size-3.5" />
               {style.languages.join(", ")}
             </span>
+            {mentor.availability && <span>{mentor.availability}</span>}
             {current && (
               <span className="flex items-center gap-1">
                 <Briefcase className="size-3.5" />
@@ -58,9 +68,12 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
             ))}
           </div>
           {reason && (
-            <p className="mt-2.5 flex gap-1.5 rounded-lg bg-primary/[0.05] p-2.5 text-sm">
+            <p className="mt-2.5 flex gap-1.5 rounded-lg bg-primary/5 p-2.5 text-sm">
               <Sparkles className="mt-0.5 size-3.5 shrink-0 text-primary" />
-              <span>{reason}</span>
+              <span>
+                <span className="font-semibold">Why this match: </span>
+                {reason}
+              </span>
             </p>
           )}
         </div>

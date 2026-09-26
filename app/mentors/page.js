@@ -36,9 +36,17 @@ export default function MentorsPage() {
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold">Find a mentor</h1>
         <p className="text-sm text-muted-foreground">
-          {UNIVERSITY} · peer mentors who scored D or HD in the unit. Chat with
-          their AI first to check the vibe, then book the real person.
+          Peer mentors who scored Distinction or above. Chat with their AI first, then book the real person.
         </p>
+        <div className="mt-2 flex flex-wrap gap-2 text-sm">
+          <label className="flex items-center gap-1.5">
+            University
+            <select disabled className="h-8 rounded-md border bg-transparent px-2 text-sm" value="deakin">
+              <option value="deakin">{UNIVERSITY}</option>
+            </select>
+          </label>
+          <span className="text-xs text-muted-foreground self-center">Then pick a unit below.</span>
+        </div>
       </div>
 
       <div className="flex items-center justify-between gap-3 border-b px-4 py-3">

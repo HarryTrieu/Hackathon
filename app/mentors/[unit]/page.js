@@ -32,7 +32,12 @@ export default function FindMentorPage() {
   const [thinking, setThinking] = useState(false);
   const [error, setError] = useState(null);
   const [mocked, setMocked] = useState(false);
+  const [matching, setMatching] = useState(false);
+  const [budget, setBudget] = useState("any");
+  const [language, setLanguage] = useState("any");
+  const [format, setFormat] = useState("any");
   const endRef = useRef(null);
+  const matchTimer = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,7 +54,9 @@ export default function FindMentorPage() {
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [messages, matches]);
+  }, [messages, matches, matching]);
+
+  useEffect(() => () => clearTimeout(matchTimer.current), []);
 
   async function send(text) {
     const clean = text.trim();
@@ -78,7 +85,13 @@ export default function FindMentorPage() {
         setMessages((prev) => [...prev, { role: "ai", text: data.question, suggestions: data.suggestions }]);
       } else {
         setMessages((prev) => [...prev, { role: "ai", text: data.summary }]);
-        setMatches(data.matches);
+        setMatches(null);
+        setMatching(true);
+        clearTimeout(matchTimer.current);
+        matchTimer.current = setTimeout(() => {
+          setMatches(data.matches);
+          setMatching(false);
+        }, 3000);
       }
     } catch {
       setError("Could not reach the matcher. Browse the mentors below instead.");
@@ -88,15 +101,36 @@ export default function FindMentorPage() {
   }
 
   function reset() {
+    clearTimeout(matchTimer.current);
     setMessages([]);
     setMatches(null);
+    setMatching(false);
     setError(null);
   }
 
   const byId = new Map((mentors ?? []).map((m) => [m.id, m]));
-  const ranked = (matches ?? [])
+  const rankedAll = (matches ?? [])
     .map((m) => ({ mentor: byId.get(m.id), reason: m.reason }))
     .filter((r) => r.mentor);
+
+  function pickRecommended(list) {
+    if (list.length <= 5) return list;
+    const top = list.slice(0, 4);
+    const newer = [...list].sort((a, b) => a.mentor.reputation - b.mentor.reputation)[0];
+    if (newer && !top.some((r) => r.mentor.id === newer.mentor.id)) {
+      return [...top.slice(0, 3), { ...newer, reason: `${newer.reason} Newer mentor, included so newer listings still get seen.` }];
+    }
+    return list.slice(0, 5);
+  }
+
+  const filtered = rankedAll.filter(({ mentor }) => {
+    if (budget === "30" && mentor.rate_per_hour > 30) return false;
+    if (budget === "50" && mentor.rate_per_hour > 50) return false;
+    if (language !== "any" && !mentor.style.languages.includes(language)) return false;
+    if (format !== "any" && mentor.style.format !== format && mentor.style.format !== "Both") return false;
+    return true;
+  });
+  const ranked = pickRecommended(filtered);
   const lastAi = messages.at(-1)?.role === "ai" ? messages.at(-1) : null;
 
   return (
@@ -189,6 +223,11 @@ export default function FindMentorPage() {
             <Spinner /> Thinking about who fits you...
           </p>
         )}
+        {matching && (
+          <p className="flex items-center gap-2 rounded-xl border bg-primary/5 px-3 py-3 text-sm font-medium duration-700 animate-in fade-in">
+            <Spinner /> Matching a mentor for you...
+          </p>
+        )}
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <form
@@ -213,10 +252,39 @@ export default function FindMentorPage() {
       </div>
 
       {ranked.length > 0 && (
-        <section className="space-y-3 border-b px-4 py-4">
+        <section className="space-y-3 border-b px-4 py-4 duration-700 animate-in fade-in slide-in-from-bottom-2">
           <h2 className="text-sm font-semibold">
             Your matches {mocked && <span className="font-normal text-muted-foreground">(offline matcher)</span>}
           </h2>
+          <div className="flex flex-wrap gap-2 text-xs">
+            <label className="flex items-center gap-1">
+              Budget
+              <select value={budget} onChange={(e) => setBudget(e.target.value)} className="rounded-md border bg-transparent px-1 py-0.5">
+                <option value="any">Any</option>
+                <option value="30">Under $30</option>
+                <option value="50">$50 or under</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1">
+              Language
+              <select value={language} onChange={(e) => setLanguage(e.target.value)} className="rounded-md border bg-transparent px-1 py-0.5">
+                <option value="any">Any</option>
+                <option value="English">English</option>
+                <option value="Vietnamese">Vietnamese</option>
+                <option value="Mandarin">Mandarin</option>
+                <option value="Hindi">Hindi</option>
+                <option value="Arabic">Arabic</option>
+              </select>
+            </label>
+            <label className="flex items-center gap-1">
+              Format
+              <select value={format} onChange={(e) => setFormat(e.target.value)} className="rounded-md border bg-transparent px-1 py-0.5">
+                <option value="any">Any</option>
+                <option value="Online">Online</option>
+                <option value="In person">In person</option>
+              </select>
+            </label>
+          </div>
           {ranked.map(({ mentor, reason }, i) => (
             <MentorCard key={mentor.id} mentor={mentor} reason={reason} rank={i + 1} />
           ))}

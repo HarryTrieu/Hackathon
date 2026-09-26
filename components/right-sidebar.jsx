@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { TrendingUp } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TagChip } from "@/components/tag-chip";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
 import { POSTS, PROFILES } from "@/lib/seed";
@@ -25,14 +25,7 @@ export function RightSidebar() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-1.5">
           {tags.map(({ tag, count }) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="cursor-default transition-colors duration-300 delay-150 ease-out hover:bg-primary/[0.07] hover:text-primary/90"
-            >
-              {tag}
-              <span className="text-muted-foreground">{count}</span>
-            </Badge>
+            <TagChip key={tag} tag={tag} count={count} />
           ))}
         </CardContent>
       </Card>

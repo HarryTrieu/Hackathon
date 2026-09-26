@@ -20,9 +20,18 @@ export function MentorChat({ mentor, persona, unitName }) {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [error, setError] = useState(null);
+  const [lastFailed, setLastFailed] = useState(null);
   const [mocked, setMocked] = useState(false);
   const endRef = useRef(null);
   const isSelf = persona.id === mentor.profile_id;
+
+  useEffect(() => {
+    fetch("/api/events", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type: "preview_started", listing_id: mentor.id, mentee_id: persona.id }),
+    }).catch(() => {});
+  }, [mentor.id, persona.id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,6 +58,7 @@ export function MentorChat({ mentor, persona, unitName }) {
     setDraft("");
     setSending(true);
     setError(null);
+    setLastFailed(null);
     try {
       const res = await fetch("/api/mentor-chat", {
         method: "POST",
@@ -58,13 +68,15 @@ export function MentorChat({ mentor, persona, unitName }) {
       const data = await res.json();
       if (typeof data.remaining === "number") setRemaining(data.remaining);
       if (!res.ok) {
-        setError(data.error ?? "The AI mentor could not reply.");
+        setError(data.error ?? "The AI is slow or unavailable.");
+        setLastFailed(clean);
         return;
       }
       setMocked(Boolean(data.mocked));
       setMessages((prev) => [...prev, { role: "mentor", text: data.reply }]);
     } catch {
-      setError("Could not reach the AI mentor.");
+      setError("The AI is slow or unavailable.");
+      setLastFailed(clean);
     } finally {
       setSending(false);
     }
@@ -118,7 +130,16 @@ export function MentorChat({ mentor, persona, unitName }) {
         <div ref={endRef} />
       </div>
 
-      {error && <p className="px-4 pb-2 text-sm text-destructive">{error}</p>}
+      {error && (
+        <div className="flex items-center justify-between gap-2 px-4 pb-2 text-sm text-destructive">
+          <p>{error}</p>
+          {lastFailed && (
+            <Button size="sm" variant="outline" onClick={() => send(lastFailed)}>
+              Try again
+            </Button>
+          )}
+        </div>
+      )}
 
       {outOfMessages ? (
         <div className="space-y-1 border-t bg-primary/[0.04] px-4 py-3 text-sm">

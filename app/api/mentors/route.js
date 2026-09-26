@@ -20,6 +20,7 @@ const Application = z.object({
   grade: z.enum(["HD", "D", "C", "P"]),
   transcript_url: z.string().max(500).nullable().optional(),
   rate_per_hour: z.number().int().min(10).max(200),
+  availability: z.string().trim().max(120).optional(),
   show_experience: z.boolean(),
   experience: z
     .array(
@@ -89,8 +90,9 @@ export async function POST(request) {
     grade: app.grade,
     status: "pending",
     email_verified: true,
-    transcript_url: app.transcript_url ?? null,
+    transcript_url: null,
     rate_per_hour: app.rate_per_hour,
+    availability: app.availability || "Weeknights, to be confirmed",
     show_experience: app.show_experience,
     experience: app.experience,
     style: app.style,

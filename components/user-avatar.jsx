@@ -1,7 +1,9 @@
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+"use client";
+
+import { useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
-// Muted tints only, so 40 avatars add colour without competing with the accent.
 const TINTS = [
   "bg-sky-100 text-sky-800 dark:bg-sky-900/70 dark:text-sky-100",
   "bg-teal-100 text-teal-800 dark:bg-teal-900/70 dark:text-teal-100",
@@ -13,10 +15,22 @@ const TINTS = [
   "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/70 dark:text-cyan-100",
 ];
 
-function tintFor(seed) {
+const STYLES = ["bottts", "fun-emoji", "shapes", "identicon", "lorelei", "adventurer", "notionists", "thumbs"];
+
+function hashSeed(seed) {
   let sum = 0;
   for (const char of seed) sum += char.charCodeAt(0);
-  return TINTS[sum % TINTS.length];
+  return sum;
+}
+
+function tintFor(seed) {
+  return TINTS[hashSeed(seed) % TINTS.length];
+}
+
+export function avatarUrl(profile) {
+  if (profile.avatar) return profile.avatar;
+  const style = STYLES[hashSeed(profile.handle) % STYLES.length];
+  return `https://api.dicebear.com/9.x/${style}/svg?seed=${encodeURIComponent(profile.handle)}`;
 }
 
 export function initials(name) {
@@ -28,15 +42,17 @@ export function initials(name) {
 }
 
 export function UserAvatar({ profile, className, textClassName }) {
+  const [failed, setFailed] = useState(false);
   return (
     <Avatar className={cn("size-10", className)}>
-      <AvatarFallback
-        className={cn(
-          "font-semibold",
-          tintFor(profile.handle),
-          textClassName
-        )}
-      >
+      {!failed && (
+        <AvatarImage
+          src={avatarUrl(profile)}
+          alt={`${profile.name} profile picture`}
+          onError={() => setFailed(true)}
+        />
+      )}
+      <AvatarFallback className={cn("font-semibold", tintFor(profile.handle), textClassName)}>
         {initials(profile.name)}
       </AvatarFallback>
     </Avatar>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, HeartHandshake, User, Users, PenLine, GraduationCap, ShieldAlert } from "lucide-react";
+import { Home, HeartHandshake, User, Users, PenLine, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -16,6 +16,7 @@ export function LeftNav() {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
+    { href: "/search", label: "Topics", icon: Search },
     { href: "/communities", label: "Communities", icon: Users },
     { href: "/review", label: "Review", icon: ShieldAlert },
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },

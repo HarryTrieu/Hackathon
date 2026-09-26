@@ -10,7 +10,6 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { unitDirectory } from "@/lib/communities";
 import {
-  GRADE_LABELS,
   MIN_GRADES,
   STYLE_QUESTIONS,
   VOICE_QUESTIONS,
@@ -65,6 +64,7 @@ function ApplyForm() {
   const [style, setStyle] = useState(EMPTY_STYLE);
   const [voice, setVoice] = useState(EMPTY_VOICE);
   const [rate, setRate] = useState(30);
+  const [availability, setAvailability] = useState("Weeknights after 6, online");
   const [showExperience, setShowExperience] = useState(false);
   const [experience, setExperience] = useState([]);
   const [conduct, setConduct] = useState(false);
@@ -139,8 +139,9 @@ function ApplyForm() {
         body: JSON.stringify({
           ...draft,
           email: persona.verified ? undefined : email.trim(),
-          transcript_url: transcript,
+          transcript_url: null,
           rate_per_hour: Number(rate),
+          availability,
           show_experience: showExperience,
           experience: experience.filter((e) => e.company.trim() && e.role.trim()),
           code_of_conduct: conduct,
@@ -187,7 +188,11 @@ function ApplyForm() {
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold">Become a mentor</h1>
         <p className="text-sm text-muted-foreground">
-          Applying as {persona.name}. Earn by mentoring a unit you scored D or HD in.
+          Applying as {persona.name}. Earn by mentoring a unit you scored Distinction or above in.
+        </p>
+        <p className="mt-2 rounded-lg bg-muted/60 p-2 text-xs text-muted-foreground">
+          How we use your data: we store your teaching answers, rate and a yes/no email-verified flag.
+          We never show your exact grade or store a transcript file.
         </p>
       </div>
 
@@ -211,12 +216,13 @@ function ApplyForm() {
         <div className="space-y-1.5 text-sm">
           <p className="font-medium">Your grade in this unit</p>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(GRADE_LABELS).map(([g, label]) => (
-              <Chip key={g} active={grade === g} onClick={() => setGrade(g)}>
-                {label} ({g})
-              </Chip>
-            ))}
+            <Chip active={eligibleGrade} onClick={() => setGrade(grade === "D" ? "" : "D")}>
+              Distinction or above
+            </Chip>
           </div>
+          <p className="text-xs text-muted-foreground">
+            Reviewers confirm you are Distinction or above. The public profile never shows HD vs D.
+          </p>
           {grade && !eligibleGrade && (
             <p className="text-destructive">
               Mentors need a Distinction or High Distinction. You can still help for free in the community.
@@ -248,7 +254,7 @@ function ApplyForm() {
         )}
 
         <div className="space-y-1 text-sm">
-          <p className="font-medium">Transcript screenshot (optional, speeds up review)</p>
+          <p className="font-medium">Transcript check (optional, this session only, not stored)</p>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted">
             {uploading ? <Spinner /> : <FileUp className="size-4" />}
             {transcript ? "Replace file" : "Upload image"}
@@ -259,7 +265,9 @@ function ApplyForm() {
               onChange={(e) => uploadTranscript(e.target.files?.[0])}
             />
           </label>
-          {transcript && <span className="ml-2 text-xs text-primary">Uploaded, only reviewers see it.</span>}
+          {transcript && (
+            <span className="ml-2 text-xs text-primary">Checked for this session. The file is not saved.</span>
+          )}
         </div>
       </Section>
 
@@ -310,6 +318,16 @@ function ApplyForm() {
             value={rate}
             onChange={(e) => setRate(e.target.value)}
             className="h-10 w-24 rounded-lg border bg-transparent px-3 text-sm"
+          />
+        </label>
+        <label className="block space-y-1 text-sm">
+          <span className="font-medium">Weekly availability</span>
+          <input
+            value={availability}
+            onChange={(e) => setAvailability(e.target.value)}
+            placeholder="e.g. Tue/Thu evenings, Burwood weekends"
+            maxLength={120}
+            className="h-10 w-full rounded-lg border bg-transparent px-3 text-sm"
           />
         </label>
         <label className="flex items-center gap-2 text-sm">
@@ -401,10 +419,19 @@ function ApplyForm() {
                 Offline preview (AI unavailable)
               </Badge>
             )}
-            {preview.samples.map((s) => (
+            {preview.samples.map((s, i) => (
               <div key={s.question} className="space-y-1.5 rounded-xl border p-3 text-sm">
                 <p className="font-medium">Student: {s.question}</p>
-                <p className="rounded-lg bg-muted p-2.5 whitespace-pre-wrap">{s.answer}</p>
+                <Textarea
+                  value={s.answer}
+                  rows={4}
+                  onChange={(e) =>
+                    setPreview((prev) => ({
+                      ...prev,
+                      samples: prev.samples.map((x, j) => (j === i ? { ...x, answer: e.target.value } : x)),
+                    }))
+                  }
+                />
               </div>
             ))}
           </div>
@@ -426,7 +453,7 @@ function ApplyForm() {
         {error && <p className="text-sm text-destructive">{error}</p>}
         <Button className="w-full rounded-full" disabled={!canSubmit || submitting} onClick={submit}>
           {submitting ? <Spinner data-icon="inline-start" /> : <CheckCircle2 data-icon="inline-start" />}
-          Approve my AI and submit for review
+          Publish AI mentor for review
         </Button>
         {!emailOk && <p className="text-xs text-muted-foreground">Add your Deakin email in step 1 to submit.</p>}
       </Section>
