@@ -129,7 +129,11 @@ export function PostCard({ post, author, reason, onDeleted }) {
   if (gone) return null;
 
   return (
-    <article className="group border-b px-4 py-4 transition-colors duration-300 ease-out hover:bg-foreground/[0.015]">
+    <article className="group relative overflow-hidden border-b px-4 py-4 transition-colors duration-300 ease-out hover:bg-foreground/[0.015]">
+      <span
+        aria-hidden
+        className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-gradient-to-br from-primary/40 via-sky-400/20 to-transparent blur-2xl"
+      />
       {reason && <p className="mb-2 pl-13 text-xs text-primary">{reason}</p>}
 
       <div className="flex gap-3">
