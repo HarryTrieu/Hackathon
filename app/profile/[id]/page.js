@@ -19,7 +19,7 @@ import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { UserAvatar } from "@/components/user-avatar";
-import { getPostsByAuthor, getProfile } from "@/lib/seed";
+import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
 
 export default async function ProfilePage({ params }) {
   const { id } = await params;
@@ -41,10 +41,10 @@ export default async function ProfilePage({ params }) {
             <h1 className="text-xl font-bold">{profile.name}</h1>
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <Badge>{profile.role === "mentor" ? "Mentor" : "Mentee"}</Badge>
+              <Badge>{roleLabel(profile.role)}</Badge>
               <Badge variant="outline">
                 {profile.course}
-                {profile.year ? ` · Year ${profile.year}` : " · Alumni"}
+                {profile.year ? ` · Year ${profile.year}` : profile.role === "admin" ? "" : " · Alumni"}
               </Badge>
               {profile.verified && (
                 <Badge variant="secondary">

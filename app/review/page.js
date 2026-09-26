@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, ShieldCheck, EyeOff } from "lucide-react";
+import { ShieldAlert, ShieldCheck, EyeOff, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,9 +15,32 @@ import {
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
 import { MentorApplications } from "@/components/mentor-applications";
+import { usePersona } from "@/lib/persona-context";
 import { getProfile, POSTS } from "@/lib/seed";
 
+// Only the admin persona moderates. The nav hides the link for everyone else;
+// this covers someone opening /review directly. UI gate only: the review
+// APIs have no auth, like the rest of the demo.
 export default function ReviewPage() {
+  const { persona } = usePersona();
+  if (persona.role === "admin") return <ReviewQueue />;
+  return (
+    <Empty className="my-16">
+      <EmptyHeader>
+        <EmptyMedia variant="icon">
+          <Lock />
+        </EmptyMedia>
+        <EmptyTitle>Moderators only</EmptyTitle>
+        <EmptyDescription>
+          Mentor applications, reports and AI-flagged posts are reviewed by the Sodu team. Switch to
+          the Sodu Moderator persona to see the queue.
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
+  );
+}
+
+function ReviewQueue() {
   const [flagged, setFlagged] = useState(null);
   const [reports, setReports] = useState(null);
   const [funnel, setFunnel] = useState(null);

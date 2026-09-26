@@ -2,6 +2,12 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 10:00 · Admin-only review
+- Did: new "Sodu Moderator" persona (`ADMIN_PROFILE`, role `admin`) in the switcher. Only admin sees Review in the nav; `/review` shows "Moderators only" for mentors/mentees. Admin has no Post button or feed composer. Mentor apply success page no longer links to the review queue. Report buttons unchanged for everyone
+- Admin is kept out of `PROFILES`: the DB `profiles.role` check only allows mentor/mentee, and post/reply APIs validate authors against `PROFILES`, so admin cannot post (API returns 400)
+- Files: `lib/seed.js` (`ADMIN_PROFILE`, `roleLabel`, `getProfile`), `components/left-nav.jsx`, `app/review/page.js`, `components/feed.jsx`, `components/persona-switcher.jsx`, `app/profile/[id]/page.js`, `app/mentor/apply/page.js`
+- Test: eslint 0; default persona: no /review link in nav, `/review` gated, `/profile/admin` 200 with Admin badge, POST /api/posts as admin → 400. Admin queue view not browser-tested. UI gate only: review APIs still have no auth
+
 ### 2026-09-27 00:50 · Demo prep: grade privacy fix, Students card, clickable Publish, demo script
 - Did: match reasons (mock and Gemini prompt) now use `gradeBand()`, live Gemini had written "an HD student"; prompt forbids exact grades. Mentor view gets a Students card under Suggested mentors. Publish on /mentor/apply is always clickable and lists what is missing. Part B answers need 1 character (no max). Sarah's NeetCode post (s3) pinned to slot 2 in For you with a 5-reply community thread. Lan (p8) is Year 1. Review card no longer asks for an uploaded transcript (we never store one). Word spacing on html. Demo video script in `Docs/demo-video-script.md`
 - Files: `lib/mentor-ai.js`, `lib/rank.js`, `lib/seed.js`, `components/right-sidebar.jsx`, `components/mentor-applications.jsx`, `app/mentor/apply/page.js`, `app/api/mentors/route.js`, `app/api/mentor-preview/route.js`, `app/globals.css`, `Docs/demo-video-script.md`

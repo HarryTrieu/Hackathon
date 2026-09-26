@@ -4,7 +4,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePersona } from "@/lib/persona-context";
-import { getProfile, PERSONA_IDS } from "@/lib/seed";
+import { getProfile, PERSONA_IDS, roleLabel } from "@/lib/seed";
 import { UserAvatar } from "@/components/user-avatar";
 
 const STORAGE_KEYS = ["sodu-mentor-apps", "sodu-followed-tags"];
@@ -42,7 +42,7 @@ export function PersonaSwitcher() {
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{persona.name}</p>
           <p className="truncate text-xs text-muted-foreground">
-            {persona.role === "mentor" ? "Mentor" : "Mentee"} · {persona.course}
+            {roleLabel(persona.role)} · {persona.course}
             {persona.year ? ` · Year ${persona.year}` : ""}
           </p>
         </div>
@@ -65,7 +65,7 @@ export function PersonaSwitcher() {
           const p = getProfile(id);
           return (
             <option key={id} value={id}>
-              {p.name} · {p.role === "mentor" ? "Mentor" : "Mentee"}, {p.course}
+              {p.name} · {roleLabel(p.role)}, {p.course}
               {p.year ? ` Y${p.year}` : ""}
             </option>
           );

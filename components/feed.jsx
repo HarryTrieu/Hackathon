@@ -131,7 +131,7 @@ export function Feed() {
             ))}
           </div>
         )}
-        <Composer onPublished={handlePublished} />
+        {persona.role !== "admin" && <Composer onPublished={handlePublished} />}
 
         <TabsContent value="for-you">
           {/* key on persona so switching re-mounts and fades the new order in */}

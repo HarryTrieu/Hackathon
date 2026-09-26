@@ -12,13 +12,15 @@ import { cn } from "@/lib/utils";
 export function LeftNav() {
   const pathname = usePathname();
   const { persona } = usePersona();
+  const isAdmin = persona.role === "admin";
 
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
     { href: "/search", label: "Topics", icon: Search },
     { href: "/communities", label: "Communities", icon: Users },
-    { href: "/review", label: "Review", icon: ShieldAlert },
+    // Moderation is admin-only; mentors and mentees never see the queue.
+    ...(isAdmin ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
@@ -52,7 +54,8 @@ export function LeftNav() {
         })}
       </nav>
 
-      <PostDialogButton />
+      {/* The moderator account reviews content, it does not post. */}
+      {!isAdmin && <PostDialogButton />}
 
       <div className="mt-auto space-y-2">
         <ThemeToggle className="w-full justify-start text-foreground/80" />
@@ -70,7 +73,7 @@ export function MobileNav() {
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentors", icon: HeartHandshake },
     { href: "/communities", label: "Units", icon: Users },
-    { href: "/review", label: "Review", icon: ShieldAlert },
+    ...(persona.role === "admin" ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
