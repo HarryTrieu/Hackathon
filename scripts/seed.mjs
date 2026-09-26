@@ -3,7 +3,7 @@
 // Idempotent: upserts by id, safe to re-run.
 
 import { createClient } from "@supabase/supabase-js";
-import { PROFILES, POSTS } from "../lib/seed.js";
+import { PROFILES, POSTS, REPLIES } from "../lib/seed.js";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -65,4 +65,19 @@ if (postErr) {
   process.exit(1);
 }
 console.log(`posts: ${postRows.length} upserted`);
+
+const replyRows = REPLIES.map((r) => ({
+  id: r.id,
+  post_id: r.post_id,
+  author_id: r.author_id,
+  text: r.text,
+  is_demo: true,
+  created_at: new Date(Date.now() - r.hours_ago * 3600_000).toISOString(),
+}));
+const { error: rErr } = await db.from("replies").upsert(replyRows);
+if (rErr) {
+  console.error("replies upsert failed:", rErr.message);
+  process.exit(1);
+}
+console.log(`replies: ${replyRows.length} upserted`);
 console.log("Seed complete.");

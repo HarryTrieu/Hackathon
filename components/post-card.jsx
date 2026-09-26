@@ -7,6 +7,7 @@ import {
   Languages,
   ThumbsUp,
   Bookmark,
+  MessageCircle,
   MessageCircleQuestion,
   ShieldAlert,
   BadgeCheck,
@@ -15,6 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "@/components/link-preview";
+import { RepliesPanel } from "@/components/replies";
+import { getSeedReplies } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 
 function relativeTime(hoursAgo) {
@@ -43,6 +46,8 @@ export function PostCard({ post, author, reason }) {
   const [expanded, setExpanded] = useState(false);
   const [helpful, setHelpful] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [repliesOpen, setRepliesOpen] = useState(false);
+  const seedReplyCount = getSeedReplies(post.id).length;
 
   const text = displayText(post);
   const clampable = text.length > CLAMP_THRESHOLD;
@@ -153,13 +158,14 @@ export function PostCard({ post, author, reason }) {
           {(post.unit_codes.length > 0 || post.tags.length > 0) && (
             <div className="mt-2.5 flex flex-wrap gap-1.5">
               {post.unit_codes.map((code) => (
-                <Badge
-                  key={code}
-                  variant="outline"
-                  className={cn("font-mono", CHIP_HOVER)}
-                >
-                  {code}
-                </Badge>
+                <Link key={code} href={`/unit/${code}`}>
+                  <Badge
+                    variant="outline"
+                    className={cn("font-mono", CHIP_HOVER, "cursor-pointer")}
+                  >
+                    {code}
+                  </Badge>
+                </Link>
               ))}
               {post.tags.map((tag) => (
                 <Badge key={tag} variant="secondary" className={CHIP_HOVER}>
@@ -203,6 +209,18 @@ export function PostCard({ post, author, reason }) {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setRepliesOpen((v) => !v)}
+              className={cn(
+                "text-muted-foreground transition-colors duration-300 ease-out",
+                repliesOpen && "text-primary"
+              )}
+            >
+              <MessageCircle data-icon="inline-start" />
+              {seedReplyCount > 0 ? `Replies · ${seedReplyCount}` : "Reply"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               disabled
               title="Wired in build step 4"
               className="text-muted-foreground"
@@ -211,6 +229,8 @@ export function PostCard({ post, author, reason }) {
               Ask the author
             </Button>
           </div>
+
+          {repliesOpen && <RepliesPanel postId={post.id} />}
         </div>
       </div>
     </article>

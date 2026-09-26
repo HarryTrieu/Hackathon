@@ -14,6 +14,11 @@
 | `app/api/upload/route.js` | Cloudinary image upload, mock fallback |
 | `app/api/link-preview/route.js` | OpenGraph unfurl for pasted links |
 | `app/api/posts/route.js` | GET feed data, POST publish (Zod + AI labels) |
+| `app/api/replies/route.js` | Flat replies on posts |
+| `app/api/membership/route.js` | Unit community join/leave/mentor |
+| `app/communities/page.js` | Unit directory grouped by course |
+| `app/unit/[code]/page.js` | Unit hub: members, mentors, posts |
+| `lib/communities.js` | Derived unit directory + membership storage |
 | `app/api/review/route.js` | Human review actions on flagged posts |
 | `app/review/page.js` | Flagged-post queue, approve or remove |
 | `lib/enrich.js` | Gemini labelling + deterministic mock |
@@ -58,3 +63,4 @@ All optional. Every route falls back to mock data when a key is missing. See `.e
 | `features/feed-ui.md` | Feature 1: seed + feed + persona switcher + ranking |
 | `features/post-media.md` | Feature 1.5: images, link previews, upload, hover polish |
 | `features/posts-api.md` | Feature 2: publish with AI labels, Supabase, review queue |
+| `features/communities.md` | Feature 3: unit communities, replies, per-unit mentors |

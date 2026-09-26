@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Search, User, PenLine, GraduationCap, ShieldAlert } from "lucide-react";
+import { Home, Search, User, Users, PenLine, GraduationCap, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { usePersona } from "@/lib/persona-context";
@@ -15,6 +15,7 @@ export function LeftNav() {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/search", label: "Search", icon: Search },
+    { href: "/communities", label: "Communities", icon: Users },
     { href: "/review", label: "Review", icon: ShieldAlert },
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
@@ -74,6 +75,8 @@ export function MobileNav() {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/search", label: "Search", icon: Search },
+    { href: "/communities", label: "Units", icon: Users },
+    { href: "/review", label: "Review", icon: ShieldAlert },
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 

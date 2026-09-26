@@ -2,6 +2,12 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 14:10 · Feature 3: unit communities, replies, per-unit mentors + Gemini model fix
+- Did: `/communities` + `/unit/[code]` pages, join and become-a-mentor per persona, flat replies on every post, unit chips link to their community, Review + Units added to mobile nav
+- Did: fixed retired `gemini-2.0-flash` → `gemini-flash-latest` default with lite fallback on 503; live-verified real tags and Vietnamese → English summary
+- Files: see `Worklog/features/communities.md`
+- Test: eslint exit 0, build clean (13 routes), curl probes on replies/membership APIs (validation 400s, mock paths); membership insert against live Supabase pending schema re-run
+
 ### 2026-09-26 13:50 · Feature 2: posts API with AI labels, Supabase, review page
 - Did: `POST /api/posts` (Zod + Gemini with deterministic mock), `GET /api/posts` (DB with seed fallback), `/review` page + `/api/review`, Hot and New feed tabs, composer publishes for real
 - Did: `supabase/schema.sql`, `scripts/seed.mjs` (`npm run seed`), server-only Supabase client, deps `@supabase/supabase-js` + `zod`, package.json `type: module`
