@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { PenLine, ImagePlus, X, TriangleAlert } from "lucide-react";
+import { PenLine, ImagePlus, X, TriangleAlert, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -12,13 +12,14 @@ import { usePersona } from "@/lib/persona-context";
 
 const URL_PATTERN = /https?:\/\/[^\s]+/;
 
-export function Composer() {
+export function Composer({ onPublished }) {
   const { persona } = usePersona();
   const [text, setText] = useState("");
-  const [notice, setNotice] = useState(false);
   const [image, setImage] = useState(null); // { url, mocked }
   const [uploading, setUploading] = useState(false);
+  const [posting, setPosting] = useState(false);
   const [error, setError] = useState(null);
+  const [status, setStatus] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
 
@@ -70,6 +71,53 @@ export function Composer() {
     }
   }
 
+  async function handlePost() {
+    setError(null);
+    setStatus(null);
+    setPosting(true);
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          author_id: persona.id,
+          text: text.trim(),
+          image_url: image?.url,
+          link_preview: shownPreview
+            ? {
+                url: shownPreview.url,
+                title: shownPreview.title,
+                site: shownPreview.site,
+                description: shownPreview.description,
+                image: shownPreview.image,
+              }
+            : undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Posting failed. Please try again.");
+        return;
+      }
+
+      onPublished?.(data.post);
+      setText("");
+      setImage(null);
+      setPreview(null);
+      const aiNote = data.mocked
+        ? "Posted with mock AI labels (add GEMINI_API_KEY for real ones)."
+        : "Posted. AI added tags and a summary.";
+      const dbNote = data.persisted
+        ? ""
+        : " Session only: add Supabase keys to save posts.";
+      setStatus(aiNote + dbNote);
+    } catch {
+      setError("Posting failed. Check your connection and try again.");
+    } finally {
+      setPosting(false);
+    }
+  }
+
   return (
     <div className="border-b px-4 py-3">
       <div className="flex gap-3">
@@ -80,7 +128,7 @@ export function Composer() {
             value={text}
             onChange={(e) => {
               setText(e.target.value);
-              setNotice(false);
+              setStatus(null);
             }}
             placeholder="Share what you learned..."
             className="min-h-16 resize-none border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
@@ -127,6 +175,12 @@ export function Composer() {
               {error}
             </p>
           )}
+          {status && !error && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Sparkles className="size-4 text-primary" />
+              {status}
+            </p>
+          )}
 
           <div className="mt-2 flex items-center justify-between gap-2">
             <div className="flex items-center gap-1">
@@ -140,7 +194,7 @@ export function Composer() {
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={uploading}
+                disabled={uploading || posting}
                 onClick={() => fileRef.current?.click()}
                 className="text-muted-foreground"
               >
@@ -148,19 +202,21 @@ export function Composer() {
                 Image
               </Button>
               <p className="hidden text-xs text-muted-foreground sm:block">
-                {notice
-                  ? "Publishing arrives in the next build step (AI tags + TL;DR)."
-                  : "AI adds tags and a TL;DR when you post."}
+                AI adds tags and a TL;DR when you post.
               </p>
             </div>
             <Button
               size="sm"
               className="rounded-full font-semibold"
-              disabled={text.trim().length === 0 || uploading}
-              onClick={() => setNotice(true)}
+              disabled={text.trim().length === 0 || uploading || posting}
+              onClick={handlePost}
             >
-              <PenLine data-icon="inline-start" />
-              Post
+              {posting ? (
+                <Spinner data-icon="inline-start" />
+              ) : (
+                <PenLine data-icon="inline-start" />
+              )}
+              {posting ? "Tagging..." : "Post"}
             </Button>
           </div>
         </div>

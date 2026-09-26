@@ -2,6 +2,12 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 13:50 · Feature 2: posts API with AI labels, Supabase, review page
+- Did: `POST /api/posts` (Zod + Gemini with deterministic mock), `GET /api/posts` (DB with seed fallback), `/review` page + `/api/review`, Hot and New feed tabs, composer publishes for real
+- Did: `supabase/schema.sql`, `scripts/seed.mjs` (`npm run seed`), server-only Supabase client, deps `@supabase/supabase-js` + `zod`, package.json `type: module`
+- Files: see `Worklog/features/posts-api.md`
+- Test: eslint and build clean (9 routes); curl probes on mock paths all correct (validation 400s, phone-number flag, unit-code extraction, TL;DR threshold). Live Gemini/Supabase untested: `.env.local` was empty on disk at build time
+
 ### 2026-09-26 10:20 · Post media, link previews, calmer hover, English-only seed
 - Did: attached images to 5 seeded posts, link preview cards on 3, all seed text now English (translation path kept for live posts)
 - Did: calmed hover (dimmer tints, 300ms ease-out, 150ms delay on chips), removed the fake 350ms re-rank skeleton

@@ -13,6 +13,13 @@
 | `app/loading.js` | Route-level skeleton |
 | `app/api/upload/route.js` | Cloudinary image upload, mock fallback |
 | `app/api/link-preview/route.js` | OpenGraph unfurl for pasted links |
+| `app/api/posts/route.js` | GET feed data, POST publish (Zod + AI labels) |
+| `app/api/review/route.js` | Human review actions on flagged posts |
+| `app/review/page.js` | Flagged-post queue, approve or remove |
+| `lib/enrich.js` | Gemini labelling + deterministic mock |
+| `lib/supabase.js` | Server-only Supabase client (null without env) |
+| `supabase/schema.sql` | Tables + RLS deny-all (service role only) |
+| `scripts/seed.mjs` | Push seed data to Supabase (`npm run seed`) |
 | `public/demo/*.svg` | Offline demo images and link thumbnails |
 | `lib/seed.js` | Demo data: 12 profiles, 40 posts, PERSONA_IDS |
 | `lib/rank.js` | Tag-overlap ranking, reason lines, trending, mentors (no AI) |
@@ -50,3 +57,4 @@ All optional. Every route falls back to mock data when a key is missing. See `.e
 |-------------|---------|
 | `features/feed-ui.md` | Feature 1: seed + feed + persona switcher + ranking |
 | `features/post-media.md` | Feature 1.5: images, link previews, upload, hover polish |
+| `features/posts-api.md` | Feature 2: publish with AI labels, Supabase, review queue |

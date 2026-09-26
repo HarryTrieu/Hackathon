@@ -88,6 +88,11 @@ export function PostCard({ post, author, reason }) {
                 Flagged for review
               </Badge>
             )}
+            {post.mocked && (
+              <Badge variant="outline" className="text-muted-foreground">
+                Mock AI
+              </Badge>
+            )}
           </div>
 
           <p
