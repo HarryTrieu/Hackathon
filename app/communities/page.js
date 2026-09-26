@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Users, MessageSquareText, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { unitsByCourse } from "@/lib/communities";
+import { UNIVERSITY, unitsByCourse } from "@/lib/communities";
 import { POSTS } from "@/lib/seed";
 
 export default function CommunitiesPage() {
@@ -31,8 +31,8 @@ export default function CommunitiesPage() {
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold">Communities</h1>
         <p className="text-sm text-muted-foreground">
-          One community per unit. Join the ones you are taking, mentor the ones
-          you have beaten.
+          {UNIVERSITY} · one community per unit. Join the ones you are taking,
+          mentor the ones you have beaten.
         </p>
       </div>
 

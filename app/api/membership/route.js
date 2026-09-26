@@ -9,7 +9,7 @@ const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
 
 const Action = z.object({
   profile_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown profile."),
-  unit_code: z.string().regex(/^[A-Z]{3}\d{5}$/, "Invalid unit code."),
+  unit_code: z.string().regex(/^[A-Z]{3}\d{3}$/, "Invalid unit code."),
   action: z.enum(["join", "leave", "mentor", "unmentor"]),
 });
 

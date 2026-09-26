@@ -20,6 +20,7 @@ mentors for a specific unit. Flat replies make every post a small thread.
 | `scripts/seed.mjs` | also upserts demo replies |
 
 ## Decisions
+- Scoped to Deakin University: `CATALOG` in `lib/communities.js` lists 12 real units; other Deakin-format codes (`/^[A-Z]{3}\d{3}$/`) seen in posts also get a community, other unis' codes are ignored. Expanding later = widen the catalog and add a university field
 - Directory is derived, not stored: fewer tables, zero admin, always consistent with posts
 - Membership is optimistic: localStorage first, then synced to `unit_members`; honest note when sync fails or DB is absent
 - Replies are flat, not nested: enough for the demo, half the complexity

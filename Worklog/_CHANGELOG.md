@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 15:40 · Scope to Deakin University
+- Did: all seed unit codes mapped to real Deakin units (verified on deakin.edu.au handbook pages), official titles, Deakin wording (trimester, CloudDeakin, SplashKit); unit-code format now 3 letters + 3 digits in mock AI, Gemini prompt, and membership API; communities seeded from a 12-unit Deakin catalog, non-Deakin codes ignored
+- Files: `lib/seed.js`, `lib/communities.js`, `lib/enrich.js`, `app/api/membership/route.js`, `app/communities/page.js`, `public/demo/webpage.svg`
+- Test: eslint 0, build clean, re-seeded Supabase (no old codes left), live Gemini post extracted SIT221 + SIT102 and was persisted, membership mentor/leave round-trip against live `unit_members`, old-format code rejected 400
+
 ### 2026-09-26 14:10 · Feature 3: unit communities, replies, per-unit mentors + Gemini model fix
 - Did: `/communities` + `/unit/[code]` pages, join and become-a-mentor per persona, flat replies on every post, unit chips link to their community, Review + Units added to mobile nav
 - Did: fixed retired `gemini-2.0-flash` → `gemini-flash-latest` default with lite fallback on 503; live-verified real tags and Vietnamese → English summary

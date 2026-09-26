@@ -21,7 +21,7 @@
 
   <rect x="292" y="250" width="210" height="96" rx="8" fill="#ffffff" stroke="#e6e8ea"/>
   <text x="310" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#2A7C99">Python</text>
-  <text x="310" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">COS10009 labs, plus a</text>
+  <text x="310" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">SIT102 labs, plus a</text>
   <text x="310" y="324" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">dice game I made.</text>
 
   <rect x="524" y="250" width="210" height="96" rx="8" fill="#ffffff" stroke="#e6e8ea"/>
