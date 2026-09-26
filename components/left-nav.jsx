@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { Home, HeartHandshake, User, Users, PenLine, GraduationCap, ShieldAlert, Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { focusComposer } from "@/components/composer";
+import { usePathname } from "next/navigation";
+import { Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { PostDialogButton } from "@/components/post-dialog";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
@@ -12,7 +11,6 @@ import { cn } from "@/lib/utils";
 
 export function LeftNav() {
   const pathname = usePathname();
-  const router = useRouter();
   const { persona } = usePersona();
 
   const items = [
@@ -54,16 +52,7 @@ export function LeftNav() {
         })}
       </nav>
 
-      <Button
-        size="lg"
-        className="mt-3 w-full rounded-full text-base font-semibold shadow-sm transition-all hover:shadow-md"
-        onClick={() => {
-          if (!focusComposer()) router.push("/?compose=1");
-        }}
-      >
-        <PenLine data-icon="inline-start" />
-        Post
-      </Button>
+      <PostDialogButton />
 
       <div className="mt-auto space-y-2">
         <ThemeToggle className="w-full justify-start text-foreground/80" />

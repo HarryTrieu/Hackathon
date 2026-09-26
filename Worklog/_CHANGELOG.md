@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 23:00 · Left-nav Post opens a "Create post" popup
+- Did: replaced scroll-to-composer / `?compose=1` with a Facebook-style modal on every page. Reuses `Composer` (`inDialog`), closes on publish, and the home feed prepends the new post via a `sodu:post-published` window event
+- Files: `components/post-dialog.jsx`, `components/ui/dialog.jsx` (shadcn, base-ui, no new deps), `components/composer.jsx`, `components/left-nav.jsx`, `components/feed.jsx`
+- Test: eslint 0; `/`, `/mentors`, `/profile/p8` return 200. Open → post → close flow not browser-tested
+
 ### 2026-09-26 22:30 · Saved posts on profile
 - Did: Save on a post card was local state only (lost on reload, shown nowhere). Now persisted per persona in localStorage as post snapshots, and your own profile gets a "Saved" tab (hidden on other people's profiles, empty state when none)
 - Files: `lib/use-saved-posts.js`, `components/saved-posts.jsx`, `components/post-card.jsx`, `app/profile/[id]/page.js`

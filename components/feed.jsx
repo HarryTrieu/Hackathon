@@ -5,6 +5,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Composer } from "@/components/composer";
+import { POST_PUBLISHED_EVENT } from "@/components/post-dialog";
 import { HomeHero } from "@/components/home-hero";
 import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
@@ -72,6 +73,13 @@ export function Feed() {
   function handlePublished(post) {
     setSessionPosts((prev) => [post, ...prev]);
   }
+
+  // Posts published from the left-nav popup while this feed is on screen.
+  useEffect(() => {
+    const onPublished = (e) => setSessionPosts((prev) => [e.detail, ...prev]);
+    window.addEventListener(POST_PUBLISHED_EVENT, onPublished);
+    return () => window.removeEventListener(POST_PUBLISHED_EVENT, onPublished);
+  }, []);
 
   return (
     <div className="pb-16 md:pb-0">
