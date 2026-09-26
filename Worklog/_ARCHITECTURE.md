@@ -11,12 +11,17 @@
 | `app/profile/[id]/page.js` | Profile: header + Posts / Path tabs |
 | `app/search/page.js` | Stub (build step 5) |
 | `app/loading.js` | Route-level skeleton |
+| `app/api/upload/route.js` | Cloudinary image upload, mock fallback |
+| `app/api/link-preview/route.js` | OpenGraph unfurl for pasted links |
+| `public/demo/*.svg` | Offline demo images and link thumbnails |
 | `lib/seed.js` | Demo data: 12 profiles, 40 posts, PERSONA_IDS |
 | `lib/rank.js` | Tag-overlap ranking, reason lines, trending, mentors (no AI) |
 | `lib/persona-context.jsx` | Client context for demo persona switcher |
 | `components/feed.jsx` | Tabs For you / Popular, skeleton on switch, caught-up state |
-| `components/post-card.jsx` | Post UI: badges, clamp, AI boxes, chips, actions, flag |
-| `components/composer.jsx` | Visual composer (API wired in step 2) |
+| `components/post-card.jsx` | Post UI: badges, clamp, image, link card, AI boxes, chips, flag |
+| `components/link-preview.jsx` | Shared link preview card |
+| `components/user-avatar.jsx` | Deterministic tinted avatar + `initials()` |
+| `components/composer.jsx` | Composer: image upload, live unfurl (publishing in step 2) |
 | `components/left-nav.jsx` | Desktop nav + mobile bottom nav |
 | `components/right-sidebar.jsx` | Trending tags, suggested mentors |
 | `components/ui/` | shadcn (base-nova style, Base UI primitives) |
@@ -34,12 +39,14 @@ Next.js 16 App Router · JavaScript · Tailwind v4 · shadcn/ui (base-nova) · L
 
 ## Env (names only)
 
-None yet (Feature 1 is fully offline seed data). Coming in step 2+:
-- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` (server only), `GEMINI_API_KEY` (server only)
+All optional. Every route falls back to mock data when a key is missing. See `.env.example`.
+- `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (server only)
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` (step 2)
+- `SUPABASE_SERVICE_ROLE_KEY` (server only, step 2), `GEMINI_API_KEY` (server only, step 2)
 
 ## Feature docs
 
 | Feature doc | Summary |
 |-------------|---------|
 | `features/feed-ui.md` | Feature 1: seed + feed + persona switcher + ranking |
+| `features/post-media.md` | Feature 1.5: images, link previews, upload, hover polish |

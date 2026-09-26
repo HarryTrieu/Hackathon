@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="Link thumbnail: algorithms video channel">
+  <rect width="640" height="360" fill="#16181c"/>
+  <text x="40" y="96" font-family="Segoe UI, Arial, sans-serif" font-size="15" letter-spacing="2" fill="#7d868d">PRACTICE PLAYLIST</text>
+  <text x="40" y="152" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff">150 coding</text>
+  <text x="40" y="200" font-family="Segoe UI, Arial, sans-serif" font-size="38" font-weight="700" fill="#ffffff">interview problems</text>
+  <rect x="40" y="236" width="150" height="6" rx="3" fill="#2A7C99"/>
+  <circle cx="520" cy="180" r="56" fill="#ffffff" opacity="0.92"/>
+  <polygon points="502,150 502,210 552,180" fill="#16181c"/>
+  <text x="40" y="312" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#7d868d">Free video walkthroughs, one pattern at a time</text>
+</svg>

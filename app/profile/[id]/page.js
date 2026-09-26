@@ -6,7 +6,6 @@ import {
   ExternalLink,
   Link2,
 } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,15 +16,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { PostCard } from "@/components/post-card";
+import { UserAvatar } from "@/components/user-avatar";
 import { getPostsByAuthor, getProfile } from "@/lib/seed";
-
-function initials(name) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2);
-}
 
 export default async function ProfilePage({ params }) {
   const { id } = await params;
@@ -36,13 +28,13 @@ export default async function ProfilePage({ params }) {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="border-b px-4 py-6">
+      <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-6">
         <div className="flex items-start gap-4">
-          <Avatar className="size-16">
-            <AvatarFallback className="bg-primary/10 text-xl font-semibold text-primary">
-              {initials(profile.name)}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            profile={profile}
+            className="size-16 ring-4 ring-background"
+            textClassName="text-xl"
+          />
           <div className="min-w-0 flex-1">
             <h1 className="text-xl font-bold">{profile.name}</h1>
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
@@ -87,7 +79,7 @@ export default async function ProfilePage({ params }) {
               <EmptyHeader>
                 <EmptyTitle>No posts yet</EmptyTitle>
                 <EmptyDescription>
-                  {profile.name} hasn't shared anything so far.
+                  {profile.name} hasn&apos;t shared anything so far.
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -124,7 +116,7 @@ export default async function ProfilePage({ params }) {
                     </p>
                     {unit.tip && (
                       <p className="mt-1 text-sm text-muted-foreground">
-                        "{unit.tip}"
+                        &ldquo;{unit.tip}&rdquo;
                       </p>
                     )}
                   </div>

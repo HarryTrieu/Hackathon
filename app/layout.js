@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Sodu — study experience feed",
+  title: "Sodu · study experience feed",
   description:
     "A distraction-free social feed where students and seniors share study experience.",
 };

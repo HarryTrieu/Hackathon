@@ -7,7 +7,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 
-export const metadata = { title: "Search — Sodu" };
+export const metadata = { title: "Search · Sodu" };
 
 export default function SearchPage() {
   return (
@@ -19,7 +19,7 @@ export default function SearchPage() {
           </EmptyMedia>
           <EmptyTitle>Search is coming in build step 5</EmptyTitle>
           <EmptyDescription>
-            You'll be able to find people by skill or keyword and see what they
+            You&apos;ll be able to find people by skill or keyword and see what they
             studied and where they ended up.
           </EmptyDescription>
         </EmptyHeader>

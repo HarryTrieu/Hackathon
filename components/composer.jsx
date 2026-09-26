@@ -1,34 +1,80 @@
 "use client";
 
-import { useState } from "react";
-import { PenLine } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect, useRef, useState } from "react";
+import { PenLine, ImagePlus, X, TriangleAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/user-avatar";
+import { LinkPreview } from "@/components/link-preview";
 import { usePersona } from "@/lib/persona-context";
 
-function initials(name) {
-  return name
-    .split(" ")
-    .map((w) => w[0])
-    .join("")
-    .slice(0, 2);
-}
+const URL_PATTERN = /https?:\/\/[^\s]+/;
 
 export function Composer() {
   const { persona } = usePersona();
   const [text, setText] = useState("");
   const [notice, setNotice] = useState(false);
+  const [image, setImage] = useState(null); // { url, mocked }
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const fileRef = useRef(null);
+
+  const foundUrl = text.match(URL_PATTERN)?.[0] ?? null;
+  // Derived, so editing the link hides a stale card without clearing state.
+  const shownPreview =
+    preview && preview.requested === foundUrl ? preview : null;
+
+  // Unfurl the first link as the user types, debounced.
+  useEffect(() => {
+    if (!foundUrl || foundUrl === preview?.requested) return;
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `/api/link-preview?url=${encodeURIComponent(foundUrl)}`
+        );
+        if (!res.ok) return;
+        const data = await res.json();
+        setPreview({ ...data, requested: foundUrl });
+      } catch {
+        // A failed unfurl is not worth an error message in the composer.
+      }
+    }, 700);
+    return () => clearTimeout(timer);
+  }, [foundUrl, preview?.requested]);
+
+  async function handleFile(event) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setError(null);
+    setUploading(true);
+    try {
+      const body = new FormData();
+      body.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Upload failed. Please try again.");
+        return;
+      }
+      setImage({ url: data.url, mocked: Boolean(data.mocked) });
+    } catch {
+      setError("Upload failed. Check your connection and try again.");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   return (
     <div className="border-b px-4 py-3">
       <div className="flex gap-3">
-        <Avatar className="size-10 shrink-0">
-          <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">
-            {initials(persona.name)}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
+        <UserAvatar profile={persona} className="shrink-0" textClassName="text-sm" />
+        <div className="min-w-0 flex-1">
           <Textarea
             id="composer-input"
             value={text}
@@ -39,16 +85,78 @@ export function Composer() {
             placeholder="Share what you learned..."
             className="min-h-16 resize-none border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"
           />
-          <div className="mt-2 flex items-center justify-between">
-            <p className="text-xs text-muted-foreground">
-              {notice
-                ? "Publishing arrives in the next build step (AI tags + TL;DR)."
-                : "AI adds tags and a TL;DR when you post."}
+
+          {uploading && (
+            <div className="mt-2 flex items-center gap-2 rounded-xl border border-dashed p-3 text-sm text-muted-foreground">
+              <Spinner />
+              Uploading image...
+            </div>
+          )}
+
+          {image && !uploading && (
+            <div className="relative mt-2 overflow-hidden rounded-xl border">
+              {/* Cloudinary URLs are arbitrary, so next/image is not usable here. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={image.url}
+                alt="Attached preview"
+                className="aspect-video w-full object-cover"
+              />
+              <Button
+                variant="secondary"
+                size="icon-sm"
+                aria-label="Remove image"
+                onClick={() => setImage(null)}
+                className="absolute top-2 right-2 rounded-full"
+              >
+                <X />
+              </Button>
+              {image.mocked && (
+                <Badge variant="secondary" className="absolute top-2 left-2">
+                  Mock mode · no Cloudinary key
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {shownPreview && <LinkPreview preview={shownPreview} className="mt-2" />}
+
+          {error && (
+            <p className="mt-2 flex items-center gap-1.5 text-sm text-destructive">
+              <TriangleAlert className="size-4" />
+              {error}
             </p>
+          )}
+
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFile}
+                className="hidden"
+              />
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={uploading}
+                onClick={() => fileRef.current?.click()}
+                className="text-muted-foreground"
+              >
+                <ImagePlus data-icon="inline-start" />
+                Image
+              </Button>
+              <p className="hidden text-xs text-muted-foreground sm:block">
+                {notice
+                  ? "Publishing arrives in the next build step (AI tags + TL;DR)."
+                  : "AI adds tags and a TL;DR when you post."}
+              </p>
+            </div>
             <Button
               size="sm"
               className="rounded-full font-semibold"
-              disabled={text.trim().length === 0}
+              disabled={text.trim().length === 0 || uploading}
               onClick={() => setNotice(true)}
             >
               <PenLine data-icon="inline-start" />

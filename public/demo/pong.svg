@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Demo Pong clone game screenshot">
+  <rect width="800" height="450" fill="#101214"/>
+  <rect x="0" y="0" width="800" height="34" fill="#1c1f23"/>
+  <text x="20" y="22" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#8b949e">PongClone - Unity - Game view</text>
+  <line x1="400" y1="52" x2="400" y2="430" stroke="#2b3035" stroke-width="3" stroke-dasharray="14 12"/>
+  <rect x="44" y="176" width="14" height="96" rx="7" fill="#ffffff"/>
+  <rect x="742" y="228" width="14" height="96" rx="7" fill="#ffffff"/>
+  <circle cx="330" cy="248" r="11" fill="#2A7C99"/>
+  <circle cx="376" cy="226" r="5" fill="#2A7C99" opacity="0.4"/>
+  <circle cx="414" cy="208" r="3" fill="#2A7C99" opacity="0.2"/>
+  <text x="300" y="112" font-family="Consolas, monospace" font-size="46" font-weight="700" fill="#ffffff">3</text>
+  <text x="470" y="112" font-family="Consolas, monospace" font-size="46" font-weight="700" fill="#ffffff">2</text>
+  <text x="330" y="404" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#5c646b">W / S to move  -  first to 5</text>
+</svg>
