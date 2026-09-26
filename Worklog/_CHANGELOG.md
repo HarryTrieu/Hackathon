@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 00:00 · Per-tab scroll on the home feed
+- Did: switching For you / Hot / New kept the shared window scroll, so the new tab opened mid-list. Tabs are now controlled; each tab remembers its scroll offset, a first visit starts at the top, a return restores the old offset
+- Files: `components/feed.jsx`
+- Test: eslint 0; `/` returns 200. Scroll behaviour not browser-tested
+
 ### 2026-09-26 23:45 · Hot: most Helpful first
 - Did: `rankHot` sorts by `helpful_count` descending (newer post breaks ties) instead of helpful-with-recency-gravity
 - Files: `lib/rank.js`

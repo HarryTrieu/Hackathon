@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
@@ -35,6 +35,24 @@ export function Feed() {
   // Posts published this session while no DB is configured.
   const [sessionPosts, setSessionPosts] = useState([]);
   const [hidden, setHidden] = useState([]);
+  const [tab, setTab] = useState("for-you");
+  // Window scroll offset per tab: a tab you have not opened starts at the
+  // top, a tab you come back to returns to where you left it.
+  const scrollByTab = useRef({});
+  const restoreScroll = useRef(false);
+
+  function changeTab(next) {
+    scrollByTab.current[tab] = window.scrollY;
+    restoreScroll.current = true;
+    setTab(next);
+  }
+
+  // Layout effect so the jump happens before paint, after the new panel mounts.
+  useLayoutEffect(() => {
+    if (!restoreScroll.current) return;
+    restoreScroll.current = false;
+    window.scrollTo({ top: scrollByTab.current[tab] ?? 0, behavior: "instant" });
+  }, [tab]);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,7 +101,7 @@ export function Feed() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <Tabs defaultValue="for-you" className="gap-0">
+      <Tabs value={tab} onValueChange={changeTab} className="gap-0">
         <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
           <div className="flex items-center justify-between px-4 pt-3">
             <h1 className="text-lg font-bold">Home</h1>
