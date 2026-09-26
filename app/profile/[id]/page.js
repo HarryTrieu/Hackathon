@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/empty";
 import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
+import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { UserAvatar } from "@/components/user-avatar";
 import { getPostsByAuthor, getProfile } from "@/lib/seed";
 
@@ -73,6 +74,7 @@ export default async function ProfilePage({ params }) {
             <TabsTrigger value="path" className="flex-none px-3 py-2">
               Path
             </TabsTrigger>
+            <SavedTabTrigger profileId={profile.id} />
           </TabsList>
         </div>
 
@@ -176,6 +178,8 @@ export default async function ProfilePage({ params }) {
             </Card>
           </div>
         </TabsContent>
+
+        <SavedTabContent profileId={profile.id} />
       </Tabs>
     </div>
   );

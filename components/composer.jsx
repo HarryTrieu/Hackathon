@@ -12,6 +12,16 @@ import { usePersona } from "@/lib/persona-context";
 
 const URL_PATTERN = /https?:\/\/[^\s]+/;
 
+// Scroll the composer into view and put the caret in it. Returns false when
+// the composer is not on this page (only the home feed renders it).
+export function focusComposer() {
+  const input = document.getElementById("composer-input");
+  if (!input) return false;
+  input.scrollIntoView({ behavior: "smooth", block: "center" });
+  input.focus({ preventScroll: true });
+  return true;
+}
+
 export function Composer({ onPublished }) {
   const { persona } = usePersona();
   const [text, setText] = useState("");
@@ -22,6 +32,16 @@ export function Composer({ onPublished }) {
   const [status, setStatus] = useState(null);
   const [preview, setPreview] = useState(null);
   const fileRef = useRef(null);
+
+  // Left-nav "Post" from another page lands on /?compose=1: open the composer
+  // once, then drop the param so a refresh does not refocus it.
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("compose") !== "1") return;
+    url.searchParams.delete("compose");
+    window.history.replaceState(null, "", url.pathname + url.search + url.hash);
+    focusComposer();
+  }, []);
 
   const foundUrl = text.match(URL_PATTERN)?.[0] ?? null;
   // Derived, so editing the link hides a stale card without clearing state.

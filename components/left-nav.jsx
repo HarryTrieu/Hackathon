@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Home, HeartHandshake, User, Users, PenLine, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { focusComposer } from "@/components/composer";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function LeftNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { persona } = usePersona();
 
   const items = [
@@ -55,9 +57,9 @@ export function LeftNav() {
       <Button
         size="lg"
         className="mt-3 w-full rounded-full text-base font-semibold shadow-sm transition-all hover:shadow-md"
-        onClick={() =>
-          document.getElementById("composer-input")?.focus()
-        }
+        onClick={() => {
+          if (!focusComposer()) router.push("/?compose=1");
+        }}
       >
         <PenLine data-icon="inline-start" />
         Post
