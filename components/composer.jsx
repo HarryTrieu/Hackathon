@@ -161,7 +161,7 @@ export function Composer({ onPublished }) {
               </Button>
               {image.mocked && (
                 <Badge variant="secondary" className="absolute top-2 left-2">
-                  Mock mode · no Cloudinary key
+                  Mock image · Cloudinary not configured
                 </Badge>
               )}
             </div>

@@ -62,11 +62,14 @@ export async function POST(request) {
     );
     const data = await res.json();
     if (!res.ok || !data.secure_url) {
-      // Never break the demo on an upstream failure.
-      return Response.json({ url: MOCK_URL, mocked: true, upstreamFailed: true });
+      const reason = data.error?.message || `Cloudinary returned ${res.status}.`;
+      return Response.json({ error: reason, mocked: false }, { status: 502 });
     }
     return Response.json({ url: data.secure_url, mocked: false });
   } catch {
-    return Response.json({ url: MOCK_URL, mocked: true, upstreamFailed: true });
+    return Response.json(
+      { error: "Could not reach Cloudinary. Check the cloud name and try again." },
+      { status: 502 }
+    );
   }
 }
