@@ -2,25 +2,44 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { Bell, Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { PostDialogButton } from "@/components/post-dialog";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
+import { useNotifications } from "@/lib/use-notifications";
 import { cn } from "@/lib/utils";
+
+// Unread count on the bell, capped so the badge stays small.
+function UnreadBadge({ count, className }) {
+  if (!count) return null;
+  return (
+    <span
+      className={cn(
+        "flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold leading-none text-white",
+        className
+      )}
+    >
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
 
 export function LeftNav() {
   const pathname = usePathname();
   const { persona } = usePersona();
   const isAdmin = persona.role === "admin";
+  const { unreadCount } = useNotifications(persona.id, pathname);
 
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
     { href: "/search", label: "Topics", icon: Search },
     { href: "/communities", label: "Communities", icon: Users },
-    // Moderation is admin-only; mentors and mentees never see the queue.
-    ...(isAdmin ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
+    // Moderators work from the review queue instead of notifications.
+    ...(isAdmin
+      ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
+      : [{ href: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount }]),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
@@ -35,7 +54,7 @@ export function LeftNav() {
       </Link>
 
       <nav className="flex flex-col gap-1" aria-label="Main">
-        {items.map(({ href, label, icon: Icon }) => {
+        {items.map(({ href, label, icon: Icon, badge }) => {
           const active =
             href === "/" ? pathname === "/" : pathname.startsWith(href);
           return (
@@ -47,7 +66,10 @@ export function LeftNav() {
                 active ? "font-bold" : "text-foreground/80"
               )}
             >
-              <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+              <span className="relative">
+                <Icon className="size-5" strokeWidth={active ? 2.5 : 2} />
+                <UnreadBadge count={badge} className="absolute -top-1.5 -right-2" />
+              </span>
               {label}
             </Link>
           );
@@ -68,12 +90,15 @@ export function LeftNav() {
 export function MobileNav() {
   const pathname = usePathname();
   const { persona } = usePersona();
+  const { unreadCount } = useNotifications(persona.id, pathname);
 
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentors", icon: HeartHandshake },
     { href: "/communities", label: "Units", icon: Users },
-    ...(persona.role === "admin" ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
+    ...(persona.role === "admin"
+      ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
+      : [{ href: "/notifications", label: "Alerts", icon: Bell, badge: unreadCount }]),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
@@ -82,7 +107,7 @@ export function MobileNav() {
       aria-label="Mobile"
       className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around border-t bg-background/95 py-2 backdrop-blur md:hidden"
     >
-      {items.map(({ href, label, icon: Icon }) => {
+      {items.map(({ href, label, icon: Icon, badge }) => {
         const active =
           href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
@@ -91,11 +116,14 @@ export function MobileNav() {
             href={href}
             aria-label={label}
             className={cn(
-              "flex flex-col items-center gap-0.5 rounded-lg px-4 py-1 text-[11px] transition-colors hover:bg-muted",
+              "flex flex-col items-center gap-0.5 rounded-lg px-3 py-1 text-[11px] transition-colors hover:bg-muted",
               active ? "font-semibold text-primary" : "text-muted-foreground"
             )}
           >
-            <Icon className="size-5" />
+            <span className="relative">
+              <Icon className="size-5" />
+              <UnreadBadge count={badge} className="absolute -top-1.5 -right-2" />
+            </span>
             {label}
           </Link>
         );

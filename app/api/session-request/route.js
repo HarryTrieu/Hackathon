@@ -30,6 +30,44 @@ export async function GET(request) {
   return Response.json({ requests: error ? null : data });
 }
 
+const Decision = z.object({
+  id: z.string().uuid(),
+  mentor_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown mentor."),
+  action: z.enum(["accept", "decline"]),
+});
+
+// The mentor answers a request. Only a still-pending ("sent") request that
+// belongs to this mentor can change, so a replay cannot flip a decision.
+export async function PATCH(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Body must be JSON." }, { status: 400 });
+  }
+  const parsed = Decision.safeParse(body);
+  if (!parsed.success) {
+    return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
+  }
+  const { id, mentor_id, action } = parsed.data;
+  const status = action === "accept" ? "accepted" : "declined";
+
+  const db = supabaseAdmin();
+  if (!db) return Response.json({ ok: true, status, persisted: false });
+  const { data, error } = await db
+    .from("session_requests")
+    .update({ status })
+    .eq("id", id)
+    .eq("mentor_id", mentor_id)
+    .eq("status", "sent")
+    .select("id");
+  if (error) return Response.json({ error: "Could not update the request." }, { status: 500 });
+  if (data.length === 0) {
+    return Response.json({ error: "Request not found or already answered." }, { status: 409 });
+  }
+  return Response.json({ ok: true, status, persisted: true });
+}
+
 export async function POST(request) {
   let body;
   try {

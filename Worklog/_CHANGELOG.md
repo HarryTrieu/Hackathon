@@ -2,6 +2,12 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 10:45 · Notifications + accept/decline session requests
+- Did: `/notifications` (All / Requests tabs) and a bell with unread badge in desktop and mobile nav (not for admin). Notifications are derived from existing tables, no new table: Helpful votes and replies on your posts, session requests you received, status changes on requests you sent, your mentor application decisions (non-demo). Mentors can Accept / Decline pending requests; the mentee then sees "accepted/declined". Read state = seen notification keys per persona in localStorage (a status change makes a new key, so it shows unread again)
+- API: `GET /api/notifications?profile_id=`, `PATCH /api/session-request` (only a `sent` request owned by that mentor can change; replay → 409)
+- Files: `app/api/notifications/route.js`, `app/api/session-request/route.js`, `lib/use-notifications.js`, `app/notifications/page.js`, `components/left-nav.jsx`
+- Test: eslint 0; live flow: Aisha like + reply on f5 and Lan → James request show up for Lan / James; accept 200, second decision 409, wrong mentor 409; Lan sees "accepted". Test rows removed afterwards. Seed Helpful counts have no like rows, so only new likes notify. No realtime: refetch on navigation / persona switch
+
 ### 2026-09-27 10:00 · Admin-only review
 - Did: new "Sodu Moderator" persona (`ADMIN_PROFILE`, role `admin`) in the switcher. Only admin sees Review in the nav; `/review` shows "Moderators only" for mentors/mentees. Admin has no Post button or feed composer. Mentor apply success page no longer links to the review queue. Report buttons unchanged for everyone
 - Admin is kept out of `PROFILES`: the DB `profiles.role` check only allows mentor/mentee, and post/reply APIs validate authors against `PROFILES`, so admin cannot post (API returns 400)
