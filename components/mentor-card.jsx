@@ -21,7 +21,7 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
     >
       <span
         aria-hidden
-        className="pointer-events-none absolute -top-8 -right-8 size-28 rounded-full bg-gradient-to-br from-primary/40 via-sky-400/20 to-transparent blur-2xl"
+        className="pointer-events-none absolute -top-5 -right-5 size-16 rounded-full bg-gradient-to-br from-primary/40 via-sky-400/20 to-transparent blur-2xl dark:-top-8 dark:-right-8 dark:size-28"
       />
       <div className="relative flex items-start gap-3">
         <UserAvatar profile={profile} className="size-11" textClassName="text-sm" />
