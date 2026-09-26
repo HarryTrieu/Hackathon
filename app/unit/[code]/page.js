@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Users, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Empty,
   EmptyDescription,
@@ -33,6 +33,7 @@ export default function UnitPage() {
   // null | "member" | "mentor" for the current persona, from DB or localStorage.
   const [myRole, setMyRole] = useState(null);
   const [note, setNote] = useState(null);
+  const [mentorListings, setMentorListings] = useState([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -46,6 +47,19 @@ export default function UnitPage() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch(`/api/mentors?unit=${code}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.mentors) setMentorListings(data.mentors);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [code]);
 
   // Load the persona's membership: DB when available, localStorage otherwise.
   useEffect(() => {
@@ -79,8 +93,7 @@ export default function UnitPage() {
   );
 
   async function setRole(next) {
-    const action =
-      next === null ? "leave" : next === "mentor" ? "mentor" : "join";
+    const action = next === null ? "leave" : "join";
     setMyRole(next);
     writeLocalMembership(persona.id, code, next);
     try {
@@ -126,10 +139,11 @@ export default function UnitPage() {
   }
 
   const isMember = myRole !== null;
-  const isMentor = myRole === "mentor";
-  // Baseline people from seed activity, plus the persona if joined here.
-  const memberIds = [...new Set([...unit.memberIds, ...(isMember ? [persona.id] : [])])];
-  const mentorIds = [...new Set([...unit.mentorIds, ...(isMentor ? [persona.id] : [])])];
+  // Mentors are approved mentor listings for this unit, not just seniors.
+  const mentorIds = mentorListings.map((m) => m.profile_id);
+  const memberIds = [
+    ...new Set([...unit.memberIds, ...mentorIds, ...(isMember ? [persona.id] : [])]),
+  ];
 
   return (
     <div className="pb-16 md:pb-0">
@@ -157,19 +171,13 @@ export default function UnitPage() {
           >
             {isMember ? "Joined" : "Join"}
           </Button>
-          <Button
-            size="sm"
-            variant={isMentor ? "secondary" : "outline"}
-            className={cn("rounded-full", isMentor && "text-primary")}
-            onClick={() => setRole(isMentor ? "member" : "mentor")}
-            title="Mentors offer help to students taking this unit"
+          <Link
+            href={`/mentors/${unit.code}`}
+            className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}
           >
-            <Star
-              data-icon="inline-start"
-              className={cn(isMentor && "fill-primary/30")}
-            />
-            {isMentor ? "Mentoring" : "Become a mentor"}
-          </Button>
+            <Star data-icon="inline-start" />
+            Find a mentor
+          </Link>
         </div>
         {note && <p className="mt-1.5 text-xs text-muted-foreground">{note}</p>}
       </div>

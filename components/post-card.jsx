@@ -9,15 +9,19 @@ import {
   Bookmark,
   MessageCircle,
   MessageCircleQuestion,
+  Pencil,
   ShieldAlert,
   BadgeCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "@/components/link-preview";
 import { RepliesPanel } from "@/components/replies";
+import { SEED_MENTORS } from "@/lib/mentors";
+import { usePersona } from "@/lib/persona-context";
 import { getSeedReplies } from "@/lib/seed";
+import { rememberVote, useLikedPosts } from "@/lib/use-liked";
 import { cn } from "@/lib/utils";
 
 function relativeTime(hoursAgo) {
@@ -43,11 +47,63 @@ function displayText(post) {
 }
 
 export function PostCard({ post, author, reason }) {
+  const { persona } = usePersona();
+  const likedSet = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
-  const [helpful, setHelpful] = useState(false);
+  // Vote override scoped to the persona that cast it.
+  const [vote, setVote] = useState({ personaId: null, value: null });
   const [saved, setSaved] = useState(false);
   const [repliesOpen, setRepliesOpen] = useState(false);
+  const [tags, setTags] = useState(post.tags);
+  const [editingTags, setEditingTags] = useState(false);
+  const [tagDraft, setTagDraft] = useState("");
+  const [tagError, setTagError] = useState(null);
   const seedReplyCount = getSeedReplies(post.id).length;
+
+  const wasLiked = likedSet.has(post.id);
+  const helpful = vote.personaId === persona.id && vote.value !== null ? vote.value : wasLiked;
+  const helpfulCount = post.helpful_count + (helpful ? 1 : 0) - (wasLiked ? 1 : 0);
+  const isAuthor = persona.id === post.author_id;
+  // Prefer the mentor listing for a unit this post is about.
+  const authorListings = SEED_MENTORS.filter((m) => m.profile_id === post.author_id);
+  const authorListing =
+    authorListings.find((m) => post.unit_codes.includes(m.unit_code)) ?? authorListings[0];
+
+  function toggleHelpful() {
+    const next = !helpful;
+    setVote({ personaId: persona.id, value: next });
+    rememberVote(persona.id, post.id, next);
+    fetch("/api/helpful", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ post_id: post.id, profile_id: persona.id, action: next ? "like" : "unlike" }),
+    }).catch(() => {});
+  }
+
+  async function saveTags(e) {
+    e.preventDefault();
+    const next = tagDraft
+      .split(",")
+      .map((t) => t.trim().toLowerCase().replace(/\s+/g, "-"))
+      .filter(Boolean);
+    setTagError(null);
+    try {
+      const res = await fetch("/api/posts", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: post.id, author_id: persona.id, tags: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setTagError(data.error ?? "Could not save tags.");
+        return;
+      }
+      setTags(data.tags);
+      setEditingTags(false);
+    } catch {
+      setTagError("Could not save tags.");
+    }
+  }
 
   const text = displayText(post);
   const clampable = text.length > CLAMP_THRESHOLD;
@@ -155,31 +211,64 @@ export function PostCard({ post, author, reason }) {
             </div>
           )}
 
-          {(post.unit_codes.length > 0 || post.tags.length > 0) && (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {post.unit_codes.map((code) => (
-                <Link key={code} href={`/unit/${code}`}>
-                  <Badge
-                    variant="outline"
-                    className={cn("font-mono", CHIP_HOVER, "cursor-pointer")}
-                  >
-                    {code}
+          {editingTags ? (
+            <form onSubmit={saveTags} className="mt-2.5 flex flex-wrap items-center gap-2">
+              <input
+                value={tagDraft}
+                onChange={(e) => setTagDraft(e.target.value)}
+                placeholder="comma, separated, tags"
+                autoFocus
+                className="h-8 min-w-0 flex-1 rounded-full border bg-transparent px-3 text-sm outline-none focus:border-primary/50"
+              />
+              <Button type="submit" size="sm" className="rounded-full">
+                Save tags
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingTags(false)}>
+                Cancel
+              </Button>
+              {tagError && <p className="w-full text-xs text-destructive">{tagError}</p>}
+            </form>
+          ) : (
+            (post.unit_codes.length > 0 || tags.length > 0 || isAuthor) && (
+              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                {post.unit_codes.map((code) => (
+                  <Link key={code} href={`/unit/${code}`}>
+                    <Badge
+                      variant="outline"
+                      className={cn("font-mono", CHIP_HOVER, "cursor-pointer")}
+                    >
+                      {code}
+                    </Badge>
+                  </Link>
+                ))}
+                {tags.map((tag) => (
+                  <Badge key={tag} variant="secondary" className={CHIP_HOVER}>
+                    {tag}
                   </Badge>
-                </Link>
-              ))}
-              {post.tags.map((tag) => (
-                <Badge key={tag} variant="secondary" className={CHIP_HOVER}>
-                  {tag}
-                </Badge>
-              ))}
-            </div>
+                ))}
+                {isAuthor && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTagDraft(tags.join(", "));
+                      setEditingTags(true);
+                    }}
+                    className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+                    title="AI picked these tags. Fix them if they're wrong."
+                  >
+                    <Pencil className="size-3" />
+                    Edit tags
+                  </button>
+                )}
+              </div>
+            )
           )}
 
           <div className="mt-2 flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setHelpful((v) => !v)}
+              onClick={toggleHelpful}
               className={cn(
                 "text-muted-foreground transition-colors duration-300 ease-out",
                 helpful && "text-primary"
@@ -189,7 +278,7 @@ export function PostCard({ post, author, reason }) {
                 data-icon="inline-start"
                 className={cn(helpful && "fill-primary/20")}
               />
-              Helpful · {post.helpful_count + (helpful ? 1 : 0)}
+              Helpful · {helpfulCount}
             </Button>
             <Button
               variant="ghost"
@@ -218,16 +307,18 @@ export function PostCard({ post, author, reason }) {
               <MessageCircle data-icon="inline-start" />
               {seedReplyCount > 0 ? `Replies · ${seedReplyCount}` : "Reply"}
             </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              disabled
-              title="Wired in build step 4"
-              className="text-muted-foreground"
-            >
-              <MessageCircleQuestion data-icon="inline-start" />
-              Ask the author
-            </Button>
+            {authorListing && !isAuthor && (
+              <Link
+                href={`/mentors/${authorListing.unit_code}/${author.id}`}
+                className={cn(
+                  buttonVariants({ variant: "ghost", size: "sm" }),
+                  "text-muted-foreground transition-colors duration-300 ease-out hover:text-primary"
+                )}
+              >
+                <MessageCircleQuestion data-icon="inline-start" />
+                Ask {author.name.split(" ")[0]}&apos;s AI
+              </Link>
+            )}
           </div>
 
           {repliesOpen && <RepliesPanel postId={post.id} />}

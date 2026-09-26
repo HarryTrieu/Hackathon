@@ -15,6 +15,7 @@ import {
   EmptyHeader,
   EmptyTitle,
 } from "@/components/ui/empty";
+import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
 import { UserAvatar } from "@/components/user-avatar";
 import { getPostsByAuthor, getProfile } from "@/lib/seed";
@@ -47,7 +48,7 @@ export default async function ProfilePage({ params }) {
               {profile.verified && (
                 <Badge variant="secondary">
                   <BadgeCheck data-icon="inline-start" />
-                  Uni email verified
+                  Deakin email verified
                 </Badge>
               )}
             </div>
@@ -60,6 +61,8 @@ export default async function ProfilePage({ params }) {
           </div>
         </div>
       </div>
+
+      <MentorSection profileId={profile.id} />
 
       <Tabs defaultValue="posts" className="gap-0">
         <div className="border-b">

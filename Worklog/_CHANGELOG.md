@@ -2,6 +2,12 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 18:30 · Feature 4: AI mentor marketplace
+- Did: conversational mentor matching with reasons, AI mentor chat (5/day), become-a-mentor application with AI preview approval, human approval on /review, session requests, persisted Helpful votes as mentor reputation, author tag editing, MMK101 + 2 Business mentors
+- Did: shared `lib/gemini.js`; nav gets "Find a mentor", Search removed from nav (route kept)
+- Files: see `Worklog/features/mentor-marketplace.md`
+- Test: eslint 0, build clean (24 routes), live probes: vague input gets a follow-up, specific input gets a ranked list with reasons, AI refuses assignment writing, validation 400s (grade C, no conduct, gmail, short answers, bad option, bad id), tag edit 403/400, chat limit 429 on message 6 (bug found and fixed: HEAD count on a missing table returns null with no error). New tables not yet created in the live Supabase
+
 ### 2026-09-26 15:40 · Scope to Deakin University
 - Did: all seed unit codes mapped to real Deakin units (verified on deakin.edu.au handbook pages), official titles, Deakin wording (trimester, CloudDeakin, SplashKit); unit-code format now 3 letters + 3 digits in mock AI, Gemini prompt, and membership API; communities seeded from a 12-unit Deakin catalog, non-Deakin codes ignored
 - Files: `lib/seed.js`, `lib/communities.js`, `lib/enrich.js`, `app/api/membership/route.js`, `app/communities/page.js`, `public/demo/webpage.svg`

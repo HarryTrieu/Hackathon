@@ -19,6 +19,12 @@
 | `app/communities/page.js` | Unit directory grouped by course |
 | `app/unit/[code]/page.js` | Unit hub: members, mentors, posts |
 | `lib/communities.js` | Derived unit directory + membership storage |
+| `app/mentors/**` | Find a mentor: unit list, AI matcher, mentor page + AI chat |
+| `app/mentor/apply/page.js` | Mentor application with AI preview approval |
+| `lib/mentors.js` | Mentor questions, seed listings, intro, local fallbacks |
+| `lib/mentor-ai.js` | Server: listings loader, matcher, persona chat, preview |
+| `lib/gemini.js` | Server: shared Gemini REST call with lite fallback |
+| `app/api/mentors`, `match`, `mentor-chat`, `mentor-preview`, `session-request`, `helpful` | Mentor marketplace APIs |
 | `app/api/review/route.js` | Human review actions on flagged posts |
 | `app/review/page.js` | Flagged-post queue, approve or remove |
 | `lib/enrich.js` | Gemini labelling + deterministic mock |
@@ -64,3 +70,4 @@ All optional. Every route falls back to mock data when a key is missing. See `.e
 | `features/post-media.md` | Feature 1.5: images, link previews, upload, hover polish |
 | `features/posts-api.md` | Feature 2: publish with AI labels, Supabase, review queue |
 | `features/communities.md` | Feature 3: unit communities, replies, per-unit mentors |
+| `features/mentor-marketplace.md` | Feature 4: AI mentor matching, chat, applications, reputation |

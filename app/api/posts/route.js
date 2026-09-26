@@ -104,3 +104,57 @@ export async function POST(request) {
     persisted,
   });
 }
+
+const EditTags = z.object({
+  id: z.string().min(1).max(64),
+  author_id: z.string().refine((id) => PROFILE_IDS.includes(id), {
+    message: "Unknown author.",
+  }),
+  tags: z
+    .array(
+      z
+        .string()
+        .trim()
+        .toLowerCase()
+        .regex(/^[a-z0-9][a-z0-9-]{0,39}$/, "Tags are lowercase words or kebab-case, max 40 chars.")
+    )
+    .max(6, "Up to 6 tags."),
+});
+
+// Authors correct the AI's tags on their own posts.
+export async function PATCH(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Body must be JSON." }, { status: 400 });
+  }
+  const parsed = EditTags.safeParse(body);
+  if (!parsed.success) {
+    return Response.json(
+      { error: parsed.error.issues[0]?.message ?? "Invalid tags." },
+      { status: 400 }
+    );
+  }
+  const { id, author_id } = parsed.data;
+  const tags = [...new Set(parsed.data.tags)];
+
+  const db = supabaseAdmin();
+  if (!db) return Response.json({ tags, persisted: false });
+
+  const { data, error } = await db
+    .from("posts")
+    .update({ tags })
+    .eq("id", id)
+    .eq("author_id", author_id)
+    .select("id");
+  if (error) return Response.json({ tags, persisted: false });
+  if (data.length === 0) {
+    const { data: exists } = await db.from("posts").select("id").eq("id", id).maybeSingle();
+    if (exists) {
+      return Response.json({ error: "Only the author can edit tags." }, { status: 403 });
+    }
+    return Response.json({ tags, persisted: false });
+  }
+  return Response.json({ tags, persisted: true });
+}

@@ -14,6 +14,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
+import { MentorApplications } from "@/components/mentor-applications";
 import { getProfile, POSTS } from "@/lib/seed";
 
 export default function ReviewPage() {
@@ -77,6 +78,8 @@ export default function ReviewPage() {
           AI only flags posts, it never hides or deletes them. A person decides here.
         </p>
       </div>
+
+      <MentorApplications />
 
       {note && (
         <p className="border-b bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
