@@ -1,0 +1,14 @@
+---
+description: Vercel deploy — env vars and serverless limits
+globs: vercel.json,next.config.* 
+alwaysApply: false
+---
+
+# Vercel
+
+- Secrets live in Vercel → Settings → Environment Variables (Production + Preview as needed). After changing env, **Redeploy**.
+- Local: `.env.local` (gitignored). Commit `.env.example` with empty names only.
+- Hobby has short serverless timeouts and body size limits. Resize/compress images before upload. Keep Gemini prompts short. Always keep a mock path.
+- Prefer App Router `app/api/**/route.js` over inventing a second host. Do not add `vercel.json` complexity (Edge, middleware, headers packs) unless asked.
+- Demo backup: localhost still works if wifi dies. Do not assume only the `.vercel.app` URL.
+- Do not run `vercel` from a parent drive folder (e.g. `E:\DATA`). Only from the app repo root.

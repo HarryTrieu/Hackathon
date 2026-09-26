@@ -1,0 +1,119 @@
+---
+description: Worklog folder — architecture map + short per-feature notes. Token-conscious.
+alwaysApply: true
+---
+
+# Worklog folder (memory for humans + new chats)
+
+After meaningful implementation (and after user **go**), update `Worklog/` as below. **No secrets** (no keys, tokens, connection strings, `.env` values).
+
+## Is this expensive? (follow these caps)
+
+Worklogs **do use tokens** when written and when read. They save tokens if new chats `@` one short file instead of re-explaining the app.
+
+**Hard caps (do not violate):**
+- Do **not** paste full source code into Worklog files. Use **paths + line ranges** (e.g. `app/page.jsx` lines 40–85).
+- Each feature file: prefer **≤40 lines**. Split only if a feature is huge.
+- `Worklog/_ARCHITECTURE.md`: keep the map accurate; prefer **≤80 lines**.
+- New Agent chat: read `@Worklog/_ARCHITECTURE.md` first. Read **one** feature file only if the task touches that feature. Do **not** load every file in `Worklog/` every turn.
+- Skip Worklog updates for tiny one-line renames unless the user asks.
+- Product **flow** prose (user/server/mock vs live) belongs in `Docs/how-it-works/` per `07-how-it-works.mdc`, not as a second Worklog tree.
+
+## Folder layout
+
+```text
+Worklog/
+  _ARCHITECTURE.md     ← overall map (update when folders/files appear)
+  _CHANGELOG.md        ← newest entries at top (what happened this session)
+  features/
+    <feature-slug>.md  ← one file per feature/component slice
+```
+
+Create the folder on first implement if missing.
+
+## `_ARCHITECTURE.md` (top of the “system” doc)
+
+Keep this structure at the **top**, then a short stack note:
+
+```markdown
+# Architecture
+
+## Folder map
+| Path | Role |
+|------|------|
+| app/page.jsx | … |
+| app/api/… | … |
+| lib/… | … |
+| components/… | … |
+| Worklog/ | Human + agent memory (this folder) |
+
+## Stack
+Next.js App Router · Tailwind · shadcn · Supabase · Zod · Vercel
+
+## Demo path
+1. …
+2. …
+3. …
+
+## Env (names only)
+NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, …
+```
+
+Update the table when you add/remove important paths. Do not duplicate README.
+
+## `_CHANGELOG.md` (everything that happened, brief)
+
+Newest first. Each entry:
+
+```markdown
+### YYYY-MM-DD HH:MM — short title
+- Did: …
+- Files: `path` (lines a–b), `path2` (lines c–d)
+- Feature doc: `Worklog/features/<slug>.md`
+- Test: …
+```
+
+Max ~8 bullets per entry.
+
+## `features/<slug>.md` (one per feature)
+
+Slug examples: `home-ui`, `notes-api`, `supabase-wire`, `analyze-ai`.
+
+```markdown
+# <Feature name>
+
+## Purpose
+One paragraph.
+
+## Files
+| Path | Lines (approx) | What |
+|------|----------------|------|
+| app/api/notes/route.js | 1–80 | POST/GET notes |
+
+## What we implemented
+- Bullet list of behaviour (not code dumps)
+
+## How to test
+1. …
+2. …
+
+## Depends on
+- env names / other features
+
+## Out of scope
+- …
+```
+
+## After each approved implementation
+
+1. Update `Worklog/features/<slug>.md` (create or append).  
+2. Prepend a short entry to `Worklog/_CHANGELOG.md`.  
+3. Refresh `Worklog/_ARCHITECTURE.md` folder map if paths changed.  
+4. In the chat **## Done** section, point Harry to the feature md path.
+
+## Do not
+
+- Replace the real codebase with docs (code is source of truth; Worklog is the map).
+- Commit secrets into Worklog.
+- Write novels or paste entire diffs.
+- Create a new feature file for every tiny CSS tweak (append to the existing feature doc instead).

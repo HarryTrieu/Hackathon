@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" width="640" height="360" role="img" aria-label="Link thumbnail: open source web development curriculum">
+  <rect width="640" height="360" fill="#f4f6f7"/>
+  <rect x="0" y="0" width="640" height="118" fill="#2A7C99"/>
+  <text x="40" y="70" font-family="Segoe UI, Arial, sans-serif" font-size="27" font-weight="700" fill="#ffffff">Full-stack curriculum</text>
+  <text x="40" y="98" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#c4dde6">Free, open source, project based</text>
+
+  <rect x="40" y="152" width="170" height="80" rx="8" fill="#ffffff" stroke="#e2e5e7"/>
+  <text x="58" y="184" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1b1f22">Foundations</text>
+  <text x="58" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#7b8287">HTML, CSS, Git</text>
+
+  <rect x="234" y="152" width="170" height="80" rx="8" fill="#ffffff" stroke="#e2e5e7"/>
+  <text x="252" y="184" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1b1f22">JavaScript</text>
+  <text x="252" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#7b8287">DOM, async, testing</text>
+
+  <rect x="428" y="152" width="170" height="80" rx="8" fill="#ffffff" stroke="#e2e5e7"/>
+  <text x="446" y="184" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" fill="#1b1f22">Projects</text>
+  <text x="446" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="12" fill="#7b8287">Deploy real apps</text>
+
+  <text x="40" y="288" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#5c646b">You build the projects. Nobody hands you the answers.</text>
+  <rect x="40" y="306" width="118" height="28" rx="14" fill="#2A7C99"/>
+  <text x="64" y="325" font-family="Segoe UI, Arial, sans-serif" font-size="12" font-weight="600" fill="#ffffff">Start free</text>
+</svg>

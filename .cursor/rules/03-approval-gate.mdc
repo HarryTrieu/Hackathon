@@ -1,0 +1,83 @@
+---
+description: Approval gate — plan first, wait for user GO, then implement, then next steps.
+alwaysApply: true
+---
+
+# Approval gate (Harry decides)
+
+You must **not** implement big changes until the user explicitly approves.
+
+## Magic words that mean GO
+Treat any of these as approval to implement the **last plan you proposed** (or the plan in the same message if they pasted one):
+- `go`
+- `GO`
+- `approved`
+- `lfg`
+- `ship it`
+- `do it`
+- `implement`
+
+If they say `go` **and** change the plan in the same message, follow the updated plan.
+
+## Magic words that mean STOP / revise
+- `stop`, `wait`, `no`, `change plan`, `revise`
+→ Do not write more code. Ask what to change. Propose a new short plan.
+
+## When the user proposes an idea or a feature
+
+**Phase A — Plan only (default).** Do **not** edit files yet.
+
+Reply with a short plan in this shape:
+
+```text
+## Plan (waiting for GO)
+Goal: …
+Demo path: 1) … 2) … 3) …
+Files I will touch: …
+APIs / tables: …
+Stack pieces: … (nothing extra)
+Out of scope: …
+Risks: …
+## After I finish I will tell you to: …
+Reply **go** to implement, or tell me what to change.
+```
+
+Keep the plan short (roughly half a screen). No essays.
+
+**Phase B — Implement.** Only after GO.
+- Follow the approved plan. Smallest diff.
+- Do not expand scope mid-flight.
+- If you discover a blocker, stop and re-ask (new mini-plan).
+
+**Phase C — Next steps.** After implementing, always end with:
+
+```text
+## Done
+- What changed: …
+- How to verify: …
+## Your next steps
+1. …
+2. …
+3. …
+## Waiting
+Say **go** if you want the next chunk (name it), or describe the next idea.
+```
+
+## What counts as “needs approval”
+- New pages, new API routes, new dependencies
+- Scaffold / boilerplate / Product MVP builds
+- Auth, AI, database wiring, refactors across many files
+- Deleting files or changing env / deploy setup
+
+## What does NOT need a full plan first (still keep diffs small)
+- Answering questions (“what is Zod?”)
+- Explaining errors without editing
+- Tiny one-line fixes the user already named exactly (“rename title to X”)
+- Pure doc clarifications the user asked to write into a markdown file they named
+
+If unsure whether something is big: **plan first**.
+
+## Prompts that include “just build it” / full scaffold text
+If the user pastes a long scaffold prompt from `Prompt.md` that already says to build, still give a **5-bullet plan** first and ask for `go`, unless their message also contains a GO word.
+
+Exception: user says `go` in the **same** message as the scaffold prompt → implement.

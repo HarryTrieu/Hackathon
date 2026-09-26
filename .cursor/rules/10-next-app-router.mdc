@@ -1,0 +1,15 @@
+---
+description: Next.js App Router conventions for this hackathon
+globs: app/**/*.{js,jsx,ts,tsx}
+alwaysApply: false
+---
+
+# Next.js App Router
+
+- Default to **Server Components**. Add `"use client"` only for state, effects, events, camera, browser APIs. Push client to the smallest leaf.
+- Folders under `app/` are URLs. Special files: `page`, `layout`, `loading`, `error`, `not-found`. API: `app/api/**/route.js`.
+- Do not invent Pages Router APIs (`getServerSideProps`, `pages/`). This project is App Router.
+- Use `next/link` for internal links. Use `next/navigation` `useRouter` only in client components.
+- Keep secrets and Gemini/Mongo calls in `app/api/**` or `lib/` imported only from those routes — never from `"use client"` files.
+- Prefer `loading.js` / `loading.jsx` for slow segments instead of custom spinner systems.
+- Ignore unless asked: middleware, ISR, parallel routes, intercepting routes, `generateStaticParams`.

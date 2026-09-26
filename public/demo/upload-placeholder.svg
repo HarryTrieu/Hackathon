@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Mock upload placeholder">
+  <rect width="800" height="450" fill="#f2f5f6"/>
+  <rect x="24" y="24" width="752" height="402" rx="12" fill="#ffffff" stroke="#d8dee1" stroke-dasharray="10 8"/>
+  <rect x="332" y="168" width="136" height="100" rx="10" fill="#e3edf1"/>
+  <circle cx="370" cy="202" r="11" fill="#9cc2d1"/>
+  <polygon points="346,254 388,214 420,254" fill="#9cc2d1"/>
+  <polygon points="404,254 432,226 454,254" fill="#bcd6e0"/>
+  <text x="400" y="306" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="17" font-weight="600" fill="#39444a">Mock upload</text>
+  <text x="400" y="332" text-anchor="middle" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#7b8287">Cloudinary keys are not set, so this stand-in image was used.</text>
+</svg>

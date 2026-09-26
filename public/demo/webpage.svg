@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" width="800" height="450" role="img" aria-label="Demo first personal webpage screenshot">
+  <rect width="800" height="450" fill="#ffffff"/>
+  <rect x="0" y="0" width="800" height="38" fill="#f1f3f4"/>
+  <circle cx="22" cy="19" r="5" fill="#d9dcde"/>
+  <circle cx="40" cy="19" r="5" fill="#d9dcde"/>
+  <circle cx="58" cy="19" r="5" fill="#d9dcde"/>
+  <rect x="80" y="10" width="300" height="18" rx="9" fill="#ffffff"/>
+  <text x="94" y="23" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#8a9298">minhle.github.io</text>
+
+  <rect x="0" y="38" width="800" height="150" fill="#f7f9fa"/>
+  <circle cx="92" cy="112" r="34" fill="#cfe0e7"/>
+  <text x="80" y="120" font-family="Segoe UI, Arial, sans-serif" font-size="22" font-weight="700" fill="#2A7C99">ML</text>
+  <text x="152" y="102" font-family="Segoe UI, Arial, sans-serif" font-size="26" font-weight="700" fill="#1b1f22">Hi, I'm Minh</text>
+  <text x="152" y="130" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#6b7378">First year IT student. This is my first ever webpage.</text>
+
+  <text x="60" y="234" font-family="Segoe UI, Arial, sans-serif" font-size="15" font-weight="700" fill="#1b1f22">What I'm learning</text>
+  <rect x="60" y="250" width="210" height="96" rx="8" fill="#ffffff" stroke="#e6e8ea"/>
+  <text x="78" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#2A7C99">HTML + CSS</text>
+  <text x="78" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">Built this page by hand,</text>
+  <text x="78" y="324" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">no template.</text>
+
+  <rect x="292" y="250" width="210" height="96" rx="8" fill="#ffffff" stroke="#e6e8ea"/>
+  <text x="310" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#2A7C99">Python</text>
+  <text x="310" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">COS10009 labs, plus a</text>
+  <text x="310" y="324" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">dice game I made.</text>
+
+  <rect x="524" y="250" width="210" height="96" rx="8" fill="#ffffff" stroke="#e6e8ea"/>
+  <text x="542" y="282" font-family="Segoe UI, Arial, sans-serif" font-size="13" font-weight="600" fill="#2A7C99">Next up</text>
+  <text x="542" y="306" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">JavaScript, so buttons</text>
+  <text x="542" y="324" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#7b8287">actually do something.</text>
+
+  <line x1="60" y1="382" x2="740" y2="382" stroke="#eceef0"/>
+  <text x="60" y="410" font-family="Segoe UI, Arial, sans-serif" font-size="11" fill="#9aa1a6">Hosted free on GitHub Pages</text>
+</svg>

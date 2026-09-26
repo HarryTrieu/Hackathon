@@ -1,0 +1,79 @@
+---
+description: Docs/how-it-works — product flow docs. Worklog stays at repo root.
+alwaysApply: true
+---
+
+# How-it-works docs (product understanding)
+
+After meaningful implementation (and after user **go**), keep `Docs/how-it-works/` accurate. This is **not** a second Worklog.
+
+## Split (do not merge these jobs)
+
+| Location | Job |
+|----------|-----|
+| `Worklog/` (repo root) | Short memory: what changed, paths, how to retest. Ruled by `04-worklog.mdc`. |
+| `Docs/how-it-works/` | How the **product** behaves: user flow, server flow, mock vs live, rules layers. |
+
+**Never** put Worklog under `Docs/`. **Never** invent `Docs/Worklog/`.
+
+## Folder layout
+
+```text
+Docs/
+  how-it-works/
+    00-overview.md
+    features/
+      <feature-slug>.md
+```
+
+Create on first meaningful feature if missing.
+
+## When to update
+- After a vertical slice / API / demo-path change that alters behaviour.
+- Skip for typos, pure CSS tweaks, or one-line renames unless the user asks.
+
+## Token caps
+- No source-code dumps. Numbered workflows + file paths only.
+- `00-overview.md` prefer **≤100 lines**.
+- Each feature doc prefer **≤60 lines**.
+- New chat: default `@Worklog/_ARCHITECTURE.md`. Add `@Docs/how-it-works/00-overview.md` only when the task needs product-flow understanding. Do **not** load every how-it-works file every turn.
+- No API keys, tokens, connection strings, or `.env` values in Docs.
+
+## `00-overview.md` required shape
+
+```markdown
+# How The App Works
+
+## User Flow
+1. What the user opens
+2. What they enter or click
+3. Request the browser sends (shape only, no secrets)
+
+## Server Workflow
+1. Which route receives it
+2. Validation (e.g. Zod)
+3. Mock behaviour when env keys are missing
+4. Live AI/DB behaviour when keys exist
+5. Normalization / business-rules layers
+6. What the UI displays
+
+## Main Files
+| Path | Owns |
+|------|------|
+
+## What we do not store or build
+- …
+```
+
+## `features/<slug>.md` required sections
+- Purpose  
+- User workflow (numbered)  
+- Files and responsibilities  
+- Data flow and dependencies  
+- How to test  
+- Out of scope  
+
+## Relationship to Worklog
+1. Update `Worklog/` (changelog + short feature note) per `04-worklog.mdc`.  
+2. Update `Docs/how-it-works/` for behaviour/flow.  
+3. Point the feature Worklog note at the how-it-works path when useful (`Docs/how-it-works/features/<slug>.md`).

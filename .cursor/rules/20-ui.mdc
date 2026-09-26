@@ -1,0 +1,36 @@
+---
+description: Hackathon UI — shadcn + Tailwind, readable demo screens, no AI slop.
+globs: app/**/*.{jsx,tsx,js,ts,css}, components/**/*.{jsx,tsx,js,ts}, src/**/*.{jsx,tsx,js,ts,css}
+alwaysApply: false
+---
+
+# UI rules (48h hackathon)
+
+Use when editing pages, components, or styles. Pair with the **shadcn** Cursor plugin if the project uses shadcn/ui.
+
+## Default stack
+- Tailwind for layout and spacing.
+- Prefer **shadcn/ui** primitives (`Button`, `Input`, `Card`, `Label`, `Textarea`) when already installed or when the user asks to set them up.
+- Do not add a second UI kit (MUI, Chakra, Ant, Daisy) unless the user explicitly asks.
+- Prefer **JavaScript** + existing project patterns.
+
+## Look (anti-slop)
+- One clear visual direction. Define CSS variables or Tailwind theme tokens once.
+- Avoid: purple-on-white / purple-indigo gradients, glow everywhere, pill spam, multi-layer shadows, emoji decoration, generic “AI SaaS” card grids.
+- Prefer: big readable type, one accent colour, strong contrast, generous whitespace, real hierarchy (title → action → result).
+- First viewport: one job. Title, short line, primary CTA, result area. No dashboard clutter.
+
+## Demo UX (non-negotiable)
+- Every async action needs **loading**, **empty**, and **error** UI (or mock success).
+- Buttons need clear labels (`Analyze`, `Submit`, not icon-only).
+- Works on laptop and phone width (~375px). Tap targets large enough for a finger.
+- Show the result **on the same path** the judges click. Do not hide success behind a buried menu.
+
+## Motion
+- Optional: 1–2 subtle fades/staggers (result appear). Skip fancy motion if it risks the build.
+- Do not add Framer Motion unless asked or already in `package.json`.
+
+## Process
+- If shadcn is not initialized and the user wants nicer UI, run the official init / add components rather than hand-rolling Button CSS.
+- Reuse `components/ui/*`. Do not duplicate primitives.
+- Smallest diff. No redesign of unrelated pages.
