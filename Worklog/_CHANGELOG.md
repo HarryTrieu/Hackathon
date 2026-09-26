@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 00:20 · Featured long posts for the AI summary demo
+- Did: 5 long seed posts (f1-f5) with an AI summary, a photo (picsum.photos) and a link preview, each tuned to rank first in For you for one persona: f1 Lan (p8), f2 Aisha (p10), f3 Minh (p7), f4 Duc/Sarah (p2/p1), f5 Hannah (p13). Upserted only f1-f5 into live Supabase (did not re-run the full seed, so live Helpful counts are untouched)
+- Files: `lib/seed.js`
+- Test: eslint 0; ranking simulated on live `/api/posts`: every persona gets an f-post at #1. Images are external (picsum.photos), so they need internet during the demo
+
 ### 2026-09-27 00:00 · Per-tab scroll on the home feed
 - Did: switching For you / Hot / New kept the shared window scroll, so the new tab opened mid-list. Tabs are now controlled; each tab remembers its scroll offset, a first visit starts at the top, a return restores the old offset
 - Files: `components/feed.jsx`
