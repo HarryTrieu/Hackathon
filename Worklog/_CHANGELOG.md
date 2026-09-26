@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-26 22:00 · Fix left-nav Post button
+- Did: Post button did nothing outside Home (composer only lives on the feed) and gave no visible feedback on Home. Now scrolls to and focuses the composer on Home; elsewhere goes to `/?compose=1`, which focuses the composer once and strips the param
+- Files: `components/left-nav.jsx`, `components/composer.jsx` (`focusComposer`)
+- Test: eslint 0; `/`, `/?compose=1`, `/mentors`, `/communities` return 200. Click flow not browser-tested
+
 ### 2026-09-26 21:20 · Checklist catch-up, tags, avatars, Times, helpful fix
 - Did: match 3s reveal + card hover/gradient; follow/filter tags; most seed posts get media; delete own post; helpful -1 bug (cache mutation); Dicebear avatars; Times New Roman; home CTAs + 3-step; reset demo + switch role; availability, sample labels, stats, visa/MH refusals, filters, 3 extra mentors (12 listings), event funnel
 - Test: eslint 0. Mock hard-chat 5/5 correct. Matcher: calm+VN → Hannah, exam+direct → James, ask-me → follow-up. Production build not run this pass.
