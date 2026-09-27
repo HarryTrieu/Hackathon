@@ -7,6 +7,12 @@ Newest entries at the top. No secrets.
 - Files: `lib/rank.js`
 - Test: eslint 0; simulated all 6 personas: lp2 then jr6 (Lan #4/#5), 58 posts, no duplicates, #1/#2 unchanged
 
+### 2026-09-27 12:00 · Clear notifications
+- Did: "Clear all" and a per-row ✕ on the All tab, with Undo for the last clear. Clearing hides keys for that persona in localStorage (`sodu-notif-cleared:<id>`) and marks them seen; the underlying likes/replies/requests are untouched. A request that changes status gets a new key and reappears. Requests tab is not affected, so pending requests cannot be cleared by accident
+- Files: `lib/use-notifications.js`, `app/notifications/page.js`
+- Test: eslint 0; `/notifications` 200. Clear / undo flow not browser-tested
+- Follow-up: Requests tab gets the same Clear all / ✕ / Undo (`requestKey`, `canClearRequest`). Sent requests clear by id+status, so a status change brings them back; requests to you can only be cleared once answered, pending ones stay until accepted/declined. Undo is per tab
+
 ### 2026-09-27 11:50 · Job referral posts + scrollable sidebar lists
 - Did: 8 job referral seed posts (jr1-jr8) from alumni and seniors (Google SWE, Canva analyst, startup frontend, Atlassian "what a referral changes", REA UX, PwC vacationer, skincare marketing assistant, a mentee asking how to ask) with photos, plus 6 replies (r18-r23). All model safe practice: apply officially first, reply in-thread, no contact details, a referral is not a pass through interviews. jr9 is a flagged "$150 guaranteed referral" scam post for the moderator queue. Upserted only jr1-jr9 and r18-r23 into live Supabase (existing Helpful counts untouched). Mock tagger knows `referral` and `jobs`. Suggested mentors and Students now list everyone in a scrollable box (about 3.5 rows tall)
 - Files: `lib/seed.js`, `lib/enrich.js`, `components/right-sidebar.jsx`
