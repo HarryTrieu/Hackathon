@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 11:30 · Faster notifications (and every API route on Vercel)
+- Did: functions ran in Vercel's default iad1 (Washington) while Supabase and users are in Australia, so each query crossed the Pacific; `vercel.json` pins functions to syd1. Notifications API: likes and replies inner-join their post filtered on author, so all 5 queries run in one parallel round trip instead of posts-then-the-rest. Client hook: one shared stale-while-revalidate cache per persona (instant render from cache, background refresh after 15s, forced after accept/decline), one request in flight per persona (nav and page used different dedupe keys, so each open fired two identical requests)
+- Files: `vercel.json`, `app/api/notifications/route.js`, `lib/use-notifications.js`
+- Test: eslint 0; API output byte-identical to the old version for p8, p2, p13, p4, p1; local warm ~85ms to ~50ms; prod before the change 0.8 to 1.9s per call (`x-vercel-id` showed syd1::iad1). Region change and client cache not yet verified on prod or in a browser
+
 ### 2026-09-27 10:45 · Notifications + accept/decline session requests
 - Did: `/notifications` (All / Requests tabs) and a bell with unread badge in desktop and mobile nav (not for admin). Notifications are derived from existing tables, no new table: Helpful votes and replies on your posts, session requests you received, status changes on requests you sent, your mentor application decisions (non-demo). Mentors can Accept / Decline pending requests; the mentee then sees "accepted/declined". Read state = seen notification keys per persona in localStorage (a status change makes a new key, so it shows unread again)
 - API: `GET /api/notifications?profile_id=`, `PATCH /api/session-request` (only a `sent` request owned by that mentor can change; replay → 409)

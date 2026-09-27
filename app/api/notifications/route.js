@@ -19,34 +19,25 @@ export async function GET(request) {
   const db = supabaseAdmin();
   if (!db) return Response.json({ notifications: [], requests: { sent: [], received: [] }, persisted: false });
 
-  const { data: myPosts } = await db
-    .from("posts")
-    .select("id, text")
-    .eq("author_id", profileId)
-    .neq("status", "removed")
-    .limit(200);
-  const postText = new Map((myPosts ?? []).map((p) => [p.id, p.text]));
-  const postIds = [...postText.keys()];
-
+  // Likes and replies join their post (inner join filtered on the author),
+  // so every query runs in one parallel round trip.
   const [likes, replies, sent, received, apps] = await Promise.all([
-    postIds.length
-      ? db
-          .from("post_likes")
-          .select("post_id, profile_id, created_at")
-          .in("post_id", postIds)
-          .neq("profile_id", profileId)
-          .order("created_at", { ascending: false })
-          .limit(50)
-      : { data: [] },
-    postIds.length
-      ? db
-          .from("replies")
-          .select("id, post_id, author_id, text, created_at")
-          .in("post_id", postIds)
-          .neq("author_id", profileId)
-          .order("created_at", { ascending: false })
-          .limit(50)
-      : { data: [] },
+    db
+      .from("post_likes")
+      .select("post_id, profile_id, created_at, posts!inner(text, author_id, status)")
+      .eq("posts.author_id", profileId)
+      .neq("posts.status", "removed")
+      .neq("profile_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(50),
+    db
+      .from("replies")
+      .select("id, post_id, author_id, text, created_at, posts!inner(text, author_id, status)")
+      .eq("posts.author_id", profileId)
+      .neq("posts.status", "removed")
+      .neq("author_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(50),
     db
       .from("session_requests")
       .select("*")
@@ -74,7 +65,7 @@ export async function GET(request) {
       key: `like:${l.post_id}:${l.profile_id}`,
       type: "like",
       actor_id: l.profile_id,
-      post_excerpt: excerpt(postText.get(l.post_id)),
+      post_excerpt: excerpt(l.posts?.text),
       created_at: l.created_at,
     })),
     ...(replies.data ?? []).map((r) => ({
@@ -82,7 +73,7 @@ export async function GET(request) {
       type: "reply",
       actor_id: r.author_id,
       text: excerpt(r.text, 120),
-      post_excerpt: excerpt(postText.get(r.post_id)),
+      post_excerpt: excerpt(r.posts?.text),
       created_at: r.created_at,
     })),
     ...(received.data ?? []).map((r) => ({
