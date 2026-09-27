@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 13:45 · Lan's resources with YouTube thumbnails
+- Did: Lan (p8) gets 6 resources: 3 YouTube videos (4Ps explainer, Accounting Stuff financial statements, McKinsey case interview demo) and 3 sites (Deakin Abroad trimester abroad, DeakinTALENT, HubSpot Academy). New `ResourceLink` card on every profile's Path tab: YouTube watch links show the video thumbnail with a play badge, other links show the site icon (Google favicon service), plus an optional `note` line
+- Files: `components/resource-link.jsx`, `app/profile/[id]/page.js`, `lib/seed.js`
+- Test: eslint 0; all 3 video IDs confirmed via YouTube oEmbed, thumbnails and icons return 200; `/profile/p8` renders 3 thumbnails + 3 icons; `/profile/p1` 200. Deakin pages 403 to scripts, so their URLs were confirmed via web search, not fetched. Not viewed in a browser
+
 ### 2026-09-27 13:05 · PwC referral pinned under Lan's exchange question
 - Did: For you places jr6 (James's PwC vacationer referral) directly after lp2 (Lan's "exchange in T1 or T2 vs internship recruiting" question) for every persona; s3 stays pinned at #2
 - Files: `lib/rank.js`

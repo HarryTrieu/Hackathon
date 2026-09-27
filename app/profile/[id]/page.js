@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   BookOpen,
   Briefcase,
-  ExternalLink,
   Link2,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +16,7 @@ import {
 } from "@/components/ui/empty";
 import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
+import { ResourceLink } from "@/components/resource-link";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { UserAvatar } from "@/components/user-avatar";
 import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
@@ -143,21 +143,7 @@ export default async function ProfilePage({ params }) {
                   </p>
                 )}
                 {profile.resources.map((res) => (
-                  <a
-                    key={res.label}
-                    href={res.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between rounded-lg border p-3 text-sm transition-all hover:border-primary/40 hover:bg-muted/50"
-                  >
-                    <span className="min-w-0">
-                      <span className="font-medium">{res.label}</span>
-                      <Badge variant="secondary" className="ml-2">
-                        {res.type}
-                      </Badge>
-                    </span>
-                    <ExternalLink className="size-4 shrink-0 text-muted-foreground" />
-                  </a>
+                  <ResourceLink key={res.url} resource={res} />
                 ))}
               </CardContent>
             </Card>
