@@ -9,11 +9,16 @@ import { usePersona } from "@/lib/persona-context";
 import { POSTS, PROFILES } from "@/lib/seed";
 import { trendingTags, suggestedMentors, suggestedStudents } from "@/lib/rank";
 
+// About three and a half rows tall, so a cut-off row hints there is more.
+const SCROLL_LIST =
+  "flex max-h-48 flex-col gap-1 overflow-x-hidden overflow-y-auto overscroll-contain [scrollbar-width:thin]";
+
 export function RightSidebar() {
   const { persona } = usePersona();
   const tags = trendingTags(POSTS);
-  const mentors = suggestedMentors(PROFILES, persona);
-  const students = persona.role === "mentor" ? suggestedStudents(PROFILES, persona) : [];
+  const mentors = suggestedMentors(PROFILES, persona, Infinity);
+  const students =
+    persona.role === "mentor" ? suggestedStudents(PROFILES, persona, Infinity) : [];
 
   return (
     <aside className="sticky top-0 hidden h-svh w-72 shrink-0 flex-col gap-4 overflow-y-auto px-4 py-4 lg:flex">
@@ -35,7 +40,7 @@ export function RightSidebar() {
         <CardHeader>
           <CardTitle className="text-base">Suggested mentors</CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-1">
+        <CardContent className={SCROLL_LIST}>
           {mentors.map((m) => (
             <Link
               key={m.id}
@@ -61,7 +66,7 @@ export function RightSidebar() {
           <CardHeader>
             <CardTitle className="text-base">Students</CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-1">
+          <CardContent className={SCROLL_LIST}>
             {students.map((s) => (
               <Link
                 key={s.id}

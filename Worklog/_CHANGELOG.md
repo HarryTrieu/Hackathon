@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 11:50 · Job referral posts + scrollable sidebar lists
+- Did: 8 job referral seed posts (jr1-jr8) from alumni and seniors (Google SWE, Canva analyst, startup frontend, Atlassian "what a referral changes", REA UX, PwC vacationer, skincare marketing assistant, a mentee asking how to ask) with photos, plus 6 replies (r18-r23). All model safe practice: apply officially first, reply in-thread, no contact details, a referral is not a pass through interviews. jr9 is a flagged "$150 guaranteed referral" scam post for the moderator queue. Upserted only jr1-jr9 and r18-r23 into live Supabase (existing Helpful counts untouched). Mock tagger knows `referral` and `jobs`. Suggested mentors and Students now list everyone in a scrollable box (about 3.5 rows tall)
+- Files: `lib/seed.js`, `lib/enrich.js`, `components/right-sidebar.jsx`
+- Test: eslint 0; ranking simulated for all 6 personas: #1 featured post and #2 s3 unchanged, referral posts land #3 to #9 for most; Hot top 5 unchanged; `referral` enters trending tags; live `/api/posts` returns jr1-jr9. Sidebar scroll not browser-tested
+
 ### 2026-09-27 11:30 · Faster notifications (and every API route on Vercel)
 - Did: functions ran in Vercel's default iad1 (Washington) while Supabase and users are in Australia, so each query crossed the Pacific; `vercel.json` pins functions to syd1. Notifications API: likes and replies inner-join their post filtered on author, so all 5 queries run in one parallel round trip instead of posts-then-the-rest. Client hook: one shared stale-while-revalidate cache per persona (instant render from cache, background refresh after 15s, forced after accept/decline), one request in flight per persona (nav and page used different dedupe keys, so each open fired two identical requests)
 - Files: `vercel.json`, `app/api/notifications/route.js`, `lib/use-notifications.js`
