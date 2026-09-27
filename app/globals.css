@@ -127,6 +127,12 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Selects are bg-transparent, so Chrome's native list falls back to white
+     while the text stays the theme foreground: invisible in dark mode. */
+  select option,
+  select optgroup {
+    @apply bg-popover text-popover-foreground;
+  }
   html {
     font-family: "Times New Roman", Times, Georgia, serif;
     word-spacing: 0.12em;
