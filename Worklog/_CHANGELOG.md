@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-09-27 13:05 · PwC referral pinned under Lan's exchange question
+- Did: For you places jr6 (James's PwC vacationer referral) directly after lp2 (Lan's "exchange in T1 or T2 vs internship recruiting" question) for every persona; s3 stays pinned at #2
+- Files: `lib/rank.js`
+- Test: eslint 0; simulated all 6 personas: lp2 then jr6 (Lan #4/#5), 58 posts, no duplicates, #1/#2 unchanged
+
 ### 2026-09-27 11:50 · Job referral posts + scrollable sidebar lists
 - Did: 8 job referral seed posts (jr1-jr8) from alumni and seniors (Google SWE, Canva analyst, startup frontend, Atlassian "what a referral changes", REA UX, PwC vacationer, skincare marketing assistant, a mentee asking how to ask) with photos, plus 6 replies (r18-r23). All model safe practice: apply officially first, reply in-thread, no contact details, a referral is not a pass through interviews. jr9 is a flagged "$150 guaranteed referral" scam post for the moderator queue. Upserted only jr1-jr9 and r18-r23 into live Supabase (existing Helpful counts untouched). Mock tagger knows `referral` and `jobs`. Suggested mentors and Students now list everyone in a scrollable box (about 3.5 rows tall)
 - Files: `lib/seed.js`, `lib/enrich.js`, `components/right-sidebar.jsx`
