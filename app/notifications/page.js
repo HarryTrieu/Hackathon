@@ -5,10 +5,13 @@ import Link from "next/link";
 import {
   BadgeCheck,
   Bell,
+  BellOff,
   CalendarPlus,
   CheckCircle2,
   MessageCircle,
   ThumbsUp,
+  Undo2,
+  X,
   XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -25,7 +28,14 @@ import {
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile } from "@/lib/seed";
-import { markSeen, useNotifications } from "@/lib/use-notifications";
+import {
+  canClearRequest,
+  clearNotifications,
+  markSeen,
+  requestKey,
+  restoreNotifications,
+  useNotifications,
+} from "@/lib/use-notifications";
 import { cn } from "@/lib/utils";
 
 function timeAgo(iso) {
@@ -45,6 +55,48 @@ const STATUS_BADGE = {
 function StatusBadge({ status }) {
   const s = STATUS_BADGE[status] ?? STATUS_BADGE.sent;
   return <Badge variant={s.variant}>{s.label}</Badge>;
+}
+
+// Count + "Clear all", or "Cleared N" + Undo right after a clear.
+function ClearBar({ count, noun, undoKeys, onClear, onUndo }) {
+  if (count === 0 && !undoKeys) return null;
+  const plural = (n) => `${n} ${noun}${n === 1 ? "" : "s"}`;
+  return (
+    <div className="flex items-center justify-between gap-2 border-b px-4 py-2 text-sm">
+      <span className="text-muted-foreground">
+        {undoKeys ? `Cleared ${plural(undoKeys.length)}.` : plural(count)}
+      </span>
+      <div className="flex gap-1">
+        {undoKeys && (
+          <Button size="sm" variant="ghost" className="rounded-full" onClick={onUndo}>
+            <Undo2 data-icon="inline-start" />
+            Undo
+          </Button>
+        )}
+        {count > 0 && (
+          <Button size="sm" variant="ghost" className="rounded-full text-muted-foreground" onClick={onClear}>
+            <BellOff data-icon="inline-start" />
+            Clear all
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ✕ on a card or row: always visible on touch screens, on hover for mouse.
+function ClearButton({ label, onClick }) {
+  return (
+    <Button
+      size="icon-sm"
+      variant="ghost"
+      aria-label={label}
+      onClick={onClick}
+      className="absolute top-2.5 right-2 rounded-full text-muted-foreground transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+    >
+      <X />
+    </Button>
+  );
 }
 
 // One row in the All tab: icon, who did what, and a short quote.
@@ -110,6 +162,25 @@ export default function NotificationsPage() {
   const [note, setNote] = useState(null);
   const notif = useNotifications(persona.id);
   const { ready, notifications, requests } = notif;
+  // Last clear, so it can be undone. Tied to the persona and tab it came from.
+  const [lastClear, setLastClear] = useState(null);
+  const undoKeysFor = (where) =>
+    lastClear?.personaId === persona.id && lastClear.where === where ? lastClear.keys : null;
+
+  function clear(where, keys) {
+    clearNotifications(persona.id, keys);
+    setLastClear({ personaId: persona.id, where, keys });
+  }
+
+  function undoClear() {
+    restoreNotifications(persona.id, lastClear.keys);
+    setLastClear(null);
+  }
+
+  const clearableRequestKeys = [
+    ...requests.received.filter((r) => canClearRequest(r, "received")).map((r) => requestKey(r, "received")),
+    ...requests.sent.map((r) => requestKey(r, "sent")),
+  ];
 
   // Opening the page reads everything; rows stay highlighted via isFresh.
   const keys = notifications.map((n) => n.key).join("|");
@@ -186,13 +257,22 @@ export default function NotificationsPage() {
               ))}
             </div>
           )}
+          {ready && (
+            <ClearBar
+              count={notifications.length}
+              noun="notification"
+              undoKeys={undoKeysFor("all")}
+              onClear={() => clear("all", notifications.map((n) => n.key))}
+              onUndo={undoClear}
+            />
+          )}
           {ready && notifications.length === 0 && (
             <Empty className="my-12">
               <EmptyHeader>
                 <EmptyMedia variant="icon">
                   <Bell />
                 </EmptyMedia>
-                <EmptyTitle>No notifications yet</EmptyTitle>
+                <EmptyTitle>{undoKeysFor("all") ? "All clear" : "No notifications yet"}</EmptyTitle>
                 <EmptyDescription>
                   When someone finds your post helpful, replies to you, or answers a session request,
                   it shows up here.
@@ -235,25 +315,44 @@ export default function NotificationsPage() {
               </>
             );
             const rowClass = cn(
-              "flex w-full items-start gap-3 border-b px-4 py-3 text-left transition-colors hover:bg-muted/50",
+              "flex w-full items-start gap-3 border-b py-3 pr-12 pl-4 text-left transition-colors hover:bg-muted/50",
               notif.isFresh(n.key) && "bg-primary/[0.05]"
             );
-            return d.href ? (
-              <Link key={n.key} href={d.href} className={rowClass}>
-                {content}
-              </Link>
-            ) : (
-              <button key={n.key} type="button" onClick={() => setTab(d.tab)} className={rowClass}>
-                {content}
-              </button>
+            return (
+              <div key={n.key} className="group relative">
+                {d.href ? (
+                  <Link href={d.href} className={rowClass}>
+                    {content}
+                  </Link>
+                ) : (
+                  <button type="button" onClick={() => setTab(d.tab)} className={rowClass}>
+                    {content}
+                  </button>
+                )}
+                <ClearButton label="Clear notification" onClick={() => clear("all", [n.key])} />
+              </div>
             );
           })}
         </TabsContent>
 
         <TabsContent value="requests">
+          {ready && (
+            <ClearBar
+              count={clearableRequestKeys.length}
+              noun="request"
+              undoKeys={undoKeysFor("requests")}
+              onClear={() => clear("requests", clearableRequestKeys)}
+              onUndo={undoClear}
+            />
+          )}
           {(persona.role === "mentor" || requests.received.length > 0) && (
             <section className="border-b px-4 py-4">
               <h2 className="mb-3 text-sm font-semibold">Requests to you</h2>
+              {pendingIn > 0 && (
+                <p className="-mt-2 mb-3 text-xs text-muted-foreground">
+                  Pending requests stay here until you accept or decline them.
+                </p>
+              )}
               {ready && requests.received.length === 0 && (
                 <p className="text-sm text-muted-foreground">
                   No session requests yet. Helpful answers in your unit communities raise you in mentor search.
@@ -263,8 +362,18 @@ export default function NotificationsPage() {
                 {requests.received.map((r) => {
                   const mentee = getProfile(r.mentee_id);
                   if (!mentee) return null;
+                  const clearable = canClearRequest(r, "received");
                   return (
-                    <div key={r.id} className="flex gap-3 rounded-xl border p-3">
+                    <div
+                      key={r.id}
+                      className={cn("group relative flex gap-3 rounded-xl border p-3", clearable && "pr-12")}
+                    >
+                      {clearable && (
+                        <ClearButton
+                          label="Clear request"
+                          onClick={() => clear("requests", [requestKey(r, "received")])}
+                        />
+                      )}
                       <UserAvatar profile={mentee} className="size-9" textClassName="text-xs" />
                       <div className="min-w-0 flex-1 space-y-2 text-sm">
                         <div className="flex flex-wrap items-center gap-2">
@@ -305,7 +414,7 @@ export default function NotificationsPage() {
             <h2 className="mb-3 text-sm font-semibold">Requests you sent</h2>
             {ready && requests.sent.length === 0 && (
               <div className="space-y-3 text-sm text-muted-foreground">
-                <p>You haven&apos;t requested a session yet.</p>
+                <p>No session requests to show.</p>
                 <Link href="/mentors" className={cn(buttonVariants({ size: "sm" }), "rounded-full")}>
                   Find a mentor
                 </Link>
@@ -316,7 +425,11 @@ export default function NotificationsPage() {
                 const mentor = getProfile(r.mentor_id);
                 if (!mentor) return null;
                 return (
-                  <div key={r.id} className="flex gap-3 rounded-xl border p-3">
+                  <div key={r.id} className="group relative flex gap-3 rounded-xl border p-3 pr-12">
+                    <ClearButton
+                      label="Clear request"
+                      onClick={() => clear("requests", [requestKey(r, "sent")])}
+                    />
                     <UserAvatar profile={mentor} className="size-9" textClassName="text-xs" />
                     <div className="min-w-0 flex-1 space-y-1 text-sm">
                       <div className="flex flex-wrap items-center gap-2">
