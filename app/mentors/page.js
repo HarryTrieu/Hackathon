@@ -6,6 +6,7 @@ import { GraduationCap, Sparkles, Star, UserPlus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { HoverGlow } from "@/components/hover-glow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { UNIVERSITY, unitsByCourse } from "@/lib/communities";
 import { cn } from "@/lib/utils";
@@ -75,10 +76,11 @@ export default function MentorsPage() {
                 const n = counts?.[unit.code] ?? 0;
                 return (
                   <Link key={unit.code} href={`/mentors/${unit.code}`}>
-                    <Card className="h-full py-4 transition-all duration-300 ease-out hover:border-primary/40 hover:shadow-sm">
-                      <CardContent className="px-4">
+                    <Card className="relative h-full py-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40">
+                      <HoverGlow />
+                      <CardContent className="relative px-4">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="font-mono text-sm font-bold">{unit.code}</span>
+                          <span className="font-mono text-sm font-bold text-primary">{unit.code}</span>
                           {counts === null ? (
                             <Skeleton className="h-5 w-16" />
                           ) : (

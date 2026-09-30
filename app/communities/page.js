@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Users, MessageSquareText, GraduationCap } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { HoverGlow } from "@/components/hover-glow";
 import { UNIVERSITY, unitsByCourse } from "@/lib/communities";
 import { POSTS } from "@/lib/seed";
 
@@ -46,10 +47,11 @@ export default function CommunitiesPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               {units.map((unit) => (
                 <Link key={unit.code} href={`/unit/${unit.code}`}>
-                  <Card className="h-full py-4 transition-all duration-300 ease-out hover:border-primary/40 hover:shadow-sm">
-                    <CardContent className="px-4">
+                  <Card className="relative h-full py-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40">
+                    <HoverGlow />
+                    <CardContent className="relative px-4">
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-mono text-sm font-bold">
+                        <span className="font-mono text-sm font-bold text-primary">
                           {unit.code}
                         </span>
                         {unit.mentorIds.length > 0 && (
@@ -65,11 +67,11 @@ export default function CommunitiesPage() {
                       <p className="mt-2 flex items-center gap-3 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Users className="size-3.5" />
-                          {unit.memberIds.length} members
+                          {unit.memberIds.length} {unit.memberIds.length === 1 ? "member" : "members"}
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageSquareText className="size-3.5" />
-                          {unit.postCount} posts
+                          {unit.postCount} {unit.postCount === 1 ? "post" : "posts"}
                         </span>
                       </p>
                     </CardContent>
