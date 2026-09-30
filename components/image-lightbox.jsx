@@ -17,7 +17,7 @@ export function ImageLightbox({ src, alt, className, imgClassName }) {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="View image full size"
-        className={cn("block w-full cursor-zoom-in overflow-hidden", className)}
+        className={cn("block w-full cursor-pointer overflow-hidden", className)}
       >
         {/* Uploaded and demo URLs are arbitrary, so next/image is not usable here. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
