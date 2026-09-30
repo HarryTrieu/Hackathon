@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
+import { BackButton } from "@/components/back-button";
 import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
@@ -41,6 +42,7 @@ function TagResults() {
   return (
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <BackButton className="-ml-2 mb-1" />
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <Search className="size-5 text-primary" />
           {tag ? `#${tag}` : "Followed tags"}
