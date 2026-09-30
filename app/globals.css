@@ -133,6 +133,18 @@
   select optgroup {
     @apply bg-popover text-popover-foreground;
   }
+  /* Tailwind v4 gives buttons the plain arrow cursor. Anything clickable
+     gets the hand, like links already do; disabled controls keep the arrow.
+     Covers the Post button, the For you / Hot / New tabs (Base UI tabs are
+     buttons), Helpful / Save / Reply, chips, dropdowns and checkboxes. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  select:not(:disabled),
+  input[type="checkbox"]:not(:disabled),
+  input[type="radio"]:not(:disabled),
+  label:has(> input[type="checkbox"]:not(:disabled)) {
+    cursor: pointer;
+  }
   html {
     @apply font-sans;
   }
