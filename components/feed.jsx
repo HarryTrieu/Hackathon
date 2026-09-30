@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Composer } from "@/components/composer";
 import { HomeHero } from "@/components/home-hero";
+import { MentorStrip } from "@/components/mentor-strip";
 import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
 import { usePersona } from "@/lib/persona-context";
@@ -169,6 +170,7 @@ export function Feed() {
           </TabsList>
         </div>
 
+        <MentorStrip />
         <HomeHero />
         {followed.tags.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5 border-b px-4 py-2">
