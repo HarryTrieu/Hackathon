@@ -86,3 +86,56 @@
     opacity: 0.6;
   }
 }
+
+/* "Find a mentor" CTA: a steady neon-style glow that breathes, plus a
+   light sweep every few seconds, like a shop sign. The glow is a filter,
+   not box-shadow, so the keyboard focus ring (a box-shadow) still shows.
+   The sweep sits behind the label (isolate + z-index -1). */
+.cta {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  filter: drop-shadow(0 0 6px color-mix(in oklch, var(--primary) 45%, transparent));
+  animation: cta-glow 3s ease-in-out infinite;
+}
+
+.cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  animation: cta-shine 6s ease-in-out infinite;
+}
+
+@keyframes cta-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--primary) 45%, transparent));
+  }
+  50% {
+    filter: drop-shadow(0 0 14px color-mix(in oklch, var(--primary) 75%, transparent));
+  }
+}
+
+@keyframes cta-shine {
+  0%,
+  70% {
+    transform: translateX(-120%);
+  }
+  90%,
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta {
+    animation: none;
+  }
+  .cta::after {
+    display: none;
+  }
+}

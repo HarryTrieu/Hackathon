@@ -21,7 +21,7 @@ export function HomeHero() {
         Find a Deakin peer who already passed your unit, try their AI first, then book the real person.
       </p>
       <div className="flex flex-wrap gap-2">
-        <Link href="/mentors" className={cn(buttonVariants(), "rounded-full")}>
+        <Link href="/mentors" className={cn(buttonVariants(), "rounded-full", styles.cta)}>
           Find a mentor
           <ArrowRight data-icon="inline-end" />
         </Link>
