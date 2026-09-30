@@ -18,8 +18,27 @@ import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
 import { ResourceLink } from "@/components/resource-link";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
+import { StatRow } from "@/components/stat-row";
 import { UserAvatar } from "@/components/user-avatar";
+import { reputationFor } from "@/lib/mentors";
 import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
+import { supabaseAdmin } from "@/lib/supabase";
+
+// Helpful votes on the person's posts: live counts from the database, like
+// the mentor page, so both pages agree. Seed counts when there is no DB.
+async function helpfulVotes(profileId, seedPosts) {
+  const db = supabaseAdmin();
+  if (db) {
+    const { data, error } = await db
+      .from("posts")
+      .select("author_id, helpful_count, status")
+      .eq("author_id", profileId);
+    if (!error && data) return reputationFor(profileId, data);
+  }
+  return reputationFor(profileId, seedPosts);
+}
+
+const plural = (n, word) => `${word}${n === 1 ? "" : "s"}`;
 
 export default async function ProfilePage({ params }) {
   const { id } = await params;
@@ -27,6 +46,7 @@ export default async function ProfilePage({ params }) {
   if (!profile) notFound();
 
   const posts = getPostsByAuthor(id).sort((a, b) => a.hours_ago - b.hours_ago);
+  const helpful = profile.role === "admin" ? 0 : await helpfulVotes(id, posts);
 
   return (
     <div className="pb-16 md:pb-0">
@@ -61,6 +81,16 @@ export default async function ProfilePage({ params }) {
             )}
           </div>
         </div>
+        {profile.role !== "admin" && (
+          <StatRow
+            className="mt-4"
+            items={[
+              [posts.length, plural(posts.length, "post")],
+              [helpful, plural(helpful, "helpful vote")],
+              [profile.units.length, plural(profile.units.length, "unit")],
+            ]}
+          />
+        )}
       </div>
 
       <MentorSection profileId={profile.id} />

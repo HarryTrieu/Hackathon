@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { MentorChat } from "@/components/mentor-chat";
 import { ReportButton } from "@/components/report-button";
+import { StatRow } from "@/components/stat-row";
 import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
 import { gradeBand, mergeLocalApplications } from "@/lib/mentors";
@@ -213,18 +214,14 @@ export default function MentorDetailPage() {
         </p>
 
         {/* Numbers as a stats row, like post / follower counts on social apps. */}
-        <dl className="mt-3 grid grid-cols-3 divide-x rounded-xl border bg-background/60 text-center">
-          {[
+        <StatRow
+          className="mt-3"
+          items={[
             [mentor.reputation, "helpful votes"],
             [mentor.preview_chats ?? 0, "preview chats"],
             [mentor.contact_requests ?? 0, "contact requests"],
-          ].map(([value, label]) => (
-            <div key={label} className="flex flex-col-reverse px-2 py-2">
-              <dt className="text-xs text-muted-foreground">{label}</dt>
-              <dd className="text-lg font-bold">{value}</dd>
-            </div>
-          ))}
-        </dl>
+          ]}
+        />
 
         {/* Trust signals and experience as one quiet line instead of badges. */}
         <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
