@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { FloatingPostButton } from "@/components/floating-post-button";
 import { PostDialogButton } from "@/components/post-dialog";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -95,8 +96,6 @@ export function MobileNav() {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentors", icon: HeartHandshake },
-    // Round "+" in the middle opens the Create post popup (not for admin).
-    ...(persona.role === "admin" ? [] : [{ href: null, label: "Post" }]),
     { href: "/communities", label: "Units", icon: Users },
     ...(persona.role === "admin"
       ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
@@ -110,7 +109,6 @@ export function MobileNav() {
       className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around border-t bg-background/95 py-2 backdrop-blur md:hidden"
     >
       {items.map(({ href, label, icon: Icon, badge }) => {
-        if (href === null) return <PostDialogButton key={label} compact />;
         const active =
           href === "/" ? pathname === "/" : pathname.startsWith(href);
         return (
@@ -131,6 +129,8 @@ export function MobileNav() {
           </Link>
         );
       })}
+      {/* The moderator account reviews content, it does not post. */}
+      {persona.role !== "admin" && <FloatingPostButton />}
     </nav>
   );
 }

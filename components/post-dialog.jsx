@@ -16,8 +16,8 @@ import { Composer } from "@/components/composer";
 export const POST_PUBLISHED_EVENT = "sodu:post-published";
 
 // Left-nav "Post" button: opens the composer in a popup on whatever page
-// you are on, closes it once the post is published. compact: the round "+"
-// used in the mobile bottom nav.
+// you are on, closes it once the post is published. compact: the round
+// floating "+" used on mobile (see floating-post-button.jsx).
 export function PostDialogButton({ compact = false }) {
   const [open, setOpen] = useState(false);
 
@@ -30,12 +30,11 @@ export function PostDialogButton({ compact = false }) {
     <>
       {compact ? (
         <Button
-          size="icon-lg"
           aria-label="Create post"
-          className="rounded-full shadow-sm"
+          className="size-14 rounded-full shadow-lg"
           onClick={() => setOpen(true)}
         >
-          <Plus className="size-5" />
+          <Plus className="size-6" />
         </Button>
       ) : (
         <Button
