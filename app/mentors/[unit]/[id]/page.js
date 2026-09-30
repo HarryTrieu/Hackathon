@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, Heart, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,8 +14,19 @@ import { MentorChat } from "@/components/mentor-chat";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
-import { STYLE_QUESTIONS, gradeBand, mergeLocalApplications } from "@/lib/mentors";
+import { gradeBand, mergeLocalApplications } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
+
+// Short labels for the mentor's Part A answers, shown as chips. The full
+// questions are written for the mentor filling in the form, not the student.
+const STYLE_CHIPS = [
+  ["teaching", "Style"],
+  ["tone", "Tone"],
+  ["pace", "Pace"],
+  ["feedback", "Feedback"],
+  ["languages", "Speaks"],
+  ["format", "Format"],
+];
 
 function SessionRequest({ mentor, persona }) {
   const first = mentor.profile.name.split(" ")[0];
@@ -183,71 +194,85 @@ export default function MentorDetailPage() {
               </Link>
             </h1>
             <p className="text-sm text-muted-foreground">
-              {profile.course} · {profile.year ? `Year ${profile.year}` : "Graduate"} · mentors{" "}
-              {code} {unit?.name}
+              Mentors <span className="font-mono">{code}</span>
+              {unit?.name ? ` · ${unit.name}` : ""}
             </p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <p className="text-xs text-muted-foreground">
+              {profile.course} · {profile.year ? `Year ${profile.year}` : "Graduate"}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
               <Badge>{gradeBand(mentor.grade)} · {code}</Badge>
-              {mentor.is_demo && <Badge variant="outline">Sample data</Badge>}
-              {mentor.email_verified && (
-                <Badge variant="secondary">
-                  <BadgeCheck data-icon="inline-start" />
-                  Deakin email verified
-                </Badge>
-              )}
-              {mentor.status === "approved" && (
-                <Badge variant="secondary">
-                  <ShieldCheck data-icon="inline-start" />
-                  Grade checked by reviewer
-                </Badge>
-              )}
-              <Badge variant="outline">
-                <Heart data-icon="inline-start" />
-                {mentor.reputation} helpful votes
-              </Badge>
+              {mentor.is_demo && <span className="text-xs text-muted-foreground">Sample data</span>}
             </div>
-            <p className="mt-2 text-lg font-semibold">
-              ${mentor.rate_per_hour}
-              <span className="text-sm font-normal text-muted-foreground">/hour</span>
-            </p>
-            {mentor.availability && (
-              <p className="text-sm text-muted-foreground">Usually free: {mentor.availability}</p>
-            )}
-            <p className="mt-1 text-xs text-muted-foreground">
-              {mentor.preview_chats ?? 0} preview chats · {mentor.contact_requests ?? 0} contact requests
-            </p>
           </div>
         </div>
 
-        {mentor.show_experience && mentor.experience?.length > 0 && (
-          <div className="mt-4 space-y-1">
-            {mentor.experience.map((e) => (
-              <p key={`${e.company}-${e.role}`} className="flex items-center gap-2 text-sm">
-                <Briefcase className="size-4 text-primary" />
-                {e.role} at <span className="font-medium">{e.company}</span>
-                {e.current && <Badge variant="outline">Current</Badge>}
-              </p>
+        <p className="mt-4 text-sm text-muted-foreground">
+          <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span>/hour
+          {mentor.availability && <> · Usually free: {mentor.availability}</>}
+        </p>
+
+        {/* Numbers as a stats row, like post / follower counts on social apps. */}
+        <dl className="mt-3 grid grid-cols-3 divide-x rounded-xl border bg-background/60 text-center">
+          {[
+            [mentor.reputation, "helpful votes"],
+            [mentor.preview_chats ?? 0, "preview chats"],
+            [mentor.contact_requests ?? 0, "contact requests"],
+          ].map(([value, label]) => (
+            <div key={label} className="flex flex-col-reverse px-2 py-2">
+              <dt className="text-xs text-muted-foreground">{label}</dt>
+              <dd className="text-lg font-bold">{value}</dd>
+            </div>
+          ))}
+        </dl>
+
+        {/* Trust signals and experience as one quiet line instead of badges. */}
+        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          {mentor.email_verified && (
+            <li className="flex items-center gap-1">
+              <BadgeCheck className="size-3.5 text-primary" />
+              Deakin email verified
+            </li>
+          )}
+          {mentor.status === "approved" && (
+            <li className="flex items-center gap-1">
+              <ShieldCheck className="size-3.5 text-primary" />
+              Grade checked by reviewer
+            </li>
+          )}
+          {mentor.show_experience &&
+            mentor.experience?.map((e) => (
+              <li key={`${e.company}-${e.role}`} className="flex items-center gap-1">
+                <Briefcase className="size-3.5 text-primary" />
+                {e.role} at <span className="font-medium text-foreground">{e.company}</span>
+                {e.current && " (current)"}
+              </li>
             ))}
-          </div>
-        )}
+        </ul>
       </div>
 
       <div className="space-y-4 px-4 py-4">
-        <div className="grid gap-x-6 gap-y-2 rounded-xl border p-4 text-sm sm:grid-cols-2">
-          {STYLE_QUESTIONS.map((q) => {
-            const value = style[q.id];
-            return (
-              <div key={q.id}>
-                <p className="text-xs text-muted-foreground">{q.label}</p>
-                <p className="font-medium">{Array.isArray(value) ? value.join(", ") : value}</p>
-              </div>
-            );
-          })}
-          <div className="sm:col-span-2">
-            <p className="text-xs text-muted-foreground">Strengths and what students struggle with</p>
-            <p>{mentor.voice.topics}</p>
+        <section className="space-y-3 rounded-xl border p-4 text-sm">
+          <h2 className="font-semibold">How {first} teaches</h2>
+          <div className="flex flex-wrap gap-1.5">
+            {STYLE_CHIPS.map(([key, label]) => (
+              <Badge key={key} variant="secondary" className="font-normal">
+                <span className="text-muted-foreground">{label}</span>
+                {[style[key]].flat().join(", ")}
+              </Badge>
+            ))}
           </div>
-        </div>
+          <p>
+            <span className="text-muted-foreground">Helps most with: </span>
+            {(style.help ?? []).join(", ")}
+          </p>
+          <blockquote className="border-l-2 border-primary/50 pl-3">
+            <p>&ldquo;{mentor.voice.topics}&rdquo;</p>
+            <footer className="mt-1 text-xs text-muted-foreground">
+              Strengths and common struggles, in {first}&apos;s words
+            </footer>
+          </blockquote>
+        </section>
 
         <MentorChat
           key={`${persona.id}-${mentor.id}`}
