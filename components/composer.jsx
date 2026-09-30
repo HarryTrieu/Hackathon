@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "@/components/link-preview";
+import { TypingDots } from "@/components/typing-dots";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
 
@@ -214,16 +215,22 @@ export function Composer({ onPublished, inDialog = false }) {
             </div>
             <Button
               size="sm"
-              className="rounded-full font-semibold"
+              // Full colour while tagging: it is working, not unavailable.
+              className={cn("rounded-full font-semibold", posting && "disabled:opacity-100")}
               disabled={text.trim().length === 0 || uploading || posting}
               onClick={handlePost}
             >
               {posting ? (
-                <Spinner data-icon="inline-start" />
+                <>
+                  Tagging
+                  <TypingDots className="pb-0.5" />
+                </>
               ) : (
-                <PenLine data-icon="inline-start" />
+                <>
+                  <PenLine data-icon="inline-start" />
+                  Post
+                </>
               )}
-              {posting ? "Tagging..." : "Post"}
             </Button>
           </div>
         </div>
