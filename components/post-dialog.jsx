@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PenLine } from "lucide-react";
+import { PenLine, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -16,8 +16,9 @@ import { Composer } from "@/components/composer";
 export const POST_PUBLISHED_EVENT = "sodu:post-published";
 
 // Left-nav "Post" button: opens the composer in a popup on whatever page
-// you are on, closes it once the post is published.
-export function PostDialogButton() {
+// you are on, closes it once the post is published. compact: the round "+"
+// used in the mobile bottom nav.
+export function PostDialogButton({ compact = false }) {
   const [open, setOpen] = useState(false);
 
   function handlePublished(post) {
@@ -27,14 +28,25 @@ export function PostDialogButton() {
 
   return (
     <>
-      <Button
-        size="lg"
-        className="mt-3 w-full rounded-full text-base font-semibold shadow-sm transition-all hover:shadow-md"
-        onClick={() => setOpen(true)}
-      >
-        <PenLine data-icon="inline-start" />
-        Post
-      </Button>
+      {compact ? (
+        <Button
+          size="icon-lg"
+          aria-label="Create post"
+          className="rounded-full shadow-sm"
+          onClick={() => setOpen(true)}
+        >
+          <Plus className="size-5" />
+        </Button>
+      ) : (
+        <Button
+          size="lg"
+          className="mt-3 w-full rounded-full text-base font-semibold shadow-sm transition-all hover:shadow-md"
+          onClick={() => setOpen(true)}
+        >
+          <PenLine data-icon="inline-start" />
+          Post
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="gap-0 p-0 sm:max-w-lg">
