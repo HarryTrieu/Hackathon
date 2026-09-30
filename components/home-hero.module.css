@@ -1,0 +1,88 @@
+/* One 5s loop shared by every piece, offset by delays, so the highlight
+   walks step 1 -> arrow -> step 2 -> arrow -> step 3, then pauses. */
+.step,
+.badge,
+.arrow {
+  animation-duration: 5s;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+.step {
+  animation-name: step-glow;
+}
+
+.badge {
+  animation-name: badge-pop;
+}
+
+.arrow {
+  animation-name: arrow-flash;
+  opacity: 0.35;
+}
+
+.d0 {
+  animation-delay: 0s;
+}
+.d1 {
+  animation-delay: 0.6s;
+}
+.d2 {
+  animation-delay: 1.2s;
+}
+.d3 {
+  animation-delay: 1.8s;
+}
+.d4 {
+  animation-delay: 2.4s;
+}
+
+@keyframes step-glow {
+  0%,
+  24%,
+  100% {
+    border-color: var(--border);
+    box-shadow: 0 0 0 0 transparent;
+  }
+  8%,
+  14% {
+    border-color: color-mix(in oklch, var(--primary) 60%, transparent);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--primary) 18%, transparent);
+  }
+}
+
+@keyframes badge-pop {
+  0%,
+  24%,
+  100% {
+    transform: scale(1);
+  }
+  10% {
+    transform: scale(1.15);
+  }
+}
+
+@keyframes arrow-flash {
+  0%,
+  24%,
+  100% {
+    opacity: 0.35;
+    color: var(--muted-foreground);
+  }
+  8%,
+  14% {
+    opacity: 1;
+    color: var(--primary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step,
+  .badge,
+  .arrow {
+    animation: none;
+  }
+  .arrow {
+    opacity: 0.6;
+  }
+}
