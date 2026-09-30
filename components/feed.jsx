@@ -5,12 +5,12 @@ import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Composer } from "@/components/composer";
-import { POST_PUBLISHED_EVENT } from "@/components/post-dialog";
 import { HomeHero } from "@/components/home-hero";
 import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
 import { usePersona } from "@/lib/persona-context";
 import { useFollowedTags } from "@/lib/use-followed-tags";
+import { pinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
 
@@ -32,8 +32,8 @@ export function Feed() {
   // null = still loading or unavailable, then the seed is the source of truth.
   const [dbPosts, setDbPosts] = useState(null);
   const [source, setSource] = useState("seed");
-  // Posts published this session while no DB is configured.
-  const [sessionPosts, setSessionPosts] = useState([]);
+  // Posts published in this tab, from the feed composer or the left-nav popup.
+  const myNewPosts = useMyNewPosts();
   const [hidden, setHidden] = useState([]);
   const [tab, setTab] = useState("for-you");
   // Window scroll offset per tab: a tab you have not opened starts at the
@@ -74,30 +74,33 @@ export function Feed() {
   const allPosts = useMemo(() => {
     const base = dbPosts ?? POSTS;
     // With a DB the published post comes back in the next fetch too, so only
-    // prepend session posts that the base does not already contain.
+    // prepend new posts that the base does not already contain.
     const baseIds = new Set(base.map((p) => p.id));
-    const extra = sessionPosts.filter((p) => !baseIds.has(p.id));
+    const extra = myNewPosts.filter((p) => !baseIds.has(p.id));
     const hiddenIds = new Set(hidden);
     return [...extra, ...base].filter((p) => !hiddenIds.has(p.id) && p.status !== "removed");
-  }, [dbPosts, sessionPosts, hidden]);
+  }, [dbPosts, myNewPosts, hidden]);
 
+  // Your own new posts sit on top of every tab so you can check them.
   const forYou = useMemo(
-    () => rankForYou(allPosts, persona, followed.tags),
-    [allPosts, persona, followed.tags]
+    () => pinMyNewPosts(rankForYou(allPosts, persona, followed.tags), myNewPosts, persona.id),
+    [allPosts, persona, followed.tags, myNewPosts]
   );
-  const hot = useMemo(() => rankHot(allPosts), [allPosts]);
-  const fresh = useMemo(() => rankNew(allPosts), [allPosts]);
+  const hot = useMemo(
+    () => pinMyNewPosts(rankHot(allPosts), myNewPosts, persona.id),
+    [allPosts, myNewPosts, persona.id]
+  );
+  const fresh = useMemo(
+    () => pinMyNewPosts(rankNew(allPosts), myNewPosts, persona.id),
+    [allPosts, myNewPosts, persona.id]
+  );
 
-  function handlePublished(post) {
-    setSessionPosts((prev) => [post, ...prev]);
-  }
-
-  // Posts published from the left-nav popup while this feed is on screen.
+  // Scroll up to a post you just published (e.g. from the popup while
+  // scrolled down the feed).
+  const newestId = myNewPosts[0]?.id;
   useEffect(() => {
-    const onPublished = (e) => setSessionPosts((prev) => [e.detail, ...prev]);
-    window.addEventListener(POST_PUBLISHED_EVENT, onPublished);
-    return () => window.removeEventListener(POST_PUBLISHED_EVENT, onPublished);
-  }, []);
+    if (newestId) window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [newestId]);
 
   return (
     <div className="pb-16 md:pb-0">
@@ -131,7 +134,7 @@ export function Feed() {
             ))}
           </div>
         )}
-        {persona.role !== "admin" && <Composer onPublished={handlePublished} />}
+        {persona.role !== "admin" && <Composer />}
 
         <TabsContent value="for-you">
           {/* key on persona so switching re-mounts and fades the new order in */}
@@ -150,12 +153,12 @@ export function Feed() {
         </TabsContent>
 
         <TabsContent value="hot">
-          {hot.map(({ post, author }) => (
+          {hot.map(({ post, author, reason }) => (
             <PostCard
               key={`${persona.id}-${post.id}`}
               post={post}
               author={author}
-              reason={null}
+              reason={reason}
               onDeleted={(id) => setHidden((prev) => [...prev, id])}
             />
           ))}
@@ -163,12 +166,12 @@ export function Feed() {
         </TabsContent>
 
         <TabsContent value="new">
-          {fresh.map(({ post, author }) => (
+          {fresh.map(({ post, author, reason }) => (
             <PostCard
               key={`${persona.id}-${post.id}`}
               post={post}
               author={author}
-              reason={null}
+              reason={reason}
               onDeleted={(id) => setHidden((prev) => [...prev, id])}
             />
           ))}

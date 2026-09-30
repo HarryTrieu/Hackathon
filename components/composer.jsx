@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { LinkPreview } from "@/components/link-preview";
 import { TypingDots } from "@/components/typing-dots";
+import { rememberMyPost } from "@/lib/my-new-posts";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
 
@@ -104,6 +105,7 @@ export function Composer({ onPublished, inDialog = false }) {
         return;
       }
 
+      rememberMyPost(data.post);
       onPublished?.(data.post);
       setText("");
       setImage(null);
