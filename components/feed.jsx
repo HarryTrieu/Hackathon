@@ -11,7 +11,7 @@ import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
 import { usePersona } from "@/lib/persona-context";
 import { useFollowedTags } from "@/lib/use-followed-tags";
-import { pinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
+import { pinMyNewPosts, unpinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
 
@@ -61,7 +61,7 @@ export function Feed() {
   const [dbPosts, setDbPosts] = useState(null);
   const [source, setSource] = useState("seed");
   // Posts published in this tab, from the feed composer or the left-nav popup.
-  const myNewPosts = useMyNewPosts();
+  const { posts: myNewPosts, pinned } = useMyNewPosts();
   const [hidden, setHidden] = useState([]);
   const [tab, setTab] = useState("for-you");
   const [reloading, setReloading] = useState(false);
@@ -85,6 +85,9 @@ export function Feed() {
   // Every tab click refreshes: back to the top, latest posts from the API.
   async function reload() {
     window.scrollTo({ top: 0, behavior: "instant" });
+    // A just-published post is pinned for one look; after a refresh it
+    // ranks like any other post.
+    unpinMyNewPosts();
     const seq = ++requestSeq.current;
     setReloading(true);
     const data = await fetchPosts();
@@ -117,18 +120,23 @@ export function Feed() {
     return [...extra, ...base].filter((p) => !hiddenIds.has(p.id) && p.status !== "removed");
   }, [dbPosts, myNewPosts, hidden]);
 
-  // Your own new posts sit on top of every tab so you can check them.
+  // Right after publishing, your post sits on top of every tab so you can
+  // check it, until the next tab click.
+  const pinnedPosts = useMemo(
+    () => myNewPosts.filter((p) => pinned.includes(p.id)),
+    [myNewPosts, pinned]
+  );
   const forYou = useMemo(
-    () => pinMyNewPosts(rankForYou(allPosts, persona, followed.tags), myNewPosts, persona.id),
-    [allPosts, persona, followed.tags, myNewPosts]
+    () => pinMyNewPosts(rankForYou(allPosts, persona, followed.tags), pinnedPosts, persona.id),
+    [allPosts, persona, followed.tags, pinnedPosts]
   );
   const hot = useMemo(
-    () => pinMyNewPosts(rankHot(allPosts), myNewPosts, persona.id),
-    [allPosts, myNewPosts, persona.id]
+    () => pinMyNewPosts(rankHot(allPosts), pinnedPosts, persona.id),
+    [allPosts, pinnedPosts, persona.id]
   );
   const fresh = useMemo(
-    () => pinMyNewPosts(rankNew(allPosts), myNewPosts, persona.id),
-    [allPosts, myNewPosts, persona.id]
+    () => pinMyNewPosts(rankNew(allPosts), pinnedPosts, persona.id),
+    [allPosts, pinnedPosts, persona.id]
   );
 
   // Scroll up to a post you just published (e.g. from the popup while
