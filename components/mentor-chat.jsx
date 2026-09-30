@@ -4,9 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Bot, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/user-avatar";
 import { ReportButton } from "@/components/report-button";
+import { TypingDots } from "@/components/typing-dots";
 import { MAX_CHATS_PER_DAY, introMessage, sampleQuestions } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
 
@@ -123,9 +123,13 @@ export function MentorChat({ mentor, persona, unitName }) {
           </div>
         ))}
         {sending && (
-          <p className="flex items-center gap-2 pl-9 text-sm text-muted-foreground">
-            <Spinner /> {first}&apos;s AI is typing...
-          </p>
+          <div className="flex gap-2">
+            <UserAvatar profile={mentor.profile} className="size-7" textClassName="text-[10px]" />
+            <p className="flex items-center rounded-2xl bg-muted px-3.5 py-3 text-muted-foreground">
+              <TypingDots />
+              <span className="sr-only">{first}&apos;s AI is typing</span>
+            </p>
+          </div>
         )}
         <div ref={endRef} />
       </div>

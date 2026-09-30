@@ -6,8 +6,8 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, RotateCcw, Send, Sparkles, UserPlus } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Spinner } from "@/components/ui/spinner";
 import { MentorCard } from "@/components/mentor-card";
+import { TypingDots } from "@/components/typing-dots";
 import { getUnit } from "@/lib/communities";
 import { mergeLocalApplications } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
@@ -219,13 +219,16 @@ export default function FindMentorPage() {
         )}
 
         {thinking && (
-          <p className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Spinner /> Thinking about who fits you...
-          </p>
+          <div className="flex justify-start">
+            <p className="flex items-center rounded-2xl bg-muted px-3.5 py-3 text-muted-foreground">
+              <TypingDots />
+              <span className="sr-only">Thinking about who fits you</span>
+            </p>
+          </div>
         )}
         {matching && (
           <p className="flex items-center gap-2 rounded-xl border bg-primary/5 px-3 py-3 text-sm font-medium duration-700 animate-in fade-in">
-            <Spinner /> Matching a mentor for you...
+            Matching a mentor for you <TypingDots className="pb-0.5 text-primary" />
           </p>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
