@@ -56,6 +56,9 @@ export function PostCard({ post, author, reason, onDeleted }) {
   const { set: likedSet, ready: likesReady } = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
   const [vote, setVote] = useState(null);
+  // Saved state loads from localStorage after hydration, so only pop the
+  // bookmark after a real tap, not when an already-saved post appears.
+  const [saveTapped, setSaveTapped] = useState(false);
   const savedPosts = useSavedPosts(persona.id);
   const saved = savedPosts.has(post.id);
   const [repliesOpen, setRepliesOpen] = useState(false);
@@ -310,15 +313,20 @@ export function PostCard({ post, author, reason, onDeleted }) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => savedPosts.toggle({ ...post, tags })}
+              onClick={() => {
+                setSaveTapped(true);
+                savedPosts.toggle({ ...post, tags });
+              }}
               className={cn(
                 "text-muted-foreground transition-colors duration-300 ease-out",
                 saved && "text-primary"
               )}
             >
+              {/* key remounts the icon on each toggle so the pop replays */}
               <Bookmark
+                key={saved ? "saved" : "not-saved"}
                 data-icon="inline-start"
-                className={cn(saved && "fill-primary/20")}
+                className={cn(saved && "fill-primary", saved && saveTapped && styles.pop)}
               />
               {saved ? "Saved" : "Save"}
             </Button>
