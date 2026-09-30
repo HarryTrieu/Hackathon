@@ -93,8 +93,8 @@
    The sweep sits behind the label (isolate + z-index -1). */
 .cta {
   /* Light mode: a soft glow, a white page makes a big one bloom. */
-  --glow-rest: drop-shadow(0 0 3px color-mix(in oklch, var(--primary) 30%, transparent));
-  --glow-peak: drop-shadow(0 0 7px color-mix(in oklch, var(--primary) 40%, transparent));
+  --glow-rest: drop-shadow(0 0 4px color-mix(in oklch, var(--primary) 35%, transparent));
+  --glow-peak: drop-shadow(0 0 10px color-mix(in oklch, var(--primary) 50%, transparent));
   position: relative;
   overflow: hidden;
   isolation: isolate;
