@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Composer } from "@/components/composer";
 import { HomeHero } from "@/components/home-hero";
 import { PostCard } from "@/components/post-card";
@@ -13,6 +14,33 @@ import { useFollowedTags } from "@/lib/use-followed-tags";
 import { pinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
+
+// Feed data from the API, or null when it is unavailable (seed fallback).
+async function fetchPosts() {
+  try {
+    const res = await fetch("/api/posts");
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+function FeedSkeleton() {
+  return (
+    <div className="flex flex-col gap-6 px-4 py-6" aria-label="Loading posts">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex gap-3">
+          <Skeleton className="size-10 rounded-full" />
+          <div className="flex flex-1 flex-col gap-2">
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-4/5" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function CaughtUp() {
   return (
@@ -36,40 +64,48 @@ export function Feed() {
   const myNewPosts = useMyNewPosts();
   const [hidden, setHidden] = useState([]);
   const [tab, setTab] = useState("for-you");
-  // Window scroll offset per tab: a tab you have not opened starts at the
-  // top, a tab you come back to returns to where you left it.
-  const scrollByTab = useRef({});
-  const restoreScroll = useRef(false);
-
-  function changeTab(next) {
-    scrollByTab.current[tab] = window.scrollY;
-    restoreScroll.current = true;
-    setTab(next);
-  }
-
-  // Layout effect so the jump happens before paint, after the new panel mounts.
-  useLayoutEffect(() => {
-    if (!restoreScroll.current) return;
-    restoreScroll.current = false;
-    window.scrollTo({ top: scrollByTab.current[tab] ?? 0, behavior: "instant" });
-  }, [tab]);
+  const [reloading, setReloading] = useState(false);
+  // Only the newest request may update the feed, so quick tab clicks
+  // cannot let an older response overwrite a newer one.
+  const requestSeq = useRef(0);
 
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/posts")
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled || !data?.posts) return;
-        setDbPosts(data.posts);
-        setSource(data.source);
-      })
-      .catch(() => {
-        // Seed fallback already in place.
-      });
+    const seq = ++requestSeq.current;
+    fetchPosts().then((data) => {
+      if (cancelled || seq !== requestSeq.current || !data?.posts) return;
+      setDbPosts(data.posts);
+      setSource(data.source);
+    });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  // Every tab click refreshes: back to the top, latest posts from the API.
+  async function reload() {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    const seq = ++requestSeq.current;
+    setReloading(true);
+    const data = await fetchPosts();
+    if (seq !== requestSeq.current) return;
+    setReloading(false);
+    if (data?.posts) {
+      setDbPosts(data.posts);
+      setSource(data.source);
+    }
+  }
+
+  function changeTab(next) {
+    setTab(next);
+    reload();
+  }
+
+  // Clicking the tab you are already on does not change the value, so it
+  // refreshes here instead.
+  function refreshIfActive(value) {
+    if (value === tab) reload();
+  }
 
   const allPosts = useMemo(() => {
     const base = dbPosts ?? POSTS;
@@ -113,13 +149,13 @@ export function Feed() {
             </Badge>
           </div>
           <TabsList variant="line" className="w-full justify-start px-2">
-            <TabsTrigger value="for-you" className="flex-none px-3 py-2">
+            <TabsTrigger value="for-you" onClick={() => refreshIfActive("for-you")} className="flex-none px-3 py-2">
               For you
             </TabsTrigger>
-            <TabsTrigger value="hot" className="flex-none px-3 py-2">
+            <TabsTrigger value="hot" onClick={() => refreshIfActive("hot")} className="flex-none px-3 py-2">
               Hot
             </TabsTrigger>
-            <TabsTrigger value="new" className="flex-none px-3 py-2">
+            <TabsTrigger value="new" onClick={() => refreshIfActive("new")} className="flex-none px-3 py-2">
               New
             </TabsTrigger>
           </TabsList>
@@ -136,7 +172,8 @@ export function Feed() {
         )}
         {persona.role !== "admin" && <Composer />}
 
-        <TabsContent value="for-you">
+        {reloading && <FeedSkeleton />}
+        <TabsContent value="for-you" className={reloading ? "hidden" : undefined}>
           {/* key on persona so switching re-mounts and fades the new order in */}
           <div key={persona.id} className="animate-in fade-in duration-500">
             {forYou.map(({ post, author, reason }) => (
@@ -152,7 +189,7 @@ export function Feed() {
           </div>
         </TabsContent>
 
-        <TabsContent value="hot">
+        <TabsContent value="hot" className={reloading ? "hidden" : undefined}>
           {hot.map(({ post, author, reason }) => (
             <PostCard
               key={`${persona.id}-${post.id}`}
@@ -165,7 +202,7 @@ export function Feed() {
           <CaughtUp />
         </TabsContent>
 
-        <TabsContent value="new">
+        <TabsContent value="new" className={reloading ? "hidden" : undefined}>
           {fresh.map(({ post, author, reason }) => (
             <PostCard
               key={`${persona.id}-${post.id}`}
