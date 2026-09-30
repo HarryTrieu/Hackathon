@@ -17,6 +17,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { LinkPreview } from "@/components/link-preview";
 import { RepliesPanel } from "@/components/replies";
 import { SEED_MENTORS } from "@/lib/mentors";
@@ -200,15 +201,12 @@ export function PostCard({ post, author, reason, onDeleted }) {
           )}
 
           {post.image_url && (
-            <div className="mt-2.5 overflow-hidden rounded-xl border">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={post.image_url}
-                alt={`Shared by ${author.name}`}
-                loading="lazy"
-                className="aspect-video w-full object-cover"
-              />
-            </div>
+            <ImageLightbox
+              src={post.image_url}
+              alt={`Shared by ${author.name}`}
+              className="mt-2.5 rounded-xl border"
+              imgClassName="aspect-video w-full object-cover"
+            />
           )}
 
           {post.link_preview && (
