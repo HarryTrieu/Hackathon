@@ -313,6 +313,18 @@ export function PostCard({ post, author, reason, onDeleted }) {
             <Button
               variant="ghost"
               size="sm"
+              onClick={() => setRepliesOpen((v) => !v)}
+              className={cn(
+                "text-muted-foreground transition-colors duration-300 ease-out",
+                repliesOpen && "text-primary"
+              )}
+            >
+              <MessageCircle data-icon="inline-start" />
+              {seedReplyCount > 0 ? `Replies · ${seedReplyCount}` : "Reply"}
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => {
                 setSaveTapped(true);
                 savedPosts.toggle({ ...post, tags });
@@ -329,18 +341,6 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 className={cn(saved && "fill-primary", saved && saveTapped && styles.pop)}
               />
               {saved ? "Saved" : "Save"}
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setRepliesOpen((v) => !v)}
-              className={cn(
-                "text-muted-foreground transition-colors duration-300 ease-out",
-                repliesOpen && "text-primary"
-              )}
-            >
-              <MessageCircle data-icon="inline-start" />
-              {seedReplyCount > 0 ? `Replies · ${seedReplyCount}` : "Reply"}
             </Button>
             {authorListing && !isAuthor && (
               <Link
