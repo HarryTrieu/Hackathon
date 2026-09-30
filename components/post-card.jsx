@@ -27,6 +27,7 @@ import { rememberVote, useLikedPosts } from "@/lib/use-liked";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 import { ReportButton } from "@/components/report-button";
 import { cn } from "@/lib/utils";
+import styles from "./post-card.module.css";
 
 function relativeTime(hoursAgo) {
   if (hoursAgo < 1) return "now";
@@ -133,7 +134,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
     <article className="group relative overflow-hidden border-b px-4 py-4 transition-colors duration-300 ease-out hover:bg-foreground/[0.015]">
       <span
         aria-hidden
-        className="pointer-events-none absolute -top-5 -right-5 size-16 rounded-full bg-gradient-to-br from-primary/40 via-sky-400/20 to-transparent blur-2xl dark:-top-8 dark:-right-8 dark:size-28"
+        className="pointer-events-none absolute -top-5 -right-5 size-16 rounded-full bg-gradient-to-br from-primary/40 via-sky-400/20 to-transparent opacity-0 blur-2xl transition-opacity duration-300 ease-out group-hover:opacity-100 dark:-top-8 dark:-right-8 dark:size-28"
       />
       {reason && <p className="mb-2 pl-13 text-xs text-primary">{reason}</p>}
 
@@ -154,6 +155,12 @@ export function PostCard({ post, author, reason, onDeleted }) {
             >
               {author.name}
             </Link>
+            {author.verified && (
+              <span title="Uni email verified" className="-ml-0.5 inline-flex text-primary">
+                <BadgeCheck aria-hidden="true" className="size-4" />
+                <span className="sr-only">Uni email verified</span>
+              </span>
+            )}
             <span className="text-sm text-muted-foreground">
               @{author.handle} · {relativeTime(post.hours_ago)}
             </span>
@@ -162,12 +169,6 @@ export function PostCard({ post, author, reason, onDeleted }) {
               {author.course}
               {author.year ? ` · Year ${author.year}` : " · Alumni"}
             </Badge>
-            {author.verified && (
-              <Badge variant="secondary">
-                <BadgeCheck data-icon="inline-start" />
-                Uni email verified
-              </Badge>
-            )}
             {post.flag_reason && (
               <Badge variant="destructive" title={post.flag_reason}>
                 <ShieldAlert data-icon="inline-start" />
@@ -204,8 +205,8 @@ export function PostCard({ post, author, reason, onDeleted }) {
             <ImageLightbox
               src={post.image_url}
               alt={`Shared by ${author.name}`}
-              className="mt-2.5 rounded-xl border"
-              imgClassName="aspect-video w-full object-cover"
+              className="mt-2.5 rounded-2xl border"
+              imgClassName="aspect-[16/10] w-full object-cover"
             />
           )}
 
@@ -298,9 +299,11 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 helpful && "text-primary"
               )}
             >
+              {/* key remounts the icon on each toggle so the pop replays */}
               <ThumbsUp
+                key={helpful ? "helpful" : "not-helpful"}
                 data-icon="inline-start"
-                className={cn(helpful && "fill-primary/20")}
+                className={cn(helpful && "fill-primary", vote === true && styles.pop)}
               />
               Helpful · {helpfulCount}
             </Button>
