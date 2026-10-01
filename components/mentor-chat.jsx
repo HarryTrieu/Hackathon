@@ -23,6 +23,7 @@ export function MentorChat({ mentor, persona, unitName }) {
   const [lastFailed, setLastFailed] = useState(null);
   const [mocked, setMocked] = useState(false);
   const endRef = useRef(null);
+  const shownCount = useRef(messages.length);
   const isSelf = persona.id === mentor.profile_id;
 
   useEffect(() => {
@@ -46,7 +47,11 @@ export function MentorChat({ mentor, persona, unitName }) {
     };
   }, [mentor.id, persona.id]);
 
+  // scrollIntoView also scrolls the window, so skip the intro message: on a
+  // phone it would open the page halfway down, past the mentor's details.
   useEffect(() => {
+    if (messages.length === shownCount.current) return;
+    shownCount.current = messages.length;
     endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
   }, [messages]);
 
