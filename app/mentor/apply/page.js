@@ -3,7 +3,7 @@
 import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { BadgeCheck, Bot, CheckCircle2, FileUp, Plus, Trash2 } from "lucide-react";
+import { BadgeCheck, Bot, CheckCircle2, Circle, FileUp, Plus, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
@@ -77,7 +77,8 @@ function ApplyForm() {
 
   const eligibleGrade = MIN_GRADES.includes(grade);
   const emailOk = persona.verified || /^[^\s@]+@deakin\.edu\.au$/i.test(email.trim());
-  const styleDone = STYLE_QUESTIONS.every((q) => (q.multiple ? style[q.id].length > 0 : style[q.id]));
+  const isAnswered = (q) => (q.multiple ? style[q.id].length > 0 : Boolean(style[q.id]));
+  const styleDone = STYLE_QUESTIONS.every(isAnswered);
   const voiceDone = VOICE_QUESTIONS.every((q) => voice[q.id].trim().length >= 1);
   const draft = { profile_id: persona.id, unit_code: unitCode, grade, style, voice };
   const draftKey = JSON.stringify(draft);
@@ -281,25 +282,40 @@ function ApplyForm() {
       </Section>
 
       <Section step={2} title="How you teach (used to match you with students)">
-        {STYLE_QUESTIONS.map((q) => (
-          <div key={q.id} className="space-y-1.5">
-            <p className="text-sm font-medium">
-              {q.label}
-              {q.multiple && <span className="font-normal text-muted-foreground"> (pick any)</span>}
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {q.options.map((o) => (
-                <Chip
-                  key={o}
-                  active={q.multiple ? style[q.id].includes(o) : style[q.id] === o}
-                  onClick={() => pick(q, o)}
-                >
-                  {o}
-                </Chip>
-              ))}
+        <p className="text-xs text-muted-foreground">
+          {STYLE_QUESTIONS.filter(isAnswered).length} of {STYLE_QUESTIONS.length} answered
+        </p>
+        {/* One row per question: question on the left, its chips on the right. */}
+        <div className="divide-y rounded-xl border">
+          {STYLE_QUESTIONS.map((q) => (
+            <div key={q.id} className="grid gap-2 p-3 sm:grid-cols-[10rem_1fr] sm:gap-4">
+              <div className="flex gap-2">
+                {isAnswered(q) ? (
+                  <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-primary" />
+                ) : (
+                  <Circle className="mt-0.5 size-4 shrink-0 text-muted-foreground/50" />
+                )}
+                <div>
+                  <p className="text-sm font-medium leading-snug">{q.label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {q.multiple ? "Pick any" : "Pick one"}
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap content-start gap-2">
+                {q.options.map((o) => (
+                  <Chip
+                    key={o}
+                    active={q.multiple ? style[q.id].includes(o) : style[q.id] === o}
+                    onClick={() => pick(q, o)}
+                  >
+                    {o}
+                  </Chip>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </Section>
 
       <Section step={3} title="Your voice (the AI learns to talk like you)">
