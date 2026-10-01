@@ -176,12 +176,6 @@ export default function MentorDetailPage() {
         <p className="min-w-0 flex-1 text-sm text-muted-foreground">
           <span className="font-mono font-semibold text-foreground">{code}</span> mentors
         </p>
-        <Link href={`/mentors/${code}`} className="text-xs text-primary hover:underline">
-          Back to results
-        </Link>
-        <Link href={`/mentors/${code}`} className="text-xs text-muted-foreground hover:underline">
-          Try another mentor
-        </Link>
         {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
 
