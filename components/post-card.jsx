@@ -13,6 +13,7 @@ import {
   ShieldAlert,
   BadgeCheck,
   Trash2,
+  EyeOff,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -72,6 +73,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
   const helpful = vote === null ? wasLiked : vote;
   const helpfulCount = Math.max(0, post.helpful_count + (helpful ? 1 : 0) - (wasLiked ? 1 : 0));
   const isAuthor = persona.id === post.author_id;
+  const isModerator = persona.role === "admin";
   // Prefer the mentor listing for a unit this post is about.
   const authorListings = SEED_MENTORS.filter((m) => m.profile_id === post.author_id);
   const authorListing =
@@ -119,6 +121,30 @@ export function PostCard({ post, author, reason, onDeleted }) {
         method: "DELETE",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ id: post.id, author_id: persona.id }),
+      });
+      if (!res.ok) return;
+      setGone(true);
+      onDeleted?.(post.id);
+    } catch {
+      /* keep the card */
+    }
+  }
+
+  // Moderator "Remove from feed": the same soft removal as the /review queue
+  // (status "removed", the row is kept), confirmed first because it changes
+  // the shared feed for everyone.
+  async function removeAsModerator() {
+    const restore = post.is_demo
+      ? "Reset demo brings sample posts back."
+      : "Only someone with database access can bring it back.";
+    if (!window.confirm(`Remove this post from the feed for everyone?
+
+It is hidden, not deleted. ${restore}`)) return;
+    try {
+      const res = await fetch("/api/review", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ post_id: post.id, action: "remove" }),
       });
       if (!res.ok) return;
       setGone(true);
@@ -351,7 +377,9 @@ export function PostCard({ post, author, reason, onDeleted }) {
               />
               <span className="max-sm:sr-only">{saved ? "Saved" : "Save"}</span>
             </Button>
-            {authorListing && !isAuthor && (
+            {/* The moderator can't chat with mentor AIs (the chat API only accepts
+                student and mentor profiles), and the row needs the room for Remove. */}
+            {authorListing && !isAuthor && !isModerator && (
               <Link
                 href={`/mentors/${authorListing.unit_code}/${author.id}`}
                 className={cn(
@@ -372,6 +400,19 @@ export function PostCard({ post, author, reason, onDeleted }) {
               >
                 <Trash2 data-icon="inline-start" />
                 <span className="max-sm:sr-only">Delete</span>
+              </Button>
+            )}
+            {isModerator && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={removeAsModerator}
+                title="Remove from feed (moderator)"
+                className="text-muted-foreground hover:text-destructive"
+              >
+                <EyeOff data-icon="inline-start" />
+                <span className="max-sm:sr-only">Remove</span>
+                <span className="sr-only"> from feed (moderator)</span>
               </Button>
             )}
             <ReportButton
