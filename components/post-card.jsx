@@ -377,7 +377,9 @@ It is hidden, not deleted. ${restore}`)) return;
               />
               <span className="max-sm:sr-only">{saved ? "Saved" : "Save"}</span>
             </Button>
-            {authorListing && !isAuthor && (
+            {/* The moderator can't chat with mentor AIs (the chat API only accepts
+                student and mentor profiles), and the row needs the room for Remove. */}
+            {authorListing && !isAuthor && !isModerator && (
               <Link
                 href={`/mentors/${authorListing.unit_code}/${author.id}`}
                 className={cn(
