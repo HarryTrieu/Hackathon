@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { Search, User } from "lucide-react";
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
+import { AuthButton } from "@/components/auth-button";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
@@ -61,7 +62,8 @@ export function MobileMenu() {
             </Link>
             <ThemeToggle className={cn(ROW, "py-2.5")} />
 
-            <div className="mt-2 border-t pt-3">
+            <div className="mt-2 space-y-2 border-t pt-3">
+              <AuthButton />
               <PersonaSwitcher />
             </div>
           </DialogPrimitive.Popup>
