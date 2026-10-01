@@ -151,3 +151,13 @@
     @apply font-sans;
   }
 }
+
+/* iOS Safari zooms into any focused field under 16px and does not zoom back.
+   Unlayered on purpose so it beats the text-sm / text-xs utilities. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"], [type="radio"], [type="file"]),
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
