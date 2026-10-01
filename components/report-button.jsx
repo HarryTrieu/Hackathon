@@ -16,7 +16,7 @@ const REASONS = [
 
 // Report a mentor profile, an AI chat, or a community post. AI never hides
 // the target; a human sees the report on /review.
-export function ReportButton({ targetType, targetId, className }) {
+export function ReportButton({ targetType, targetId, className, labelClassName, formClassName }) {
   const { persona } = usePersona();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -67,13 +67,13 @@ export function ReportButton({ targetType, targetId, className }) {
         )}
       >
         <Flag className="size-3" />
-        Report
+        <span className={labelClassName}>Report</span>
       </button>
     );
   }
 
   return (
-    <form onSubmit={submit} className="space-y-2 rounded-xl border p-3">
+    <form onSubmit={submit} className={cn("space-y-2 rounded-xl border p-3", formClassName)}>
       <p className="text-xs font-medium">Why are you reporting this?</p>
       <div className="flex flex-wrap gap-1.5">
         {REASONS.map((r) => (

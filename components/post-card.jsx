@@ -292,7 +292,8 @@ export function PostCard({ post, author, reason, onDeleted }) {
             )
           )}
 
-          <div className="mt-2 flex items-center gap-1">
+          {/* On phones the labels are screen-reader only, so the row fits at 390px. */}
+          <div className="mt-2 flex flex-wrap items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
@@ -308,7 +309,8 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 data-icon="inline-start"
                 className={cn(helpful && "fill-primary", vote === true && styles.pop)}
               />
-              Helpful · {helpfulCount}
+              <span className="max-sm:sr-only">Helpful · </span>
+              {helpfulCount}
             </Button>
             <Button
               variant="ghost"
@@ -320,7 +322,14 @@ export function PostCard({ post, author, reason, onDeleted }) {
               )}
             >
               <MessageCircle data-icon="inline-start" />
-              {seedReplyCount > 0 ? `Replies · ${seedReplyCount}` : "Reply"}
+              {seedReplyCount > 0 ? (
+                <>
+                  <span className="max-sm:sr-only">Replies · </span>
+                  {seedReplyCount}
+                </>
+              ) : (
+                <span className="max-sm:sr-only">Reply</span>
+              )}
             </Button>
             <Button
               variant="ghost"
@@ -340,7 +349,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 data-icon="inline-start"
                 className={cn(saved && "fill-primary", saved && saveTapped && styles.pop)}
               />
-              {saved ? "Saved" : "Save"}
+              <span className="max-sm:sr-only">{saved ? "Saved" : "Save"}</span>
             </Button>
             {authorListing && !isAuthor && (
               <Link
@@ -351,7 +360,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 )}
               >
                 <MessageCircleQuestion data-icon="inline-start" />
-                Ask {author.name.split(" ")[0]}&apos;s AI
+                Ask <span className="max-sm:hidden">{author.name.split(" ")[0]}&apos;s</span> AI
               </Link>
             )}
             {isAuthor && (
@@ -362,10 +371,16 @@ export function PostCard({ post, author, reason, onDeleted }) {
                 className="text-muted-foreground hover:text-destructive"
               >
                 <Trash2 data-icon="inline-start" />
-                Delete
+                <span className="max-sm:sr-only">Delete</span>
               </Button>
             )}
-            <ReportButton targetType="post" targetId={post.id} className="ml-auto px-2 py-1" />
+            <ReportButton
+              targetType="post"
+              targetId={post.id}
+              className="ml-auto px-2 py-1 max-sm:p-2"
+              labelClassName="max-sm:sr-only"
+              formClassName="basis-full"
+            />
           </div>
 
           {repliesOpen && <RepliesPanel postId={post.id} />}
