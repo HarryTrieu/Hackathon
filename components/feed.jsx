@@ -9,9 +9,12 @@ import { Composer } from "@/components/composer";
 import { HomeHero } from "@/components/home-hero";
 import { MentorStrip } from "@/components/mentor-strip";
 import { PostCard } from "@/components/post-card";
+import { SponsoredCard } from "@/components/sponsored-card";
 import { TagChip } from "@/components/tag-chip";
 import { usePersona } from "@/lib/persona-context";
+import { sponsoredFor, withSponsored } from "@/lib/sponsored";
 import { useFollowedTags } from "@/lib/use-followed-tags";
+import { useHiddenAds } from "@/lib/use-hidden-ads";
 import { pinMyNewPosts, unpinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
@@ -140,6 +143,32 @@ export function Feed() {
     [allPosts, pinnedPosts, persona.id]
   );
 
+  const hiddenAds = useHiddenAds(persona.id);
+  const ads = useMemo(() => sponsoredFor(persona, hiddenAds.ids), [persona, hiddenAds.ids]);
+
+  function renderItem(item) {
+    if (item.sponsored) {
+      return (
+        <SponsoredCard
+          key={`${persona.id}-${item.sponsored.ad.id}`}
+          entry={item.sponsored}
+          viewerId={persona.id}
+          onHide={hiddenAds.hide}
+        />
+      );
+    }
+    const { post, author, reason } = item;
+    return (
+      <PostCard
+        key={`${persona.id}-${post.id}`}
+        post={post}
+        author={author}
+        reason={reason}
+        onDeleted={(id) => setHidden((prev) => [...prev, id])}
+      />
+    );
+  }
+
   // Scroll up to a post you just published (e.g. from the popup while
   // scrolled down the feed).
   const newestId = myNewPosts[0]?.id;
@@ -191,42 +220,18 @@ export function Feed() {
         <TabsContent value="for-you" className={reloading ? "hidden" : undefined}>
           {/* key on persona so switching re-mounts and fades the new order in */}
           <div key={persona.id} className="animate-in fade-in duration-500">
-            {forYou.map(({ post, author, reason }) => (
-              <PostCard
-                key={`${persona.id}-${post.id}`}
-                post={post}
-                author={author}
-                reason={reason}
-                onDeleted={(id) => setHidden((prev) => [...prev, id])}
-              />
-            ))}
+            {withSponsored(forYou, ads).map(renderItem)}
             <CaughtUp />
           </div>
         </TabsContent>
 
         <TabsContent value="hot" className={reloading ? "hidden" : undefined}>
-          {hot.map(({ post, author, reason }) => (
-            <PostCard
-              key={`${persona.id}-${post.id}`}
-              post={post}
-              author={author}
-              reason={reason}
-              onDeleted={(id) => setHidden((prev) => [...prev, id])}
-            />
-          ))}
+          {withSponsored(hot, ads).map(renderItem)}
           <CaughtUp />
         </TabsContent>
 
         <TabsContent value="new" className={reloading ? "hidden" : undefined}>
-          {fresh.map(({ post, author, reason }) => (
-            <PostCard
-              key={`${persona.id}-${post.id}`}
-              post={post}
-              author={author}
-              reason={reason}
-              onDeleted={(id) => setHidden((prev) => [...prev, id])}
-            />
-          ))}
+          {withSponsored(fresh, ads).map(renderItem)}
           <CaughtUp />
         </TabsContent>
       </Tabs>

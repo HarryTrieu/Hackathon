@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEYS = ["sodu-mentor-apps", "sodu-followed-tags"];
+const STORAGE_KEYS = ["sodu-mentor-apps", "sodu-followed-tags", "sodu-hidden-ads"];
 
 const CONFIRM_TEXT =
   "Reset the demo for everyone using the site?\n\n" +

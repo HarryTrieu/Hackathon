@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
 import { MentorApplications } from "@/components/mentor-applications";
+import { SponsoredStats } from "@/components/sponsored-stats";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile, POSTS } from "@/lib/seed";
 
@@ -124,6 +125,8 @@ function ReviewQueue() {
       )}
 
       <MentorApplications />
+
+      <SponsoredStats />
 
       <section className="border-b px-4 py-4">
         <h2 className="text-sm font-semibold">User reports</h2>
