@@ -3,8 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Check, ChevronUp, LogOut, PencilLine, UserPlus } from "lucide-react";
+import { Check, ChevronsUpDown, LogOut, PencilLine, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AuthButton } from "@/components/auth-button";
 import { ResetDemoButton } from "@/components/reset-demo-button";
 import { UserAvatar } from "@/components/user-avatar";
@@ -145,8 +146,9 @@ function AccountList({ onDone }) {
 }
 
 // One card with whoever you are now; tap it to switch accounts.
-// inline: always show the list (phone Me sheet). Otherwise the card toggles
-// the list open above itself (desktop left nav).
+// inline: always show the list (phone Me sheet, already a pop-up panel).
+// Otherwise the card opens the list in a centred "Switch account" popup
+// (desktop left nav), which closes with X, Esc, a click outside, or a pick.
 export function AccountSwitcher({ inline = false }) {
   const { persona, account } = usePersona();
   const [open, setOpen] = useState(false);
@@ -156,16 +158,11 @@ export function AccountSwitcher({ inline = false }) {
   if (inline) return <AccountList />;
 
   return (
-    <div className="flex flex-col gap-2">
-      {open && (
-        <div className="max-h-[60svh] overflow-y-auto rounded-xl border bg-card p-3 shadow-sm">
-          <AccountList onDone={() => setOpen(false)} />
-        </div>
-      )}
+    <>
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
-        aria-expanded={open}
+        onClick={() => setOpen(true)}
+        aria-haspopup="dialog"
         aria-label="Switch account"
         className="flex w-full items-center gap-2 rounded-xl border bg-card p-2.5 text-left transition-colors duration-300 ease-out hover:border-primary/30"
       >
@@ -179,8 +176,20 @@ export function AccountSwitcher({ inline = false }) {
             {needsSetup ? "Google signed in: finish setup" : subtitle(persona)}
           </span>
         </span>
-        <ChevronUp className={cn("size-4 shrink-0 text-muted-foreground transition-transform", !open && "rotate-180")} />
+        <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
       </button>
-    </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-h-[85svh] gap-3 overflow-y-auto sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Switch account</DialogTitle>
+            <DialogDescription>
+              Use your own Google account, or explore Sodu as one of the demo students and mentors.
+            </DialogDescription>
+          </DialogHeader>
+          <AccountList onDone={() => setOpen(false)} />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
