@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { FloatingPostButton } from "@/components/floating-post-button";
+import { MobileMenu } from "@/components/mobile-menu";
 import { PostDialogButton } from "@/components/post-dialog";
 import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -100,7 +101,6 @@ export function MobileNav() {
     ...(persona.role === "admin"
       ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
       : [{ href: "/notifications", label: "Alerts", icon: Bell, badge: unreadCount }]),
-    { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
   return (
@@ -129,6 +129,7 @@ export function MobileNav() {
           </Link>
         );
       })}
+      <MobileMenu />
       {/* The moderator account reviews content, it does not post. */}
       {persona.role !== "admin" && <FloatingPostButton />}
     </nav>

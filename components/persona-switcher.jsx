@@ -1,19 +1,16 @@
 "use client";
 
-import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile, PERSONA_IDS, roleLabel } from "@/lib/seed";
+import { ResetDemoButton } from "@/components/reset-demo-button";
 import { UserAvatar } from "@/components/user-avatar";
-
-const STORAGE_KEYS = ["sodu-mentor-apps", "sodu-followed-tags"];
 
 export function PersonaSwitcher() {
   const { persona, personaId, setPersonaId } = usePersona();
   const pathname = usePathname();
   const router = useRouter();
-  const [resetting, setResetting] = useState(false);
 
   // On your own profile, follow the switch to the new persona's profile.
   function switchTo(nextId) {
@@ -23,17 +20,6 @@ export function PersonaSwitcher() {
   }
   const otherRole = persona.role === "mentor" ? "mentee" : "mentor";
   const otherId = PERSONA_IDS.find((id) => getProfile(id).role === otherRole) ?? PERSONA_IDS[0];
-
-  async function resetDemo() {
-    setResetting(true);
-    for (const key of STORAGE_KEYS) window.localStorage.removeItem(key);
-    try {
-      await fetch("/api/demo/reset", { method: "POST" });
-    } catch {
-      /* still reload so the UI snaps back */
-    }
-    window.location.reload();
-  }
 
   return (
     <div className="flex flex-col gap-2 rounded-xl border bg-card p-3 transition-colors duration-300 ease-out hover:border-primary/30">
@@ -71,9 +57,7 @@ export function PersonaSwitcher() {
           );
         })}
       </select>
-      <Button size="sm" variant="ghost" className="w-full text-xs" onClick={resetDemo} disabled={resetting}>
-        {resetting ? "Resetting..." : "Reset demo"}
-      </Button>
+      <ResetDemoButton />
       <p className="text-[10px] leading-tight text-muted-foreground">
         Demo switcher (replaces auth). Reset restores sample posts and local applications.
       </p>

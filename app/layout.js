@@ -3,7 +3,6 @@ import "./globals.css";
 import { PersonaProvider } from "@/lib/persona-context";
 import { LeftNav, MobileNav } from "@/components/left-nav";
 import { RightSidebar } from "@/components/right-sidebar";
-import { ThemeToggle } from "@/components/theme-toggle";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,10 +40,6 @@ export default function RootLayout({ children }) {
             <main className="min-w-0 flex-1 border-x">{children}</main>
             <RightSidebar />
           </div>
-          <ThemeToggle
-            compact
-            className="fixed top-3 right-3 z-20 border bg-background/90 shadow-sm backdrop-blur md:hidden"
-          />
           <MobileNav />
         </PersonaProvider>
       </body>
