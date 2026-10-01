@@ -1,6 +1,6 @@
 import { Fragment } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowRight, ShieldCheck, UserPlus } from "lucide-react";
+import { ArrowRight, ShieldCheck, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import styles from "./home-hero.module.css";
@@ -16,8 +16,8 @@ const DELAY = [styles.d0, styles.d1, styles.d2, styles.d3, styles.d4];
 
 export function HomeHero() {
   return (
-    <section className="space-y-4 border-b bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent px-4 py-5">
-      <p className="text-lg font-bold leading-snug">
+    <section className="space-y-3 border-b bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent px-4 py-4 sm:space-y-4 sm:py-5">
+      <p className="text-base font-bold leading-snug sm:text-lg">
         Find a Deakin peer who already passed your unit, try their AI first, then book the real person.
       </p>
       <div className="flex flex-wrap gap-2">
@@ -30,7 +30,8 @@ export function HomeHero() {
           Become a mentor
         </Link>
       </div>
-      <ol className="flex flex-col gap-1 sm:flex-row sm:items-center">
+      {/* Phones: one row of compact steps without the subtitles. */}
+      <ol className="flex items-center gap-1">
         {STEPS.map((s, i) => (
           <Fragment key={s.n}>
             {i > 0 && (
@@ -38,29 +39,28 @@ export function HomeHero() {
                 aria-hidden="true"
                 className={cn("flex shrink-0 justify-center", styles.arrow, DELAY[i * 2 - 1])}
               >
-                <ArrowRight className="hidden size-4 sm:block" />
-                <ArrowDown className="size-4 sm:hidden" />
+                <ArrowRight className="size-3.5 sm:size-4" />
               </li>
             )}
             <li
               className={cn(
-                "flex min-w-0 flex-1 gap-2 rounded-xl border bg-background/70 p-2.5 text-sm",
+                "flex min-w-0 flex-1 items-center gap-1.5 rounded-xl border bg-background/70 p-1.5 text-xs sm:items-start sm:gap-2 sm:p-2.5 sm:text-sm",
                 styles.step,
                 DELAY[i * 2]
               )}
             >
               <span
                 className={cn(
-                  "flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground",
+                  "flex size-5 shrink-0 items-center justify-center rounded-full bg-primary text-[11px] text-primary-foreground sm:size-6 sm:text-xs",
                   styles.badge,
                   DELAY[i * 2]
                 )}
               >
                 {s.n}
               </span>
-              <span>
+              <span className="min-w-0">
                 <span className="font-semibold">{s.title}</span>
-                <span className="block text-xs text-muted-foreground">{s.text}</span>
+                <span className="hidden text-xs text-muted-foreground sm:block">{s.text}</span>
               </span>
             </li>
           </Fragment>
@@ -68,7 +68,8 @@ export function HomeHero() {
       </ol>
       <p className="flex items-start gap-1.5 text-xs text-muted-foreground">
         <ShieldCheck className="mt-px size-3.5 shrink-0 text-primary" />
-        <span>
+        <span className="sm:hidden">Deakin only. Never your address, transcript or exact grade.</span>
+        <span className="hidden sm:inline">
           Deakin only for now. We keep the posts you write and a verified-email flag. Never your address or
           transcript, and your exact grade never appears on your profile.
         </span>
