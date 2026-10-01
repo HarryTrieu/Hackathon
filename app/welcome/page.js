@@ -1,0 +1,209 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { CheckCircle2, GraduationCap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import { AuthButton } from "@/components/auth-button";
+import { UNIVERSITY, unitDirectory } from "@/lib/communities";
+import { COURSES, GOALS, MAX_GOALS, MAX_UNITS, YEARS, goalLabel } from "@/lib/onboarding";
+import { setAccountProfile, useAccount } from "@/lib/use-account";
+import { cn } from "@/lib/utils";
+
+function Chip({ active, onClick, children, disabled = false }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      disabled={disabled && !active}
+      className={cn(
+        "rounded-full border px-3 py-1 text-sm transition-colors duration-300 disabled:opacity-40",
+        active ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary/40 hover:bg-primary/[0.04]"
+      )}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Field({ label, hint, children }) {
+  return (
+    <div className="space-y-2 border-b px-4 py-4">
+      <div>
+        <p className="text-sm font-semibold">{label}</p>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+const toggle = (list, value) => (list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
+
+// One-screen setup after the first Google sign-in. Also edits your details later.
+function WelcomeForm({ account }) {
+  const router = useRouter();
+  const existing = account.profile;
+  const [name, setName] = useState(existing?.name ?? account.user.user_metadata?.full_name ?? "");
+  const [course, setCourse] = useState(existing?.course ?? "");
+  const [year, setYear] = useState(existing?.year ?? null);
+  const [units, setUnits] = useState(existing?.units.map((u) => u.code) ?? []);
+  const [goals, setGoals] = useState(existing?.goals ?? []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Units in your course first, then the rest.
+  const allUnits = unitDirectory()
+    .filter((u) => u.name)
+    .sort((a, b) => (b.course === course) - (a.course === course) || a.code.localeCompare(b.code));
+
+  async function save(event) {
+    event.preventDefault();
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/me", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ name, course, year, units, goals }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Could not save. Try again.");
+        return;
+      }
+      setAccountProfile(account.user.id, data.profile);
+      router.push("/");
+    } catch {
+      setError("Could not reach the server. Try again.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <form onSubmit={save}>
+      {account.error === "migration-missing" && (
+        <p className="border-b bg-destructive/5 px-4 py-2 text-sm text-destructive">
+          Accounts aren&apos;t switched on in the database yet, so saving will fail until it&apos;s updated.
+        </p>
+      )}
+      <Field label="Your name" hint="Shown on your posts and profile.">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          maxLength={60}
+          className="h-10 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
+        />
+      </Field>
+      <Field label="Your course">
+        <div className="flex flex-wrap gap-2">
+          {COURSES.map((c) => (
+            <Chip key={c} active={course === c} onClick={() => setCourse(c)}>
+              {c}
+            </Chip>
+          ))}
+        </div>
+      </Field>
+      <Field label="Year">
+        <div className="flex flex-wrap gap-2">
+          {YEARS.map((y) => (
+            <Chip key={y} active={year === y} onClick={() => setYear(y)}>
+              Year {y}
+            </Chip>
+          ))}
+        </div>
+      </Field>
+      <Field
+        label="Units you're taking or have taken"
+        hint={`Pick up to ${MAX_UNITS}. Your feed and mentor matches use these. ${units.length} picked.`}
+      >
+        <div className="flex flex-wrap gap-2">
+          {allUnits.map((u) => (
+            <Chip
+              key={u.code}
+              active={units.includes(u.code)}
+              disabled={units.length >= MAX_UNITS}
+              onClick={() => setUnits((prev) => toggle(prev, u.code))}
+            >
+              <span className="font-mono">{u.code}</span> <span className="opacity-80">{u.name}</span>
+            </Chip>
+          ))}
+        </div>
+      </Field>
+      <Field label="What are you working towards?" hint={`Optional, up to ${MAX_GOALS}.`}>
+        <div className="flex flex-wrap gap-2">
+          {GOALS.map((g) => (
+            <Chip
+              key={g}
+              active={goals.includes(g)}
+              disabled={goals.length >= MAX_GOALS}
+              onClick={() => setGoals((prev) => toggle(prev, g))}
+            >
+              {goalLabel(g)}
+            </Chip>
+          ))}
+        </div>
+      </Field>
+      <div className="space-y-2 px-4 py-4">
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <Button type="submit" className="w-full rounded-full" disabled={saving || !name.trim() || !course || !year}>
+          {saving ? <Spinner data-icon="inline-start" /> : <CheckCircle2 data-icon="inline-start" />}
+          {existing ? "Save changes" : "Finish setting up"}
+        </Button>
+        <p className="text-center text-xs text-muted-foreground">
+          We keep your name, course, year, units, goals and Google profile picture. Never your password.
+        </p>
+      </div>
+    </form>
+  );
+}
+
+export default function WelcomePage() {
+  const account = useAccount();
+
+  return (
+    <div className="pb-24 md:pb-8">
+      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <h1 className="flex items-center gap-2 text-lg font-bold">
+          <GraduationCap className="size-5 text-primary" />
+          {account.status === "ready" ? "Your details" : "Welcome to Sodu"}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          {UNIVERSITY} students helping each other through their units.
+        </p>
+      </div>
+
+      {account.status === "loading" && (
+        <div className="space-y-3 px-4 py-6">
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-24 w-full rounded-lg" />
+        </div>
+      )}
+
+      {account.status === "demo" && (
+        <div className="space-y-4 px-4 py-8">
+          <p className="text-sm">
+            Sign in with Google to create your own account. It takes a minute: your name, course, year and units.
+          </p>
+          <AuthButton />
+          <p className="text-sm text-muted-foreground">
+            Or{" "}
+            <Link href="/" className="text-primary hover:underline">
+              keep exploring as a demo student
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
+      {(account.status === "needs-profile" || account.status === "ready") && (
+        <WelcomeForm key={account.user.id} account={account} />
+      )}
+    </div>
+  );
+}
