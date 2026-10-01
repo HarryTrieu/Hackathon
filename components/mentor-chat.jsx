@@ -102,7 +102,7 @@ export function MentorChat({ mentor, persona, unitName }) {
           <span className="text-xs text-muted-foreground">
             {remaining === null ? "..." : `${remaining} of ${MAX_CHATS_PER_DAY} messages left today`}
           </span>
-          <ReportButton targetType="chat" targetId={mentor.id} />
+          <ReportButton targetType="chat" targetId={mentor.id} labelClassName="max-sm:sr-only" />
         </div>
       </div>
       <p className="border-b bg-muted/40 px-4 py-1.5 text-xs text-muted-foreground">

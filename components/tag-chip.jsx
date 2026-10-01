@@ -23,7 +23,7 @@ export function TagChip({ tag, count = null, className }) {
         type="button"
         onClick={() => toggle(tag)}
         aria-pressed={following}
-        className="rounded-full px-1.5 text-[10px] text-muted-foreground hover:text-primary"
+        className="relative rounded-full px-1.5 text-[10px] text-muted-foreground hover:text-primary max-md:after:absolute max-md:after:inset-x-0 max-md:after:-inset-y-2.5"
         title={following ? `Unfollow ${tag}` : `Follow ${tag} to see more of it in For you`}
       >
         {following ? "Following" : "Follow"}

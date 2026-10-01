@@ -62,7 +62,7 @@ export function ReportButton({ targetType, targetId, className, labelClassName, 
         type="button"
         onClick={() => setOpen(true)}
         className={cn(
-          "inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive",
+          "relative inline-flex items-center gap-1 text-xs text-muted-foreground transition-colors hover:text-destructive after:absolute after:-inset-x-2 after:-inset-y-3",
           className
         )}
       >
