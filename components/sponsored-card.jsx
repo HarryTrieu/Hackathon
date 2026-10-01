@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, EyeOff, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ImageLightbox } from "@/components/image-lightbox";
 import { initials } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
@@ -88,6 +89,15 @@ export function SponsoredCard({ entry, viewerId, onHide }) {
 
           <h3 className="mt-1.5 font-semibold leading-snug">{ad.headline}</h3>
           <p className="mt-1 text-sm leading-relaxed text-foreground/90">{ad.body}</p>
+
+          {ad.image && (
+            <ImageLightbox
+              src={ad.image}
+              alt={ad.imageAlt ?? `${ad.advertiser} sponsored image`}
+              className="mt-2.5 rounded-2xl border"
+              imgClassName="aspect-video w-full object-cover"
+            />
+          )}
 
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {ad.details.map((detail) => (
