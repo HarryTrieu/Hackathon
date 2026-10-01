@@ -3,11 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Bell, Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
-import { AuthButton } from "@/components/auth-button";
+import { AccountSwitcher } from "@/components/account-switcher";
 import { FloatingPostButton } from "@/components/floating-post-button";
 import { MobileMenu } from "@/components/mobile-menu";
 import { PostDialogButton } from "@/components/post-dialog";
-import { PersonaSwitcher } from "@/components/persona-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
 import { useNotifications } from "@/lib/use-notifications";
@@ -84,8 +83,7 @@ export function LeftNav() {
 
       <div className="mt-auto space-y-2">
         <ThemeToggle className="w-full justify-start text-foreground/80" />
-        <AuthButton />
-        <PersonaSwitcher />
+        <AccountSwitcher />
       </div>
     </header>
   );

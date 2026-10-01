@@ -23,6 +23,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { reputationFor } from "@/lib/mentors";
 import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
 import { supabaseAdmin } from "@/lib/supabase";
+import { toProfile } from "@/lib/account";
 
 // Helpful votes on the person's posts: live counts from the database, like
 // the mentor page, so both pages agree. Seed counts when there is no DB.
@@ -38,11 +39,19 @@ async function helpfulVotes(profileId, seedPosts) {
   return reputationFor(profileId, seedPosts);
 }
 
+// Real (Google) accounts live only in the database, under ids like "u-<id>".
+async function realProfile(id) {
+  const db = supabaseAdmin();
+  if (!db || !id.startsWith("u-")) return null;
+  const { data } = await db.from("profiles").select("*").eq("id", id).maybeSingle();
+  return data ? toProfile(data) : null;
+}
+
 const plural = (n, word) => `${word}${n === 1 ? "" : "s"}`;
 
 export default async function ProfilePage({ params }) {
   const { id } = await params;
-  const profile = getProfile(id);
+  const profile = getProfile(id) ?? (await realProfile(id));
   if (!profile) notFound();
 
   const posts = getPostsByAuthor(id).sort((a, b) => a.hours_ago - b.hours_ago);
