@@ -47,3 +47,8 @@ create table if not exists blocks (
 alter table conversations enable row level security;
 alter table messages enable row level security;
 alter table blocks enable row level security;
+
+-- Deleting your own message: it shows as "This message was deleted" to both
+-- people. The text is kept only so a moderator can still read it if the
+-- chat is reported.
+alter table messages add column if not exists deleted_at timestamptz;

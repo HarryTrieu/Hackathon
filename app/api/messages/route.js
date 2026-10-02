@@ -3,6 +3,7 @@
 //   GET  ?profile_id=X&with=Y      the conversation with Y (marks it read)
 //   POST { profile_id, to_id, text }                  send a message
 //   POST { profile_id, other_id, action: block|unblock }
+//   POST { profile_id, message_id, action: "delete" }   delete your own message
 // No AI reads messages. A message can be reported; a moderator then sees it.
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
@@ -20,6 +21,18 @@ const NO_STORE = { "Cache-Control": "private, no-store" };
 const missingTable = (error) => ["PGRST205", "42P01"].includes(error?.code);
 const notReady = () =>
   Response.json({ error: "Messages need the database update (session-journey migration)." }, { status: 503 });
+
+// messages.deleted_at isn't there yet (column added later in the migration).
+const missingColumn = (error) => ["42703", "PGRST204"].includes(error?.code);
+
+// Run a messages select with deleted_at, or without it before the migration.
+async function selectMessages(build, columns) {
+  const res = await build(`${columns}, deleted_at`);
+  return missingColumn(res.error) ? build(columns) : res;
+}
+
+// What people see: a deleted message keeps its place but not its text.
+const shown = (m) => (m.deleted_at ? { ...m, text: null, deleted: true } : m);
 
 // Conversations are stored once per pair, with a_id < b_id.
 const pairOf = (x, y) => (x < y ? [x, y] : [y, x]);
@@ -94,13 +107,12 @@ export async function GET(request) {
 
   let messages = [];
   if (convo) {
-    const res = await db
-      .from("messages")
-      .select("id, sender_id, text, created_at")
-      .eq("conversation_id", convo.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
-    messages = (res.data ?? []).reverse();
+    const res = await selectMessages(
+      (cols) =>
+        db.from("messages").select(cols).eq("conversation_id", convo.id).order("created_at", { ascending: false }).limit(100),
+      "id, sender_id, text, created_at"
+    );
+    messages = (res.data ?? []).reverse().map(shown);
     // Opening the conversation reads it.
     await db.from("conversations").update({ [me === a ? "a_read_at" : "b_read_at"]: new Date().toISOString() }).eq("id", convo.id);
   }
@@ -128,13 +140,13 @@ export async function GET(request) {
 async function lastMessages(db, ids) {
   const texts = new Map();
   if (ids.length === 0) return texts;
-  const { data } = await db
-    .from("messages")
-    .select("conversation_id, text, created_at")
-    .in("conversation_id", ids)
-    .order("created_at", { ascending: false })
-    .limit(ids.length * 5);
-  for (const m of data ?? []) if (!texts.has(m.conversation_id)) texts.set(m.conversation_id, m.text);
+  const { data } = await selectMessages(
+    (cols) => db.from("messages").select(cols).in("conversation_id", ids).order("created_at", { ascending: false }).limit(ids.length * 5),
+    "conversation_id, text, created_at"
+  );
+  for (const m of data ?? []) {
+    if (!texts.has(m.conversation_id)) texts.set(m.conversation_id, m.deleted_at ? "Message deleted" : m.text);
+  }
   return texts;
 }
 
@@ -142,6 +154,12 @@ const Send = z.object({
   profile_id: z.string().min(1).max(80),
   to_id: z.string().regex(PROFILE_ID, "That person doesn't exist."),
   text: z.string().trim().min(1, "Type a message.").max(2000, "Keep it under 2000 characters."),
+});
+
+const DeleteAction = z.object({
+  profile_id: z.string().min(1).max(80),
+  message_id: z.string().uuid(),
+  action: z.literal("delete"),
 });
 
 const BlockAction = z.object({
@@ -158,6 +176,28 @@ export async function POST(request) {
     return Response.json({ error: "Body must be JSON." }, { status: 400 });
   }
   const db = supabaseAdmin();
+
+  if (body?.action === "delete") {
+    const parsed = DeleteAction.safeParse(body);
+    if (!parsed.success) return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
+    const who = await actAs(parsed.data.profile_id);
+    if (!who.ok) return denied(who);
+    if (!db) return notReady();
+    // Only your own message, and only once.
+    const { data, error } = await db
+      .from("messages")
+      .update({ deleted_at: new Date().toISOString() })
+      .eq("id", parsed.data.message_id)
+      .eq("sender_id", parsed.data.profile_id)
+      .is("deleted_at", null)
+      .select("id");
+    if (missingColumn(error)) {
+      return Response.json({ error: "Deleting messages needs the database update (session-journey migration)." }, { status: 503 });
+    }
+    if (error) return Response.json({ error: "Could not delete the message." }, { status: 500 });
+    if (data.length === 0) return Response.json({ error: "You can only delete your own messages." }, { status: 404 });
+    return Response.json({ ok: true });
+  }
 
   if (body?.action) {
     const parsed = BlockAction.safeParse(body);

@@ -189,6 +189,7 @@ function ReviewQueue({ moderatorId }) {
                     {r.conversation.map((m, i) => (
                       <p key={i} className={m.sender_id === r.reported_id ? "font-medium" : "text-muted-foreground"}>
                         {getProfile(m.sender_id)?.name ?? (m.sender_id === r.reporter_id ? "Reporter" : "Reported person")}: {m.text}
+                        {m.deleted_at && <span className="ml-1 italic text-destructive">(deleted by sender)</span>}
                       </p>
                     ))}
                   </div>

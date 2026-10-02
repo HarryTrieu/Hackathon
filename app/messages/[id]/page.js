@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, Ban, CalendarCheck, Send, ShieldAlert } from "lucide-react";
+import { ArrowLeft, Ban, CalendarCheck, Send, ShieldAlert, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
@@ -163,6 +163,32 @@ function Conversation() {
     }
   }
 
+  // Delete for everyone: the bubble becomes "This message was deleted".
+  async function remove(message) {
+    if (!window.confirm("Delete this message for everyone? Moderators can still see it if this chat is reported.")) return;
+    setSendError(null);
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ profile_id: meId, message_id: message.id, action: "delete" }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSendError(json.error ?? "Could not delete the message.");
+        return;
+      }
+      setData((prev) =>
+        prev
+          ? { ...prev, messages: prev.messages.map((m) => (m.id === message.id ? { ...m, text: null, deleted: true } : m)) }
+          : prev
+      );
+      refreshInbox();
+    } catch {
+      setSendError("Could not reach the server.");
+    }
+  }
+
   async function setBlocked(block) {
     if (block && !window.confirm(`Block ${data.other.name}? They won't be able to message you.`)) return;
     await fetch("/api/messages", {
@@ -249,15 +275,39 @@ function Conversation() {
         {data?.messages.map((m) => {
           const mine = m.sender_id === meId;
           return (
-            <div key={m.id} className={cn("flex", mine ? "justify-end" : "justify-start")}>
+            <div key={m.id} className={cn("group flex items-center gap-1", mine ? "justify-end" : "justify-start")}>
+              {mine && !m.deleted && (
+                <button
+                  type="button"
+                  onClick={() => remove(m)}
+                  aria-label="Delete message"
+                  title="Delete message"
+                  className="rounded-full p-1.5 text-muted-foreground opacity-60 transition hover:bg-muted hover:text-destructive hover:opacity-100 md:opacity-0 md:focus-visible:opacity-100 md:group-hover:opacity-100"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+              )}
               <div
                 className={cn(
                   "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",
-                  mine ? "bg-primary text-primary-foreground" : "bg-muted"
+                  m.deleted
+                    ? "border border-dashed bg-transparent text-muted-foreground"
+                    : mine
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted"
                 )}
               >
-                <p className="whitespace-pre-wrap break-words">{m.text}</p>
-                <p className={cn("mt-0.5 text-[10px]", mine ? "text-primary-foreground/70" : "text-muted-foreground")}>
+                {m.deleted ? (
+                  <p className="italic">{mine ? "You deleted this message" : "This message was deleted"}</p>
+                ) : (
+                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                )}
+                <p
+                  className={cn(
+                    "mt-0.5 text-[10px]",
+                    mine && !m.deleted ? "text-primary-foreground/70" : "text-muted-foreground"
+                  )}
+                >
                   {timeOf(m.created_at)}
                 </p>
               </div>

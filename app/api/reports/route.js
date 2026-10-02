@@ -54,12 +54,11 @@ async function withConversations(db, reports) {
       const [a, b] = r.reporter_id < other ? [r.reporter_id, other] : [other, r.reporter_id];
       const { data: convo } = await db.from("conversations").select("id").eq("a_id", a).eq("b_id", b).maybeSingle();
       if (!convo) return { ...r, conversation: [] };
-      const { data: messages } = await db
-        .from("messages")
-        .select("sender_id, text, created_at")
-        .eq("conversation_id", convo.id)
-        .order("created_at", { ascending: false })
-        .limit(20);
+      // Deleted messages are included (marked) so evidence can't be removed.
+      const query = (cols) =>
+        db.from("messages").select(cols).eq("conversation_id", convo.id).order("created_at", { ascending: false }).limit(20);
+      let { data: messages, error } = await query("sender_id, text, created_at, deleted_at");
+      if (error) ({ data: messages } = await query("sender_id, text, created_at"));
       return { ...r, reported_id: other, conversation: (messages ?? []).reverse() };
     })
   );
