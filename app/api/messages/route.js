@@ -76,6 +76,7 @@ export async function GET(request) {
     if (error) return Response.json({ error: "Could not load messages." }, { status: 500 });
     const lookup = await profilesById(data.map((c) => (c.a_id === me ? c.b_id : c.a_id)));
     const lastTexts = await lastMessages(db, data.map((c) => c.id));
+    const sessions = await latestSessions(db, me);
     const conversations = data
       .map((c) => {
         const otherId = c.a_id === me ? c.b_id : c.a_id;
@@ -86,6 +87,8 @@ export async function GET(request) {
           last_text: lastTexts.get(c.id) ?? "",
           last_message_at: c.last_message_at,
           last_sender_id: c.last_sender_id,
+          // Newest session request between you two, for the Sessions tab.
+          session: sessions.get(otherId) ?? null,
           unread: c.last_sender_id !== me && (!readAt || c.last_message_at > readAt),
         };
       })
@@ -134,6 +137,22 @@ export async function GET(request) {
     },
     { headers: NO_STORE }
   );
+}
+
+// Your newest session request with each person: other id -> { unit_code, status }.
+async function latestSessions(db, me) {
+  const byOther = new Map();
+  const { data } = await db
+    .from("session_requests")
+    .select("mentor_id, mentee_id, unit_code, status, created_at")
+    .or(`mentor_id.eq.${me},mentee_id.eq.${me}`)
+    .order("created_at", { ascending: false })
+    .limit(200);
+  for (const r of data ?? []) {
+    const otherId = r.mentor_id === me ? r.mentee_id : r.mentor_id;
+    if (!byOther.has(otherId)) byOther.set(otherId, { unit_code: r.unit_code, status: r.status });
+  }
+  return byOther;
 }
 
 // The newest message text of each conversation, for the list preview.
