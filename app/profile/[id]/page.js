@@ -20,6 +20,7 @@ import { PostCard } from "@/components/post-card";
 import { ResourceLink } from "@/components/resource-link";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { StatRow } from "@/components/stat-row";
+import { MessageButton } from "@/components/message-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { reputationFor } from "@/lib/mentors";
 import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
@@ -88,7 +89,10 @@ export default async function ProfilePage({ params }) {
             textClassName="text-xl"
           />
           <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold">{profile.name}</h1>
+            <div className="flex items-start justify-between gap-2">
+              <h1 className="text-xl font-bold">{profile.name}</h1>
+              <MessageButton profile={profile} />
+            </div>
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Badge>{roleLabel(profile.role)}</Badge>

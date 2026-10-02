@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   BadgeCheck,
   Bell,
@@ -27,7 +28,8 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
-import { ConfirmHeld, RateSession, ReceivedRating, SessionContact, SessionPlan } from "@/components/session-details";
+import { ConfirmHeld, RateSession, ReceivedRating, SessionPlan } from "@/components/session-details";
+import { firstMessage } from "@/lib/sessions";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile } from "@/lib/seed";
 import {
@@ -173,6 +175,7 @@ function describe(n, meId) {
 
 export default function NotificationsPage() {
   const { persona } = usePersona();
+  const router = useRouter();
   const [tab, setTab] = useState("all");
   const [note, setNote] = useState(null);
   const notif = useNotifications(persona.id);
@@ -231,12 +234,14 @@ export default function NotificationsPage() {
         return;
       }
       const mentee = (getProfile(req.mentee_id) ?? req.mentee_profile)?.name ?? "The student";
-      setNote(
-        action === "accept"
-          ? `Accepted. ${mentee} will see it in their notifications.`
-          : `Declined. ${mentee} will see it in their notifications.`
-      );
       notif.reload();
+      if (action === "accept") {
+        // The mentor starts the conversation, with a suggested opener.
+        const draft = firstMessage({ fromName: persona.name, toName: mentee, unitCode: req.unit_code, fromMentor: true });
+        router.push(`/messages/${req.mentee_id}?draft=${encodeURIComponent(draft)}`);
+        return;
+      }
+      setNote(`Declined. ${mentee} will see it in their notifications.`);
     } catch {
       setNote("Could not reach the server. Try again.");
     }
@@ -418,7 +423,11 @@ export default function NotificationsPage() {
                             </Button>
                           </div>
                         )}
-                        <SessionContact request={r} me={persona} other={mentee} fromMentor />
+                        {r.status === "accepted" && (
+                          <Link href={`/messages/${r.mentee_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
+                            Open chat with {mentee.name.split(" ")[0]}
+                          </Link>
+                        )}
                         <ReceivedRating request={r} />
                         <ConfirmHeld request={r} mentorId={persona.id} onSaved={notif.reload} />
                       </div>
@@ -462,7 +471,11 @@ export default function NotificationsPage() {
                       <p className="text-muted-foreground">{r.message}</p>
                       <SessionPlan request={r} />
                       <div className="space-y-2 pt-1">
-                        <SessionContact request={r} me={persona} other={mentor} fromMentor={false} />
+                        {r.status === "accepted" && (
+                          <Link href={`/messages/${r.mentor_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
+                            Open chat with {mentor.name.split(" ")[0]}
+                          </Link>
+                        )}
                         <RateSession request={r} menteeId={persona.id} onSaved={notif.reload} />
                       </div>
                     </div>

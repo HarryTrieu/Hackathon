@@ -74,7 +74,7 @@ function ReviewQueue({ moderatorId }) {
         if (!cancelled && data) setFunnel(data);
       })
       .catch(() => {});
-    fetch("/api/reports")
+    fetch(`/api/reports?moderator_id=${encodeURIComponent(moderatorId)}`)
       .then((res) => (res.ok ? res.json() : { reports: [] }))
       .then((data) => {
         if (!cancelled) setReports(data.reports ?? []);
@@ -83,7 +83,7 @@ function ReviewQueue({ moderatorId }) {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [moderatorId]);
 
   async function act(postId, action) {
     try {
@@ -180,6 +180,19 @@ function ReviewQueue({ moderatorId }) {
                       </span>
                     </div>
                     <p className="text-sm">{r.reason}</p>
+                {r.conversation && (
+                  <div className="space-y-1 rounded-lg border bg-muted/30 p-2 text-xs">
+                    <p className="font-medium text-muted-foreground">
+                      Reported chat with {getProfile(r.reported_id)?.name ?? r.reported_id} (last {r.conversation.length} messages)
+                    </p>
+                    {r.conversation.length === 0 && <p className="text-muted-foreground">No messages.</p>}
+                    {r.conversation.map((m, i) => (
+                      <p key={i} className={m.sender_id === r.reported_id ? "font-medium" : "text-muted-foreground"}>
+                        {getProfile(m.sender_id)?.name ?? (m.sender_id === r.reporter_id ? "Reporter" : "Reported person")}: {m.text}
+                      </p>
+                    ))}
+                  </div>
+                )}
                     <Button
                       size="sm"
                       variant="secondary"

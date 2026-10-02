@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, Check, Copy, Mail, MapPin, Star } from "lucide-react";
+import { CalendarClock, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { firstMessage, formatWhen } from "@/lib/sessions";
+import { formatWhen } from "@/lib/sessions";
 import { cn } from "@/lib/utils";
 
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
@@ -36,67 +36,6 @@ export function SessionPlan({ request }) {
         </span>
       )}
     </p>
-  );
-}
-
-function CopyButton({ text, label }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <Button
-      type="button"
-      size="sm"
-      variant="ghost"
-      className="h-7 px-2 text-xs"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(text);
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        } catch {
-          // Clipboard blocked: the text is on screen to copy by hand.
-        }
-      }}
-    >
-      {copied ? <Check data-icon="inline-start" /> : <Copy data-icon="inline-start" />}
-      {copied ? "Copied" : label}
-    </Button>
-  );
-}
-
-// Once accepted: how to reach the other person, and a first message.
-export function SessionContact({ request, me, other, fromMentor }) {
-  if (request.status !== "accepted") return null;
-  const message = firstMessage({
-    fromName: me?.name,
-    toName: other?.name,
-    unitCode: request.unit_code,
-    proposedTime: request.proposed_time,
-    proposedPlace: request.proposed_place,
-    fromMentor,
-  });
-  return (
-    <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/[0.04] p-2.5">
-      <p className="text-xs font-semibold">Accepted. Contact {other?.name?.split(" ")[0] ?? "them"} to confirm:</p>
-      {request.contact?.hidden ? (
-        <p className="text-xs text-muted-foreground">
-          They use a real account, so their email is only shared with signed-in accounts, not demo ones.
-        </p>
-      ) : request.contact ? (
-        <div className="flex flex-wrap items-center gap-1.5 text-sm">
-          <Mail className="size-3.5 text-primary" />
-          <span className="font-medium">{request.contact.email}</span>
-          {request.contact.demo && <span className="text-xs text-muted-foreground">(demo account, not a real inbox)</span>}
-          <CopyButton text={request.contact.email} label="Copy email" />
-        </div>
-      ) : (
-        <p className="text-xs text-muted-foreground">Their contact isn&apos;t available right now.</p>
-      )}
-      <div className="rounded-md bg-background/70 p-2 text-xs">
-        <p className="mb-1 font-medium text-muted-foreground">Suggested first message</p>
-        <p className="whitespace-pre-wrap">{message}</p>
-        <CopyButton text={message} label="Copy message" />
-      </div>
-    </div>
   );
 }
 

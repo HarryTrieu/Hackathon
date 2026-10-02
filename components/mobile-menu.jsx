@@ -4,12 +4,13 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Search, User } from "lucide-react";
+import { MessageCircle, Search, User } from "lucide-react";
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
+import { useInbox } from "@/lib/use-inbox";
 import { cn } from "@/lib/utils";
 
 const ROW = "flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm transition-colors hover:bg-muted";
@@ -20,6 +21,7 @@ const ROW = "flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm tra
 export function MobileMenu() {
   const pathname = usePathname();
   const { persona } = usePersona();
+  const inbox = useInbox(persona.role === "admin" ? null : persona.id);
   const [open, setOpen] = useState(false);
   const profileHref = `/profile/${persona.id}`;
   const active = open || pathname.startsWith(profileHref);
@@ -55,6 +57,17 @@ export function MobileMenu() {
               <User className="size-4" />
               View profile
             </Link>
+            {persona.role !== "admin" && (
+              <Link href="/messages" onClick={close} className={ROW}>
+                <MessageCircle className="size-4" />
+                Messages
+                {inbox.unread > 0 && (
+                  <span className="ml-auto rounded-full bg-primary px-2 text-xs font-semibold text-primary-foreground">
+                    {inbox.unread}
+                  </span>
+                )}
+              </Link>
+            )}
             <Link href="/search" onClick={close} className={ROW}>
               <Search className="size-4" />
               Topics

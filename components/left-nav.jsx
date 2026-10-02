@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Home, HeartHandshake, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { FloatingPostButton } from "@/components/floating-post-button";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -10,6 +10,7 @@ import { PostDialogButton } from "@/components/post-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
 import { useNotifications } from "@/lib/use-notifications";
+import { useInbox } from "@/lib/use-inbox";
 import { canModerate } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
@@ -33,10 +34,13 @@ export function LeftNav() {
   const { persona } = usePersona();
   const isAdmin = persona.role === "admin";
   const { unreadCount } = useNotifications(persona.id, pathname);
+  const inbox = useInbox(isAdmin ? null : persona.id);
 
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
+    // The demo Moderator doesn't chat; everyone else gets Messages.
+    ...(isAdmin ? [] : [{ href: "/messages", label: "Messages", icon: MessageCircle, badge: inbox.unread }]),
     { href: "/search", label: "Topics", icon: Search },
     { href: "/communities", label: "Communities", icon: Users },
     // The demo Moderator works from the review queue instead of notifications;

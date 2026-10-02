@@ -3,7 +3,7 @@
 // and your mentor application decisions. Read state lives on the client.
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
-import { contactsFor, realProfiles } from "@/lib/account";
+import { realProfiles } from "@/lib/account";
 
 function excerpt(text, max = 80) {
   if (!text) return "";
@@ -123,26 +123,13 @@ export async function GET(request) {
     ...sentRows.map((r) => r.mentor_id),
     ...receivedRows.map((r) => r.mentee_id),
   ]);
-  // Contacts only for accepted requests, and only the other person's.
-  const contacts = await contactsFor([
-    ...sentRows.filter((r) => r.status === "accepted").map((r) => r.mentor_id),
-    ...receivedRows.filter((r) => r.status === "accepted").map((r) => r.mentee_id),
-  ]);
   const withPerson = (row, id, key) => (people.has(id) ? { ...row, [key]: people.get(id) } : row);
-  // A real person's email only goes to another real, signed-in account:
-  // demo accounts are open to anyone, so whoever is acting as one must not
-  // see a real student's address.
-  const withContact = (row, id) => {
-    if (row.status !== "accepted" || !contacts.has(id)) return row;
-    const contact = contacts.get(id);
-    return { ...row, contact: !contact.demo && !who.real ? { hidden: true } : contact };
-  };
 
   return Response.json({
     notifications: notifications.map((n) => withPerson(n, n.actor_id, "actor")),
     requests: {
-      sent: sentRows.map((r) => withContact(withPerson(r, r.mentor_id, "mentor_profile"), r.mentor_id)),
-      received: receivedRows.map((r) => withContact(withPerson(r, r.mentee_id, "mentee_profile"), r.mentee_id)),
+      sent: sentRows.map((r) => withPerson(r, r.mentor_id, "mentor_profile")),
+      received: receivedRows.map((r) => withPerson(r, r.mentee_id, "mentee_profile")),
     },
     persisted: true,
   });

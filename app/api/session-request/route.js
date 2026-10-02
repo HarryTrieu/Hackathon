@@ -10,7 +10,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings } from "@/lib/mentor-ai";
 import { LISTING_ID, parseListingId } from "@/lib/mentors";
-import { MAX_DAYS_AHEAD, PLACES } from "@/lib/sessions";
+import { PLACES } from "@/lib/sessions";
 import { actAs, denied } from "@/lib/actor";
 
 // The session-journey migration hasn't run yet: Postgres says 42703 for an
@@ -21,15 +21,10 @@ const SessionRequest = z.object({
   listing_id: z.string().regex(LISTING_ID, "Invalid mentor."),
   mentee_id: z.string().min(1).max(80),
   message: z.string().trim().min(5, "Add a short message for the mentor.").max(1000),
-  proposed_time: z
-    .string({ message: "Pick a day and time." })
-    .datetime({ offset: true, message: "Pick a day and time." })
-    .refine((t) => new Date(t).getTime() > Date.now() - 5 * 60_000, "Pick a time in the future.")
-    .refine(
-      (t) => new Date(t).getTime() < Date.now() + MAX_DAYS_AHEAD * 86_400_000,
-      `Pick a time in the next ${MAX_DAYS_AHEAD} days.`
-    ),
-  proposed_place: z.enum(PLACES, { message: "Pick where to meet." }),
+  // Optional: since 2 Oct the mentor arranges time and place in Messages
+  // after accepting. Still accepted if a client sends them.
+  proposed_time: z.string().datetime({ offset: true }).optional(),
+  proposed_place: z.enum(PLACES).optional(),
   place_detail: z.string().trim().max(80).optional(),
 });
 
@@ -177,8 +172,8 @@ export async function POST(request) {
     message,
     rate_per_hour: listing.rate_per_hour,
     status: "sent",
-    proposed_time: new Date(proposed_time).toISOString(),
-    proposed_place: place_detail ? `${proposed_place}: ${place_detail}` : proposed_place,
+    proposed_time: proposed_time ? new Date(proposed_time).toISOString() : null,
+    proposed_place: proposed_place ? (place_detail ? `${proposed_place}: ${place_detail}` : proposed_place) : null,
     created_at: new Date().toISOString(),
   };
   const db = supabaseAdmin();

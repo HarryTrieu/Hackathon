@@ -22,7 +22,10 @@ function memoryStore() {
   return globalThis.__soduReports;
 }
 
-export async function GET() {
+// The open reports, for moderators only (a reported chat includes messages).
+export async function GET(request) {
+  const mod = await actAsModerator(new URL(request.url).searchParams.get("moderator_id"));
+  if (!mod.ok) return denied(mod);
   const db = supabaseAdmin();
   if (db) {
     const { data, error } = await db
@@ -32,13 +35,34 @@ export async function GET() {
       .order("created_at", { ascending: false })
       .limit(50);
     if (!error && Array.isArray(data)) {
-      return Response.json({ reports: data, persisted: true });
+      return Response.json({ reports: await withConversations(db, data), persisted: true });
     }
   }
   return Response.json({
     reports: memoryStore().filter((r) => r.status === "open"),
     persisted: false,
   });
+}
+
+// A reported chat ("dm:<other>", filed by one side) gets the last 20 messages
+// between the two people, so a moderator can judge it. No AI reads them.
+async function withConversations(db, reports) {
+  return Promise.all(
+    reports.map(async (r) => {
+      if (r.target_type !== "chat" || !r.target_id.startsWith("dm:")) return r;
+      const other = r.target_id.slice(3);
+      const [a, b] = r.reporter_id < other ? [r.reporter_id, other] : [other, r.reporter_id];
+      const { data: convo } = await db.from("conversations").select("id").eq("a_id", a).eq("b_id", b).maybeSingle();
+      if (!convo) return { ...r, conversation: [] };
+      const { data: messages } = await db
+        .from("messages")
+        .select("sender_id, text, created_at")
+        .eq("conversation_id", convo.id)
+        .order("created_at", { ascending: false })
+        .limit(20);
+      return { ...r, reported_id: other, conversation: (messages ?? []).reverse() };
+    })
+  );
 }
 
 export async function POST(request) {
