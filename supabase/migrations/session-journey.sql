@@ -52,3 +52,20 @@ alter table blocks enable row level security;
 -- people. The text is kept only so a moderator can still read it if the
 -- chat is reported.
 alter table messages add column if not exists deleted_at timestamptz;
+
+-- Mentor membership: mentors pay A$15 per trimester (120 days) to be listed in
+-- Find a mentor, with a money-back guarantee if no student requests a session
+-- in the first 30 days. Payments are demo only (no card is charged).
+-- Seeded demo mentors don't need a row.
+create table if not exists mentor_memberships (
+  id uuid primary key default gen_random_uuid(),
+  profile_id text not null references profiles(id),
+  amount_cents int not null,
+  paid_at timestamptz not null default now(),
+  ends_at timestamptz not null,
+  guarantee_until timestamptz not null,
+  refunded_at timestamptz,
+  demo boolean not null default true
+);
+create index if not exists mentor_memberships_profile on mentor_memberships (profile_id, paid_at desc);
+alter table mentor_memberships enable row level security;

@@ -180,12 +180,15 @@ function ApplyForm() {
         <CheckCircle2 className="size-10 text-primary" />
         <h1 className="text-xl font-bold">Application sent for review</h1>
         <p className="max-w-sm text-sm text-muted-foreground">
-          A Sodu moderator checks your grade{transcript ? " and transcript" : ""} for {unitCode}. Once approved,
-          your AI mentor goes live and students can find you.
+          A Sodu moderator checks your grade{transcript ? " and transcript" : ""} for {unitCode}. Once it&apos;s
+          approved and your mentor membership is active, your AI mentor goes live and students can find you.
           {!done.persisted && " (Saved on this device only: the database table is not set up yet.)"}
         </p>
         <div className="flex gap-2">
-          <Link href="/mentors" className={cn(buttonVariants(), "rounded-full")}>
+          <Link href="/mentor" className={cn(buttonVariants(), "rounded-full")}>
+            Open your Mentor hub
+          </Link>
+          <Link href="/mentors" className={cn(buttonVariants({ variant: "outline" }), "rounded-full")}>
             Back to mentors
           </Link>
         </div>

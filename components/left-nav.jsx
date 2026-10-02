@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { Award, Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { FloatingPostButton } from "@/components/floating-post-button";
 import { MobileMenu } from "@/components/mobile-menu";
@@ -39,6 +39,7 @@ export function LeftNav() {
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
+    ...(persona.role === "mentor" ? [{ href: "/mentor", label: "Mentor hub", icon: Award }] : []),
     // The demo Moderator doesn't chat; everyone else gets Messages.
     ...(isAdmin ? [] : [{ href: "/messages", label: "Messages", icon: MessageCircle, badge: inbox.unread }]),
     { href: "/search", label: "Topics", icon: Search },
@@ -63,7 +64,7 @@ export function LeftNav() {
       <nav className="flex flex-col gap-1" aria-label="Main">
         {items.map(({ href, label, icon: Icon, badge }) => {
           const active =
-            href === "/" ? pathname === "/" : pathname.startsWith(href);
+            href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={label}
@@ -115,7 +116,7 @@ export function MobileNav() {
     >
       {items.map(({ href, label, icon: Icon, badge }) => {
         const active =
-          href === "/" ? pathname === "/" : pathname.startsWith(href);
+          href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={label}
