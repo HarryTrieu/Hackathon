@@ -77,7 +77,11 @@ export function SessionContact({ request, me, other, fromMentor }) {
   return (
     <div className="space-y-2 rounded-lg border border-primary/30 bg-primary/[0.04] p-2.5">
       <p className="text-xs font-semibold">Accepted. Contact {other?.name?.split(" ")[0] ?? "them"} to confirm:</p>
-      {request.contact ? (
+      {request.contact?.hidden ? (
+        <p className="text-xs text-muted-foreground">
+          They use a real account, so their email is only shared with signed-in accounts, not demo ones.
+        </p>
+      ) : request.contact ? (
         <div className="flex flex-wrap items-center gap-1.5 text-sm">
           <Mail className="size-3.5 text-primary" />
           <span className="font-medium">{request.contact.email}</span>
