@@ -149,6 +149,10 @@
   }
   html {
     @apply font-sans;
+    /* Always keep room for the scrollbar, so switching between a long and a
+       short tab (review page, feed) doesn't shift the page sideways.
+       Base UI's popup scroll lock uses the same setting. */
+    scrollbar-gutter: stable;
   }
 }
 
