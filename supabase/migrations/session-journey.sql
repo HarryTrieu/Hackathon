@@ -11,3 +11,39 @@ alter table session_requests add column if not exists rated_at timestamptz;
 -- Mentor's answer to "Did the session happen?".
 alter table session_requests add column if not exists held boolean;
 alter table session_requests add column if not exists held_at timestamptz;
+
+-- In-app messaging. Anyone can message anyone; a person can block another.
+-- No AI reads messages; moderators only see a message someone reported.
+-- One conversation per pair of profiles, stored with a_id < b_id.
+create table if not exists conversations (
+  id uuid primary key default gen_random_uuid(),
+  a_id text not null references profiles(id),
+  b_id text not null references profiles(id),
+  a_read_at timestamptz,
+  b_read_at timestamptz,
+  last_message_at timestamptz,
+  last_sender_id text,
+  created_at timestamptz not null default now(),
+  check (a_id < b_id),
+  unique (a_id, b_id)
+);
+
+create table if not exists messages (
+  id uuid primary key default gen_random_uuid(),
+  conversation_id uuid not null references conversations(id) on delete cascade,
+  sender_id text not null references profiles(id),
+  text text not null check (char_length(text) between 1 and 2000),
+  created_at timestamptz not null default now()
+);
+create index if not exists messages_conversation_created on messages (conversation_id, created_at);
+
+create table if not exists blocks (
+  blocker_id text not null references profiles(id),
+  blocked_id text not null references profiles(id),
+  created_at timestamptz not null default now(),
+  primary key (blocker_id, blocked_id)
+);
+
+alter table conversations enable row level security;
+alter table messages enable row level security;
+alter table blocks enable row level security;
