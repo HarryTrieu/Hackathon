@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Empty,
   EmptyDescription,
@@ -49,6 +50,8 @@ function ReviewQueue({ moderatorId }) {
   const [funnel, setFunnel] = useState(null);
   const [source, setSource] = useState("seed");
   const [note, setNote] = useState(null);
+  // Follows the demo order: approve a mentor, resolve a report, remove a post.
+  const [tab, setTab] = useState("mentors");
 
   useEffect(() => {
     let cancelled = false;
@@ -126,119 +129,147 @@ function ReviewQueue({ moderatorId }) {
         </p>
       )}
 
-      <MentorApplications />
-
-      <SponsoredStats />
-
-      <section className="border-b px-4 py-4">
-        <h2 className="text-sm font-semibold">User reports</h2>
-        <p className="mb-3 text-xs text-muted-foreground">
-          From the Report button on a mentor profile, AI chat, or community post.
-        </p>
-        {reports === null && <Skeleton className="h-20 w-full rounded-xl" />}
-        {reports?.length === 0 && (
-          <p className="text-sm text-muted-foreground">No open reports.</p>
-        )}
-        <div className="space-y-3">
-          {reports?.map((r) => (
-            <Card key={r.id} className="gap-2">
-              <CardContent className="flex flex-col gap-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline">{r.target_type}</Badge>
-                  <span className="font-mono text-xs">{r.target_id}</span>
-                  <span className="text-xs text-muted-foreground">
-                    by {getProfile(r.reporter_id)?.name ?? r.reporter_id}
-                  </span>
-                </div>
-                <p className="text-sm">{r.reason}</p>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  onClick={async () => {
-                    await fetch("/api/reports", {
-                      method: "POST",
-                      headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ id: r.id, action: "resolve", moderator_id: moderatorId }),
-                    });
-                    setReports((prev) => prev.filter((x) => x.id !== r.id));
-                    setNote("Report marked resolved.");
-                  }}
-                >
-                  <ShieldCheck data-icon="inline-start" />
-                  Mark resolved
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
-
       {note && (
         <p className="border-b bg-muted/40 px-4 py-2 text-sm text-muted-foreground">
           {note}
         </p>
       )}
 
-      {flagged === null && (
-        <div className="flex flex-col gap-4 px-4 py-4">
-          {[0, 1].map((i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
-          ))}
-        </div>
-      )}
+      {/* One tab per queue instead of one long scroll; counts show what's waiting. */}
+      <Tabs value={tab} onValueChange={setTab} className="gap-0">
+        <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden border-b px-2 [scrollbar-width:none]">
+          <TabsTrigger value="mentors" className="flex-none px-3 py-2">
+            Mentor applications
+          </TabsTrigger>
+          <TabsTrigger value="reports" className="flex-none px-3 py-2">
+            Reports
+            {reports?.length > 0 && <Badge className="ml-1.5">{reports.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="flagged" className="flex-none px-3 py-2">
+            Flagged posts
+            {flagged?.length > 0 && <Badge className="ml-1.5">{flagged.length}</Badge>}
+          </TabsTrigger>
+          <TabsTrigger value="sponsored" className="flex-none px-3 py-2">
+            Sponsored
+          </TabsTrigger>
+        </TabsList>
 
-      {flagged?.length === 0 && (
-        <Empty className="my-8">
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <ShieldCheck />
-            </EmptyMedia>
-            <EmptyTitle>No AI-flagged posts</EmptyTitle>
-            <EmptyDescription>
-              AI only flags. It never hides a post. A person decides here.
-            </EmptyDescription>
-          </EmptyHeader>
-        </Empty>
-      )}
+        <TabsContent value="mentors">
+          <MentorApplications />
+        </TabsContent>
 
-      <div className="flex flex-col gap-4 px-4 py-4">
-        {flagged?.map((post) => {
-          const author = authorOf(post);
-          if (!author) return null;
-          return (
-            <Card key={post.id} className="gap-3">
-              <CardContent className="flex flex-col gap-3">
-                <div className="flex items-center gap-2">
-                  <UserAvatar profile={author} className="size-8" textClassName="text-xs" />
-                  <span className="text-sm font-semibold">{author.name}</span>
-                  <span className="text-xs text-muted-foreground">
-                    @{author.handle}
-                  </span>
-                </div>
-                <p className="text-sm leading-relaxed">{post.text}</p>
-                <p className="flex items-start gap-1.5 rounded-lg bg-destructive/5 p-2 text-sm text-destructive">
-                  <ShieldAlert className="mt-0.5 size-4 shrink-0" />
-                  {post.flag_reason}
-                </p>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={() => act(post.id, "approve")}>
-                    <ShieldCheck data-icon="inline-start" />
-                    Approve, clear flag
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => act(post.id, "remove")}
-                  >
-                    <EyeOff data-icon="inline-start" />
-                    Remove from feed
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+        <TabsContent value="reports">
+          <section className="border-b px-4 py-4">
+            <h2 className="text-sm font-semibold">User reports</h2>
+            <p className="mb-3 text-xs text-muted-foreground">
+              From the Report button on a mentor profile, AI chat, or community post.
+            </p>
+            {reports === null && <Skeleton className="h-20 w-full rounded-xl" />}
+            {reports?.length === 0 && (
+              <p className="text-sm text-muted-foreground">No open reports.</p>
+            )}
+            <div className="space-y-3">
+              {reports?.map((r) => (
+                <Card key={r.id} className="gap-2">
+                  <CardContent className="flex flex-col gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="outline">{r.target_type}</Badge>
+                      <span className="font-mono text-xs">{r.target_id}</span>
+                      <span className="text-xs text-muted-foreground">
+                        by {getProfile(r.reporter_id)?.name ?? r.reporter_id}
+                      </span>
+                    </div>
+                    <p className="text-sm">{r.reason}</p>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={async () => {
+                        await fetch("/api/reports", {
+                          method: "POST",
+                          headers: { "content-type": "application/json" },
+                          body: JSON.stringify({ id: r.id, action: "resolve", moderator_id: moderatorId }),
+                        });
+                        setReports((prev) => prev.filter((x) => x.id !== r.id));
+                        setNote("Report marked resolved.");
+                      }}
+                    >
+                      <ShieldCheck data-icon="inline-start" />
+                      Mark resolved
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        </TabsContent>
+
+        <TabsContent value="flagged">
+          {flagged === null && (
+            <div className="flex flex-col gap-4 px-4 py-4">
+              {[0, 1].map((i) => (
+                <Skeleton key={i} className="h-28 w-full rounded-xl" />
+              ))}
+            </div>
+          )}
+
+          {flagged?.length === 0 && (
+            <Empty className="my-8">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <ShieldCheck />
+                </EmptyMedia>
+                <EmptyTitle>No AI-flagged posts</EmptyTitle>
+                <EmptyDescription>
+                  AI only flags. It never hides a post. A person decides here.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          )}
+
+          <div className="flex flex-col gap-4 px-4 py-4">
+            {flagged?.map((post) => {
+              const author = authorOf(post);
+              if (!author) return null;
+              return (
+                <Card key={post.id} className="gap-3">
+                  <CardContent className="flex flex-col gap-3">
+                    <div className="flex items-center gap-2">
+                      <UserAvatar profile={author} className="size-8" textClassName="text-xs" />
+                      <span className="text-sm font-semibold">{author.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        @{author.handle}
+                      </span>
+                    </div>
+                    <p className="text-sm leading-relaxed">{post.text}</p>
+                    <p className="flex items-start gap-1.5 rounded-lg bg-destructive/5 p-2 text-sm text-destructive">
+                      <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                      {post.flag_reason}
+                    </p>
+                    <div className="flex gap-2">
+                      <Button size="sm" onClick={() => act(post.id, "approve")}>
+                        <ShieldCheck data-icon="inline-start" />
+                        Approve, clear flag
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="destructive"
+                        onClick={() => act(post.id, "remove")}
+                      >
+                        <EyeOff data-icon="inline-start" />
+                        Remove from feed
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sponsored">
+          <SponsoredStats />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

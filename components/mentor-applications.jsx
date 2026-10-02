@@ -56,7 +56,9 @@ export function MentorApplications() {
     }
   }
 
-  if (apps.length === 0 && !note) return null;
+  if (apps.length === 0 && !note) {
+    return <p className="px-4 py-6 text-sm text-muted-foreground">No mentor applications waiting for review.</p>;
+  }
 
   return (
     <section className="border-b px-4 py-4">
