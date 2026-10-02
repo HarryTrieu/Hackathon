@@ -3,6 +3,7 @@ import { z } from "zod";
 import { enrichPost } from "@/lib/enrich";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
+import { withRealAuthors } from "@/lib/account";
 
 // Who may post as author_id is checked by actAs() after parsing.
 const CreatePost = z.object({
@@ -44,7 +45,9 @@ export async function GET() {
     .limit(100);
 
   if (error) return Response.json({ source: "seed", posts: null });
-  return Response.json({ source: "supabase", posts: data.map(withHoursAgo) });
+  // Real (Google) authors aren't in the seed, so their profile rides along.
+  const posts = await withRealAuthors(data.map(withHoursAgo));
+  return Response.json({ source: "supabase", posts });
 }
 
 export async function POST(request) {
@@ -97,8 +100,9 @@ export async function POST(request) {
 
   // Even unpersisted posts return 200: the feed shows them for this session
   // and the composer tells the user which mode they are in.
+  const [withAuthor] = await withRealAuthors([withHoursAgo(post)]);
   return Response.json({
-    post: withHoursAgo(post),
+    post: withAuthor,
     mocked: ai.mocked,
     persisted,
   });

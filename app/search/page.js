@@ -7,8 +7,9 @@ import { BackButton } from "@/components/back-button";
 import { PostCard } from "@/components/post-card";
 import { TagChip } from "@/components/tag-chip";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { POSTS, getProfile } from "@/lib/seed";
+import { POSTS } from "@/lib/seed";
 import { useFollowedTags } from "@/lib/use-followed-tags";
+import { authorOf, withAuthors } from "@/lib/authors";
 
 function TagResults() {
   const params = useSearchParams();
@@ -32,7 +33,7 @@ function TagResults() {
 
   const posts = useMemo(() => {
     const hide = new Set(hidden);
-    return (dbPosts ?? POSTS).filter((p) => {
+    return withAuthors(dbPosts ?? POSTS).filter((p) => {
       if (hide.has(p.id) || p.status === "removed") return false;
       if (!tag) return followed.tags.some((t) => p.tags.includes(t));
       return p.tags.includes(tag) || p.unit_codes.map((c) => c.toLowerCase()).includes(tag);
@@ -70,7 +71,7 @@ function TagResults() {
           <PostCard
             key={`${tag}-${post.id}`}
             post={post}
-            author={getProfile(post.author_id)}
+            author={authorOf(post)}
             reason={tag ? `Tagged ${tag}` : "A tag you follow"}
             onDeleted={(id) => setHidden((prev) => [...prev, id])}
           />

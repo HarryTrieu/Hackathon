@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
-import { getProfile, getSeedReplies } from "@/lib/seed";
+import { getSeedReplies } from "@/lib/seed";
+import { authorOf } from "@/lib/authors";
 
 function relativeTime(iso, now) {
   const hours = (now - new Date(iso).getTime()) / 3600_000;
@@ -78,7 +79,7 @@ export function RepliesPanel({ postId }) {
   return (
     <div className="mt-2 space-y-3 border-l-2 border-muted pl-4">
       {replies.map((reply) => {
-        const author = getProfile(reply.author_id);
+        const author = authorOf(reply);
         if (!author) return null;
         return (
           <div key={reply.id} className="flex gap-2.5">

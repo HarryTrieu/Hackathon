@@ -5,6 +5,7 @@ import { randomUUID } from "crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
+import { withRealAuthors } from "@/lib/account";
 
 const CreateReply = z.object({
   post_id: z.string().min(1).max(64),
@@ -28,7 +29,7 @@ export async function GET(request) {
     .order("created_at", { ascending: true });
   if (error) return Response.json({ source: "seed", replies: null });
 
-  return Response.json({ source: "supabase", replies: data });
+  return Response.json({ source: "supabase", replies: await withRealAuthors(data) });
 }
 
 export async function POST(request) {
@@ -63,8 +64,9 @@ export async function POST(request) {
   };
 
   const db = supabaseAdmin();
-  if (!db) return Response.json({ reply, persisted: false });
+  const [shown] = await withRealAuthors([reply]);
+  if (!db) return Response.json({ reply: shown, persisted: false });
 
   const { error } = await db.from("replies").insert(reply);
-  return Response.json({ reply, persisted: !error });
+  return Response.json({ reply: shown, persisted: !error });
 }

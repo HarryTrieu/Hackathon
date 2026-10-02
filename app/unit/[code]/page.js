@@ -22,6 +22,7 @@ import {
   writeLocalMembership,
 } from "@/lib/communities";
 import { getProfile, POSTS } from "@/lib/seed";
+import { authorOf } from "@/lib/authors";
 import { cn } from "@/lib/utils";
 
 export default function UnitPage() {
@@ -217,7 +218,7 @@ export default function UnitPage() {
       </div>
 
       {unitPosts.map((post) => {
-        const author = getProfile(post.author_id);
+        const author = authorOf(post);
         if (!author) return null;
         return <PostCard key={post.id} post={post} author={author} reason={null} />;
       })}

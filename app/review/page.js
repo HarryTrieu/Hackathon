@@ -18,6 +18,7 @@ import { MentorApplications } from "@/components/mentor-applications";
 import { SponsoredStats } from "@/components/sponsored-stats";
 import { usePersona } from "@/lib/persona-context";
 import { canModerate } from "@/lib/roles";
+import { authorOf } from "@/lib/authors";
 import { getProfile, POSTS } from "@/lib/seed";
 
 // Only the admin persona moderates. The nav hides the link for everyone else;
@@ -202,7 +203,8 @@ function ReviewQueue({ moderatorId }) {
 
       <div className="flex flex-col gap-4 px-4 py-4">
         {flagged?.map((post) => {
-          const author = getProfile(post.author_id);
+          const author = authorOf(post);
+          if (!author) return null;
           return (
             <Card key={post.id} className="gap-3">
               <CardContent className="flex flex-col gap-3">

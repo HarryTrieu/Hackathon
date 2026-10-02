@@ -47,6 +47,24 @@ async function realProfile(id) {
   return data ? toProfile(data) : null;
 }
 
+// A real account's own posts (newest first), from the database.
+async function realPosts(profile) {
+  const db = supabaseAdmin();
+  if (!db) return [];
+  const { data } = await db
+    .from("posts")
+    .select("*")
+    .eq("author_id", profile.id)
+    .neq("status", "removed")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  const now = Date.now();
+  return (data ?? []).map((row) => ({
+    ...row,
+    hours_ago: Math.max(0, (now - new Date(row.created_at).getTime()) / 3600_000),
+  }));
+}
+
 const plural = (n, word) => `${word}${n === 1 ? "" : "s"}`;
 
 export default async function ProfilePage({ params }) {
@@ -54,7 +72,9 @@ export default async function ProfilePage({ params }) {
   const profile = getProfile(id) ?? (await realProfile(id));
   if (!profile) notFound();
 
-  const posts = getPostsByAuthor(id).sort((a, b) => a.hours_ago - b.hours_ago);
+  const posts = id.startsWith("u-")
+    ? await realPosts(profile)
+    : getPostsByAuthor(id).sort((a, b) => a.hours_ago - b.hours_ago);
   const helpful = profile.role === "admin" ? 0 : await helpfulVotes(id, posts);
 
   return (

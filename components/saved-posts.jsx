@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/empty";
 import { PostCard } from "@/components/post-card";
 import { usePersona } from "@/lib/persona-context";
-import { getProfile } from "@/lib/seed";
+import { authorOf } from "@/lib/authors";
 import { useSavedPosts } from "@/lib/use-saved-posts";
 
 // Saved posts are private to the active persona, so the tab only shows on
@@ -30,7 +30,7 @@ export function SavedTabContent({ profileId }) {
   if (persona.id !== profileId) return null;
 
   const items = posts
-    .map((post) => ({ post, author: getProfile(post.author_id) }))
+    .map((post) => ({ post, author: authorOf(post) }))
     .filter(({ author }) => author);
 
   return (
