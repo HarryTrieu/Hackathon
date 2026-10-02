@@ -17,6 +17,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
 import { gradeBand, mergeLocalApplications } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
+import { PLACES } from "@/lib/sessions";
 
 // Short labels for the mentor's Part A answers, shown as chips. The full
 // questions are written for the mentor filling in the form, not the student.
@@ -37,6 +38,15 @@ function SessionRequest({ mentor, persona }) {
   );
   const [state, setState] = useState("idle");
   const [note, setNote] = useState(null);
+  // datetime-local wants "YYYY-MM-DDTHH:mm" in local time; earliest is now.
+  const [minWhen] = useState(() => {
+    const d = new Date();
+    d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+    return d.toISOString().slice(0, 16);
+  });
+  const [when, setWhen] = useState("");
+  const [place, setPlace] = useState(PLACES[0]);
+  const [placeDetail, setPlaceDetail] = useState("");
 
   if (persona.id === mentor.profile_id) return null;
 
@@ -48,7 +58,14 @@ function SessionRequest({ mentor, persona }) {
       const res = await fetch("/api/session-request", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ listing_id: mentor.id, mentee_id: persona.id, message }),
+        body: JSON.stringify({
+          listing_id: mentor.id,
+          mentee_id: persona.id,
+          message,
+          proposed_time: when ? new Date(when).toISOString() : "",
+          proposed_place: place,
+          place_detail: placeDetail.trim() || undefined,
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -64,7 +81,7 @@ function SessionRequest({ mentor, persona }) {
       setState("sent");
       setNote(
         data.persisted
-          ? `Sent. ${first} will reply to arrange a time. Listed rate: $${mentor.rate_per_hour}/h.`
+          ? `Sent. ${first} will accept or decline in their notifications, and you'll see the answer under Notifications, Requests. Listed rate: $${mentor.rate_per_hour}/h.`
           : `Sent for this session only (database table not set up). Listed rate: $${mentor.rate_per_hour}/h.`
       );
     } catch {
@@ -96,9 +113,46 @@ function SessionRequest({ mentor, persona }) {
           </Button>
         </div>
       ) : (
-        <form onSubmit={submit} className="space-y-2">
+        <form onSubmit={submit} className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1 text-sm">
+              <span className="font-semibold">When</span>
+              <input
+                type="datetime-local"
+                required
+                min={minWhen}
+                value={when}
+                onChange={(e) => setWhen(e.target.value)}
+                className="h-10 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
+              />
+            </label>
+            <label className="space-y-1 text-sm">
+              <span className="font-semibold">Where</span>
+              <select
+                value={place}
+                onChange={(e) => setPlace(e.target.value)}
+                className="h-10 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
+              >
+                {PLACES.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+          <input
+            value={placeDetail}
+            onChange={(e) => setPlaceDetail(e.target.value)}
+            maxLength={80}
+            placeholder="Optional detail, e.g. Burwood library level 2"
+            className="h-10 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
+          />
           <p className="text-sm font-semibold">Message to {first}</p>
           <Textarea value={message} onChange={(e) => setMessage(e.target.value)} maxLength={1000} rows={3} />
+          <p className="text-xs text-muted-foreground">
+            {first} sees your proposed time and place. Once they accept, you both get each other&apos;s contact.
+          </p>
           {note && <p className="text-sm text-destructive">{note}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
@@ -214,6 +268,10 @@ export default function MentorDetailPage() {
             [mentor.reputation, "helpful votes"],
             [mentor.preview_chats ?? 0, "preview chats"],
             [mentor.contact_requests ?? 0, "contact requests"],
+            // Shown once a mentee has rated a session, with how many did.
+            ...(mentor.ratings
+              ? [[`${mentor.ratings.average}★`, `${mentor.ratings.count} rating${mentor.ratings.count === 1 ? "" : "s"} · ${mentor.ratings.helpedPercent}% unstuck`]]
+              : []),
           ]}
         />
 

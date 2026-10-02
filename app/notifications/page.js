@@ -9,6 +9,7 @@ import {
   CalendarPlus,
   CheckCircle2,
   MessageCircle,
+  Star,
   ThumbsUp,
   Undo2,
   X,
@@ -26,6 +27,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
+import { ConfirmHeld, RateSession, ReceivedRating, SessionContact, SessionPlan } from "@/components/session-details";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile } from "@/lib/seed";
 import {
@@ -101,7 +103,7 @@ function ClearButton({ label, onClick }) {
 
 // One row in the All tab: icon, who did what, and a short quote.
 function describe(n, meId) {
-  const actor = n.actor_id ? getProfile(n.actor_id) : null;
+  const actor = n.actor_id ? (getProfile(n.actor_id) ?? n.actor ?? null) : null;
   const name = <span className="font-semibold">{actor?.name ?? "Someone"}</span>;
   switch (n.type) {
     case "like":
@@ -139,6 +141,19 @@ function describe(n, meId) {
             <span className="font-mono">{n.unit_code}</span>
           </>
         ),
+      };
+    case "session_rated":
+      return {
+        icon: Star,
+        tab: "requests",
+        body: (
+          <>
+            {name} rated your <span className="font-mono">{n.unit_code}</span> session{" "}
+            <span className="text-primary">{"★".repeat(n.rating)}{"☆".repeat(5 - n.rating)}</span>
+            {n.helped ? ", it helped them get unstuck" : ""}
+          </>
+        ),
+        quote: n.text,
       };
     case "application":
       return {
@@ -215,7 +230,7 @@ export default function NotificationsPage() {
         setNote(data.error ?? "Could not update the request.");
         return;
       }
-      const mentee = getProfile(req.mentee_id)?.name ?? "The student";
+      const mentee = (getProfile(req.mentee_id) ?? req.mentee_profile)?.name ?? "The student";
       setNote(
         action === "accept"
           ? `Accepted. ${mentee} will see it in their notifications.`
@@ -283,7 +298,7 @@ export default function NotificationsPage() {
           {notifications.map((n) => {
             const d = describe(n, persona.id);
             if (!d) return null;
-            const actor = n.actor_id ? getProfile(n.actor_id) : null;
+            const actor = n.actor_id ? (getProfile(n.actor_id) ?? n.actor ?? null) : null;
             const Icon = d.icon;
             const content = (
               <>
@@ -360,7 +375,7 @@ export default function NotificationsPage() {
               )}
               <div className="space-y-3">
                 {requests.received.map((r) => {
-                  const mentee = getProfile(r.mentee_id);
+                  const mentee = getProfile(r.mentee_id) ?? r.mentee_profile;
                   if (!mentee) return null;
                   const clearable = canClearRequest(r, "received");
                   return (
@@ -385,6 +400,7 @@ export default function NotificationsPage() {
                           <StatusBadge status={r.status} />
                         </div>
                         <p>{r.message}</p>
+                        <SessionPlan request={r} />
                         {r.status === "sent" && (
                           <div className="flex gap-2">
                             <Button size="sm" className="rounded-full" onClick={() => decide(r, "accept")}>
@@ -402,6 +418,9 @@ export default function NotificationsPage() {
                             </Button>
                           </div>
                         )}
+                        <SessionContact request={r} me={persona} other={mentee} fromMentor />
+                        <ReceivedRating request={r} />
+                        <ConfirmHeld request={r} mentorId={persona.id} onSaved={notif.reload} />
                       </div>
                     </div>
                   );
@@ -422,7 +441,7 @@ export default function NotificationsPage() {
             )}
             <div className="space-y-3">
               {requests.sent.map((r) => {
-                const mentor = getProfile(r.mentor_id);
+                const mentor = getProfile(r.mentor_id) ?? r.mentor_profile;
                 if (!mentor) return null;
                 return (
                   <div key={r.id} className="group relative flex gap-3 rounded-xl border p-3 pr-12">
@@ -441,6 +460,11 @@ export default function NotificationsPage() {
                         <StatusBadge status={r.status} />
                       </div>
                       <p className="text-muted-foreground">{r.message}</p>
+                      <SessionPlan request={r} />
+                      <div className="space-y-2 pt-1">
+                        <SessionContact request={r} me={persona} other={mentor} fromMentor={false} />
+                        <RateSession request={r} menteeId={persona.id} onSaved={notif.reload} />
+                      </div>
                     </div>
                   </div>
                 );

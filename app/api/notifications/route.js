@@ -3,6 +3,7 @@
 // and your mentor application decisions. Read state lives on the client.
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
+import { contactsFor, realProfiles } from "@/lib/account";
 
 function excerpt(text, max = 80) {
   if (!text) return "";
@@ -92,6 +93,19 @@ export async function GET(request) {
         status: r.status,
         created_at: r.created_at,
       })),
+    // A mentee rated one of your sessions (session-journey columns).
+    ...(received.data ?? [])
+      .filter((r) => typeof r.rating === "number")
+      .map((r) => ({
+        key: `rated:${r.id}`,
+        type: "session_rated",
+        actor_id: r.mentee_id,
+        unit_code: r.unit_code,
+        rating: r.rating,
+        helped: r.helped,
+        text: r.rating_comment ? excerpt(r.rating_comment, 120) : null,
+        created_at: r.rated_at ?? r.created_at,
+      })),
     ...(apps.data ?? []).map((a) => ({
       key: `application:${a.id}:${a.status}`,
       type: "application",
@@ -101,9 +115,29 @@ export async function GET(request) {
     })),
   ].sort((a, b) => b.created_at.localeCompare(a.created_at));
 
+  // Real (Google) accounts aren't in the seed: send their profiles along.
+  const sentRows = sent.data ?? [];
+  const receivedRows = received.data ?? [];
+  const people = await realProfiles([
+    ...notifications.map((n) => n.actor_id),
+    ...sentRows.map((r) => r.mentor_id),
+    ...receivedRows.map((r) => r.mentee_id),
+  ]);
+  // Contacts only for accepted requests, and only the other person's.
+  const contacts = await contactsFor([
+    ...sentRows.filter((r) => r.status === "accepted").map((r) => r.mentor_id),
+    ...receivedRows.filter((r) => r.status === "accepted").map((r) => r.mentee_id),
+  ]);
+  const withPerson = (row, id, key) => (people.has(id) ? { ...row, [key]: people.get(id) } : row);
+  const withContact = (row, id) =>
+    row.status === "accepted" && contacts.has(id) ? { ...row, contact: contacts.get(id) } : row;
+
   return Response.json({
-    notifications,
-    requests: { sent: sent.data ?? [], received: received.data ?? [] },
+    notifications: notifications.map((n) => withPerson(n, n.actor_id, "actor")),
+    requests: {
+      sent: sentRows.map((r) => withContact(withPerson(r, r.mentor_id, "mentor_profile"), r.mentor_id)),
+      received: receivedRows.map((r) => withContact(withPerson(r, r.mentee_id, "mentee_profile"), r.mentee_id)),
+    },
     persisted: true,
   });
 }

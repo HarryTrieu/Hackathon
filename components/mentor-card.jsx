@@ -41,6 +41,12 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
               <Heart className="size-3.5" />
               {mentor.reputation} helpful
             </span>
+            {mentor.ratings && (
+              <span className="flex items-center gap-1" title={`${mentor.ratings.helpedPercent}% said it helped them get unstuck`}>
+                <span className="text-primary">★</span>
+                {mentor.ratings.average} ({mentor.ratings.count})
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Languages className="size-3.5" />
               {style.languages.join(", ")}
