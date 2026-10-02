@@ -2,22 +2,19 @@
 // AI never hides anything; a human resolves these on /review.
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = PROFILES.map((p) => p.id);
+import { actAs, actAsModerator, denied } from "@/lib/actor";
 
 const CreateReport = z.object({
   target_type: z.enum(["mentor", "chat", "post"]),
   target_id: z.string().trim().min(1).max(80),
-  reporter_id: z.string().refine((id) => PROFILE_IDS.includes(id), {
-    message: "Unknown reporter.",
-  }),
+  reporter_id: z.string().min(1).max(80),
   reason: z.string().trim().min(3, "Pick or write a reason.").max(300),
 });
 
 const ResolveReport = z.object({
   id: z.string().min(1),
   action: z.literal("resolve"),
+  moderator_id: z.string().min(1).max(80),
 });
 
 function memoryStore() {
@@ -57,6 +54,8 @@ export async function POST(request) {
     if (!parsed.success) {
       return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    const mod = await actAsModerator(parsed.data.moderator_id);
+    if (!mod.ok) return denied(mod);
     const db = supabaseAdmin();
     if (db) {
       const { error } = await db.from("reports").update({ status: "resolved" }).eq("id", parsed.data.id);
@@ -72,6 +71,9 @@ export async function POST(request) {
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+
+  const who = await actAs(parsed.data.reporter_id);
+  if (!who.ok) return denied(who);
 
   const report = {
     ...parsed.data,

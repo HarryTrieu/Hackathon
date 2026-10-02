@@ -1,13 +1,11 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { actAs, denied } from "@/lib/actor";
 
 const Event = z.object({
   type: z.enum(["preview_started", "contact_clicked"]),
   listing_id: z.string().min(1).max(40),
-  mentee_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown mentee."),
+  mentee_id: z.string().min(1).max(80),
 });
 
 function store() {
@@ -37,6 +35,8 @@ export async function POST(request) {
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
+  const who = await actAs(parsed.data.mentee_id);
+  if (!who.ok) return denied(who);
   const row = { ...parsed.data, created_at: new Date().toISOString() };
   const db = supabaseAdmin();
   if (db) {

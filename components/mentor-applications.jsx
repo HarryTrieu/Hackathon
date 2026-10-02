@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { GRADE_LABELS, mergeLocalApplications, saveLocalApplication } from "@/lib/mentors";
+import { usePersona } from "@/lib/persona-context";
 
 // Pending mentor applications. A person checks grade + transcript and
 // approves; only then does the AI mentor appear in search.
 export function MentorApplications() {
+  const { persona } = usePersona();
   const [apps, setApps] = useState([]);
   const [note, setNote] = useState(null);
 
@@ -34,7 +36,7 @@ export function MentorApplications() {
       const res = await fetch("/api/mentors/review", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ id: app.id, action }),
+        body: JSON.stringify({ id: app.id, action, moderator_id: persona.id }),
       });
       const data = await res.json();
       if (!res.ok) {

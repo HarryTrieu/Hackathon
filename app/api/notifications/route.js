@@ -2,9 +2,7 @@
 // likes and replies on your posts, session requests you sent or received,
 // and your mentor application decisions. Read state lives on the client.
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { actAs, denied } from "@/lib/actor";
 
 function excerpt(text, max = 80) {
   if (!text) return "";
@@ -13,9 +11,9 @@ function excerpt(text, max = 80) {
 
 export async function GET(request) {
   const profileId = new URL(request.url).searchParams.get("profile_id");
-  if (!PROFILE_IDS.has(profileId ?? "")) {
-    return Response.json({ error: "profile_id is required." }, { status: 400 });
-  }
+  // Your notifications only: a real account's are private to its owner.
+  const who = await actAs(profileId);
+  if (!who.ok) return denied(who);
   const db = supabaseAdmin();
   if (!db) return Response.json({ notifications: [], requests: { sent: [], received: [] }, persisted: false });
 

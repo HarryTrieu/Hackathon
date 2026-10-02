@@ -4,13 +4,11 @@
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { actAs, denied } from "@/lib/actor";
 
 const CreateReply = z.object({
   post_id: z.string().min(1).max(64),
-  author_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown author."),
+  author_id: z.string().min(1).max(80),
   text: z.string().max(1000),
 });
 
@@ -48,6 +46,8 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+  const who = await actAs(parsed.data.author_id);
+  if (!who.ok) return denied(who);
   const text = parsed.data.text.trim();
   if (!text) {
     return Response.json({ error: "Reply text is required." }, { status: 400 });

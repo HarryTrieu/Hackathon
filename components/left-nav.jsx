@@ -10,6 +10,7 @@ import { PostDialogButton } from "@/components/post-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
 import { useNotifications } from "@/lib/use-notifications";
+import { canModerate } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 // Unread count on the bell, capped so the badge stays small.
@@ -38,10 +39,10 @@ export function LeftNav() {
     { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
     { href: "/search", label: "Topics", icon: Search },
     { href: "/communities", label: "Communities", icon: Users },
-    // Moderators work from the review queue instead of notifications.
-    ...(isAdmin
-      ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
-      : [{ href: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount }]),
+    // The demo Moderator works from the review queue instead of notifications;
+    // a real moderator account gets both.
+    ...(canModerate(persona) ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
+    ...(isAdmin ? [] : [{ href: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount }]),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
 
@@ -98,7 +99,7 @@ export function MobileNav() {
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentors", icon: HeartHandshake },
     { href: "/communities", label: "Units", icon: Users },
-    ...(persona.role === "admin"
+    ...(canModerate(persona)
       ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
       : [{ href: "/notifications", label: "Alerts", icon: Bell, badge: unreadCount }]),
   ];

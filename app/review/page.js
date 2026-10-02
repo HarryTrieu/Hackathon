@@ -17,14 +17,15 @@ import { UserAvatar } from "@/components/user-avatar";
 import { MentorApplications } from "@/components/mentor-applications";
 import { SponsoredStats } from "@/components/sponsored-stats";
 import { usePersona } from "@/lib/persona-context";
+import { canModerate } from "@/lib/roles";
 import { getProfile, POSTS } from "@/lib/seed";
 
 // Only the admin persona moderates. The nav hides the link for everyone else;
 // this covers someone opening /review directly. UI gate only: the review
-// APIs have no auth, like the rest of the demo.
+// APIs check the moderator on the server too (lib/actor.js).
 export default function ReviewPage() {
   const { persona } = usePersona();
-  if (persona.role === "admin") return <ReviewQueue />;
+  if (canModerate(persona)) return <ReviewQueue moderatorId={persona.id} />;
   return (
     <Empty className="my-16">
       <EmptyHeader>
@@ -41,7 +42,7 @@ export default function ReviewPage() {
   );
 }
 
-function ReviewQueue() {
+function ReviewQueue({ moderatorId }) {
   const [flagged, setFlagged] = useState(null);
   const [reports, setReports] = useState(null);
   const [funnel, setFunnel] = useState(null);
@@ -85,7 +86,7 @@ function ReviewQueue() {
       const res = await fetch("/api/review", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ post_id: postId, action }),
+        body: JSON.stringify({ post_id: postId, action, moderator_id: moderatorId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -156,7 +157,7 @@ function ReviewQueue() {
                     await fetch("/api/reports", {
                       method: "POST",
                       headers: { "content-type": "application/json" },
-                      body: JSON.stringify({ id: r.id, action: "resolve" }),
+                      body: JSON.stringify({ id: r.id, action: "resolve", moderator_id: moderatorId }),
                     });
                     setReports((prev) => prev.filter((x) => x.id !== r.id));
                     setNote("Report marked resolved.");

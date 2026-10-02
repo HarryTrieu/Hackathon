@@ -1,10 +1,12 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
+import { actAsModerator, denied } from "@/lib/actor";
 
 const ReviewAction = z.object({
   post_id: z.string().min(1),
   // Humans decide: approve clears the flag, remove hides (never deletes).
   action: z.enum(["approve", "remove"]),
+  moderator_id: z.string().min(1).max(80),
 });
 
 export async function POST(request) {
@@ -22,6 +24,9 @@ export async function POST(request) {
       { status: 400 }
     );
   }
+
+  const mod = await actAsModerator(parsed.data.moderator_id);
+  if (!mod.ok) return denied(mod);
 
   const db = supabaseAdmin();
   if (!db) {

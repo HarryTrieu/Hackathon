@@ -168,7 +168,8 @@ function AccountList({ onDone }) {
         </ul>
       </section>
 
-      <ResetDemoButton />
+      {/* Re-seeds the shared database: signed-in moderator accounts only. */}
+      {account.profile?.moderator && <ResetDemoButton />}
     </div>
   );
 }

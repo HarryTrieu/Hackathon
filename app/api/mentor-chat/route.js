@@ -6,9 +6,8 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings, mentorReply } from "@/lib/mentor-ai";
 import { MAX_CHATS_PER_DAY } from "@/lib/mentors";
-import { PROFILES } from "@/lib/seed";
+import { actAs, denied } from "@/lib/actor";
 
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
 const LISTING_ID = /^p\d+-[A-Z]{3}\d{3}$/;
 
 const memoryCounts = (globalThis.__soduChatCounts ??= new Map());
@@ -34,7 +33,7 @@ async function usedToday(db, listingId, menteeId) {
 
 const ChatRequest = z.object({
   listing_id: z.string().regex(LISTING_ID, "Invalid mentor."),
-  mentee_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown mentee."),
+  mentee_id: z.string().min(1).max(80),
   history: z
     .array(z.object({ role: z.enum(["mentee", "mentor"]), text: z.string().max(2000) }))
     .max(20)
@@ -46,9 +45,11 @@ export async function GET(request) {
   const params = new URL(request.url).searchParams;
   const listingId = params.get("listing_id") ?? "";
   const menteeId = params.get("mentee_id") ?? "";
-  if (!LISTING_ID.test(listingId) || !PROFILE_IDS.has(menteeId)) {
+  if (!LISTING_ID.test(listingId)) {
     return Response.json({ error: "listing_id and mentee_id are required." }, { status: 400 });
   }
+  const who = await actAs(menteeId);
+  if (!who.ok) return denied(who);
   const { used } = await usedToday(supabaseAdmin(), listingId, menteeId);
   return Response.json({ remaining: Math.max(0, MAX_CHATS_PER_DAY - used) });
 }
@@ -65,6 +66,8 @@ export async function POST(request) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const { listing_id, mentee_id, history, text } = parsed.data;
+  const who = await actAs(mentee_id);
+  if (!who.ok) return denied(who);
 
   const unitCode = listing_id.split("-")[1];
   const listing = (await loadListings({ unitCode })).find((l) => l.id === listing_id);

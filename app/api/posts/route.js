@@ -2,14 +2,11 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { enrichPost } from "@/lib/enrich";
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
+import { actAs, denied } from "@/lib/actor";
 
-const PROFILE_IDS = PROFILES.map((p) => p.id);
-
+// Who may post as author_id is checked by actAs() after parsing.
 const CreatePost = z.object({
-  author_id: z.string().refine((id) => PROFILE_IDS.includes(id), {
-    message: "Unknown author.",
-  }),
+  author_id: z.string().min(1).max(80),
   text: z.string().trim().min(1, "Post text is required.").max(2000),
   image_url: z.string().max(500).optional(),
   link_preview: z
@@ -67,6 +64,8 @@ export async function POST(request) {
   }
 
   const { author_id, text, image_url, link_preview } = parsed.data;
+  const who = await actAs(author_id);
+  if (!who.ok) return denied(who);
   const ai = await enrichPost(text);
 
   const post = {
@@ -107,9 +106,7 @@ export async function POST(request) {
 
 const EditTags = z.object({
   id: z.string().min(1).max(64),
-  author_id: z.string().refine((id) => PROFILE_IDS.includes(id), {
-    message: "Unknown author.",
-  }),
+  author_id: z.string().min(1).max(80),
   tags: z
     .array(
       z
@@ -137,6 +134,8 @@ export async function PATCH(request) {
     );
   }
   const { id, author_id } = parsed.data;
+  const who = await actAs(author_id);
+  if (!who.ok) return denied(who);
   const tags = [...new Set(parsed.data.tags)];
 
   const db = supabaseAdmin();
@@ -161,9 +160,7 @@ export async function PATCH(request) {
 
 const DeletePost = z.object({
   id: z.string().min(1).max(64),
-  author_id: z.string().refine((id) => PROFILE_IDS.includes(id), {
-    message: "Unknown author.",
-  }),
+  author_id: z.string().min(1).max(80),
 });
 
 export async function DELETE(request) {
@@ -178,6 +175,8 @@ export async function DELETE(request) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 400 });
   }
   const { id, author_id } = parsed.data;
+  const who = await actAs(author_id);
+  if (!who.ok) return denied(who);
   const db = supabaseAdmin();
   if (!db) return Response.json({ ok: true, persisted: false });
 

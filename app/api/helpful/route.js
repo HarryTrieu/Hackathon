@@ -2,21 +2,18 @@
 // helpful_count is what mentor reputation is built from.
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { actAs, denied } from "@/lib/actor";
 
 const Vote = z.object({
   post_id: z.string().min(1).max(64),
-  profile_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown profile."),
+  profile_id: z.string().min(1).max(80),
   action: z.enum(["like", "unlike"]),
 });
 
 export async function GET(request) {
   const profileId = new URL(request.url).searchParams.get("profile_id");
-  if (!PROFILE_IDS.has(profileId ?? "")) {
-    return Response.json({ error: "profile_id is required." }, { status: 400 });
-  }
+  const who = await actAs(profileId);
+  if (!who.ok) return denied(who);
   const db = supabaseAdmin();
   if (!db) return Response.json({ liked: null });
   const { data, error } = await db
@@ -38,6 +35,8 @@ export async function POST(request) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const { post_id, profile_id, action } = parsed.data;
+  const who = await actAs(profile_id);
+  if (!who.ok) return denied(who);
 
   const db = supabaseAdmin();
   if (!db) return Response.json({ ok: true, persisted: false });

@@ -4,21 +4,19 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings } from "@/lib/mentor-ai";
-import { PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { actAs, denied } from "@/lib/actor";
 
 const SessionRequest = z.object({
   listing_id: z.string().regex(/^p\d+-[A-Z]{3}\d{3}$/, "Invalid mentor."),
-  mentee_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown mentee."),
+  mentee_id: z.string().min(1).max(80),
   message: z.string().trim().min(5, "Add a short message for the mentor.").max(1000),
 });
 
 export async function GET(request) {
   const mentorId = new URL(request.url).searchParams.get("mentor_id");
-  if (!PROFILE_IDS.has(mentorId ?? "")) {
-    return Response.json({ error: "mentor_id is required." }, { status: 400 });
-  }
+  // A mentor's incoming requests are private to that mentor.
+  const who = await actAs(mentorId);
+  if (!who.ok) return denied(who);
   const db = supabaseAdmin();
   if (!db) return Response.json({ requests: null });
   const { data, error } = await db
@@ -32,7 +30,7 @@ export async function GET(request) {
 
 const Decision = z.object({
   id: z.string().uuid(),
-  mentor_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown mentor."),
+  mentor_id: z.string().min(1).max(80),
   action: z.enum(["accept", "decline"]),
 });
 
@@ -50,6 +48,8 @@ export async function PATCH(request) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const { id, mentor_id, action } = parsed.data;
+  const who = await actAs(mentor_id);
+  if (!who.ok) return denied(who);
   const status = action === "accept" ? "accepted" : "declined";
 
   const db = supabaseAdmin();
@@ -80,6 +80,8 @@ export async function POST(request) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const { listing_id, mentee_id, message } = parsed.data;
+  const who = await actAs(mentee_id);
+  if (!who.ok) return denied(who);
   const [mentorId, unitCode] = listing_id.split("-");
   if (mentorId === mentee_id) {
     return Response.json({ error: "You can't book a session with yourself." }, { status: 400 });

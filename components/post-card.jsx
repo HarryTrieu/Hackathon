@@ -23,6 +23,7 @@ import { LinkPreview } from "@/components/link-preview";
 import { RepliesPanel } from "@/components/replies";
 import { SEED_MENTORS } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
+import { canModerate } from "@/lib/roles";
 import { getSeedReplies } from "@/lib/seed";
 import { rememberVote, useLikedPosts } from "@/lib/use-liked";
 import { useSavedPosts } from "@/lib/use-saved-posts";
@@ -73,7 +74,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
   const helpful = vote === null ? wasLiked : vote;
   const helpfulCount = Math.max(0, post.helpful_count + (helpful ? 1 : 0) - (wasLiked ? 1 : 0));
   const isAuthor = persona.id === post.author_id;
-  const isModerator = persona.role === "admin";
+  const isModerator = canModerate(persona);
   // Prefer the mentor listing for a unit this post is about.
   const authorListings = SEED_MENTORS.filter((m) => m.profile_id === post.author_id);
   const authorListing =
@@ -144,7 +145,7 @@ It is hidden, not deleted. ${restore}`)) return;
       const res = await fetch("/api/review", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ post_id: post.id, action: "remove" }),
+        body: JSON.stringify({ post_id: post.id, action: "remove", moderator_id: persona.id }),
       });
       if (!res.ok) return;
       setGone(true);

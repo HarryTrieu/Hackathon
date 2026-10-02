@@ -20,9 +20,15 @@ export function ResetDemoButton({ className }) {
     setResetting(true);
     for (const key of STORAGE_KEYS) window.localStorage.removeItem(key);
     try {
-      await fetch("/api/demo/reset", { method: "POST" });
+      const res = await fetch("/api/demo/reset", { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        window.alert(data.error ?? "Could not reset the demo.");
+        setResetting(false);
+        return;
+      }
     } catch {
-      /* still reload so the UI snaps back */
+      /* network blip: still reload so the UI snaps back */
     }
     window.location.reload();
   }
