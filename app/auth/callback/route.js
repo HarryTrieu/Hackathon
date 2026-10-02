@@ -2,6 +2,7 @@
 // for a session cookie, then return to the page they started from.
 import { NextResponse } from "next/server";
 import { authClient } from "@/lib/auth";
+import { findProfile } from "@/lib/account";
 
 const NO_STORE = { "Cache-Control": "private, no-cache, no-store, must-revalidate, max-age=0" };
 
@@ -15,8 +16,13 @@ export async function GET(request) {
   if (code) {
     const supabase = await authClient();
     if (supabase) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
-      if (!error) return NextResponse.redirect(`${origin}${safeNext}`, { headers: NO_STORE });
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+      if (!error) {
+        // First sign-in: go straight to the one-screen setup, then back.
+        const { profile } = await findProfile(data.user.id);
+        const dest = profile ? safeNext : `/welcome?next=${encodeURIComponent(safeNext)}`;
+        return NextResponse.redirect(`${origin}${dest}`, { headers: NO_STORE });
+      }
     }
   }
   return NextResponse.redirect(`${origin}/?signin=failed`, { headers: NO_STORE });

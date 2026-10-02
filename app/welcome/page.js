@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -47,6 +47,9 @@ const toggle = (list, value) => (list.includes(value) ? list.filter((v) => v !==
 // One-screen setup after the first Google sign-in. Also edits your details later.
 function WelcomeForm({ account }) {
   const router = useRouter();
+  // Where to go after saving: back to the page you signed in from.
+  const next = useSearchParams().get("next");
+  const backTo = next?.startsWith("/") && !next.startsWith("//") && next !== "/welcome" ? next : "/";
   const existing = account.profile;
   const [name, setName] = useState(existing?.name ?? account.user.user_metadata?.full_name ?? "");
   const [course, setCourse] = useState(existing?.course ?? "");
@@ -77,7 +80,7 @@ function WelcomeForm({ account }) {
         return;
       }
       setAccountProfile(account.user.id, data.profile);
-      router.push("/");
+      router.push(backTo);
     } catch {
       setError("Could not reach the server. Try again.");
     } finally {
@@ -163,7 +166,7 @@ function WelcomeForm({ account }) {
   );
 }
 
-export default function WelcomePage() {
+function Welcome() {
   const account = useAccount();
 
   return (
@@ -205,5 +208,14 @@ export default function WelcomePage() {
         <WelcomeForm key={account.user.id} account={account} />
       )}
     </div>
+  );
+}
+
+// useSearchParams (in the form) needs a Suspense boundary.
+export default function WelcomePage() {
+  return (
+    <Suspense fallback={null}>
+      <Welcome />
+    </Suspense>
   );
 }
