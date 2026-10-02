@@ -80,7 +80,10 @@ function AccountList({ onDone }) {
                     <span className="truncate text-sm font-semibold">{googleName}</span>
                     <Tag google />
                   </span>
-                  <span className="block truncate text-xs text-muted-foreground">{account.user.email}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {account.profile.moderator ? "Moderator · " : ""}
+                    {account.user.email}
+                  </span>
                 </span>
                 {realActive && <Check className="size-4 shrink-0 text-primary" />}
               </button>

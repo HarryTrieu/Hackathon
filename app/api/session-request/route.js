@@ -4,10 +4,11 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings } from "@/lib/mentor-ai";
+import { LISTING_ID, parseListingId } from "@/lib/mentors";
 import { actAs, denied } from "@/lib/actor";
 
 const SessionRequest = z.object({
-  listing_id: z.string().regex(/^p\d+-[A-Z]{3}\d{3}$/, "Invalid mentor."),
+  listing_id: z.string().regex(LISTING_ID, "Invalid mentor."),
   mentee_id: z.string().min(1).max(80),
   message: z.string().trim().min(5, "Add a short message for the mentor.").max(1000),
 });
@@ -82,7 +83,7 @@ export async function POST(request) {
   const { listing_id, mentee_id, message } = parsed.data;
   const who = await actAs(mentee_id);
   if (!who.ok) return denied(who);
-  const [mentorId, unitCode] = listing_id.split("-");
+  const { profileId: mentorId, unitCode } = parseListingId(listing_id);
   if (mentorId === mentee_id) {
     return Response.json({ error: "You can't book a session with yourself." }, { status: 400 });
   }

@@ -3,12 +3,12 @@
 import { z } from "zod";
 import { previewAnswers } from "@/lib/mentor-ai";
 import { getUnit } from "@/lib/communities";
-import { getProfile, PROFILES } from "@/lib/seed";
-
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
+import { getProfile } from "@/lib/seed";
+import { actAs, denied } from "@/lib/actor";
+import { realProfiles } from "@/lib/account";
 
 const Draft = z.object({
-  profile_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown profile."),
+  profile_id: z.string().min(1).max(80),
   unit_code: z.string().regex(/^[A-Z]{3}\d{3}$/, "Invalid unit code."),
   grade: z.enum(["HD", "D"]),
   style: z.object({
@@ -37,15 +37,27 @@ export async function POST(request) {
   }
   const parsed = Draft.safeParse(body);
   if (!parsed.success) {
-    return Response.json(
-      { error: "Finish Part A and type something for each Part B question before previewing." },
-      { status: 400 }
-    );
+    const field = parsed.error.issues[0]?.path?.[0];
+    const message =
+      field === "style"
+        ? "Answer every question in step 2 (How you teach) before previewing."
+        : field === "voice"
+          ? "Write something in each box in step 3 (Your voice) before previewing."
+          : field === "grade"
+            ? "Confirm Distinction or above in step 1."
+            : field === "unit_code"
+              ? "Pick a unit in step 1."
+              : "Check the form and try again.";
+    return Response.json({ error: message }, { status: 400 });
   }
   const draft = parsed.data;
+  const who = await actAs(draft.profile_id);
+  if (!who.ok) return denied(who);
+  const profile = getProfile(draft.profile_id) ?? (await realProfiles([draft.profile_id])).get(draft.profile_id);
+  if (!profile) return Response.json({ error: "Finish setting up your account first." }, { status: 403 });
   const listing = {
     ...draft,
-    profile: getProfile(draft.profile_id),
+    profile,
     unit_name: getUnit(draft.unit_code)?.name ?? null,
   };
   return Response.json(await previewAnswers(listing));

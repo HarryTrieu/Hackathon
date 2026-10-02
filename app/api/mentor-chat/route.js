@@ -5,10 +5,9 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings, mentorReply } from "@/lib/mentor-ai";
-import { MAX_CHATS_PER_DAY } from "@/lib/mentors";
+import { LISTING_ID, MAX_CHATS_PER_DAY, parseListingId } from "@/lib/mentors";
 import { actAs, denied } from "@/lib/actor";
 
-const LISTING_ID = /^p\d+-[A-Z]{3}\d{3}$/;
 
 const memoryCounts = (globalThis.__soduChatCounts ??= new Map());
 
@@ -69,7 +68,7 @@ export async function POST(request) {
   const who = await actAs(mentee_id);
   if (!who.ok) return denied(who);
 
-  const unitCode = listing_id.split("-")[1];
+  const { unitCode } = parseListingId(listing_id);
   const listing = (await loadListings({ unitCode })).find((l) => l.id === listing_id);
   if (!listing) return Response.json({ error: "Mentor not found." }, { status: 404 });
 

@@ -4,6 +4,7 @@ import {
   BookOpen,
   Briefcase,
   Link2,
+  ShieldCheck,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -91,6 +92,13 @@ export default async function ProfilePage({ params }) {
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
               <Badge>{roleLabel(profile.role)}</Badge>
+              {/* Moderator is a permission, separate from mentee / mentor. */}
+              {profile.moderator && (
+                <Badge variant="secondary">
+                  <ShieldCheck data-icon="inline-start" />
+                  Moderator
+                </Badge>
+              )}
               <Badge variant="outline">
                 {profile.course}
                 {profile.year ? ` · Year ${profile.year}` : profile.role === "admin" ? "" : " · Alumni"}

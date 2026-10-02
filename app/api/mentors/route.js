@@ -5,16 +5,17 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { loadListings } from "@/lib/mentor-ai";
 import { STYLE_QUESTIONS, mentorId } from "@/lib/mentors";
-import { getProfile, PROFILES } from "@/lib/seed";
+import { getProfile } from "@/lib/seed";
+import { actAs, denied } from "@/lib/actor";
+import { realProfiles } from "@/lib/account";
 
-const PROFILE_IDS = new Set(PROFILES.map((p) => p.id));
 const optionsOf = (id) => STYLE_QUESTIONS.find((q) => q.id === id).options;
 const one = (id) => z.enum(optionsOf(id));
 const many = (id) => z.array(z.enum(optionsOf(id))).min(1);
 const answer = z.string().trim().min(1, "Please answer every Part B question.");
 
 const Application = z.object({
-  profile_id: z.string().refine((id) => PROFILE_IDS.has(id), "Unknown profile."),
+  profile_id: z.string().min(1).max(80),
   unit_code: z.string().regex(/^[A-Z]{3}\d{3}$/, "Invalid unit code."),
   email: z.string().trim().max(200).optional(),
   grade: z.enum(["HD", "D", "C", "P"]),
@@ -64,6 +65,8 @@ export async function POST(request) {
     return Response.json({ error: parsed.error.issues[0].message }, { status: 400 });
   }
   const app = parsed.data;
+  const who = await actAs(app.profile_id);
+  if (!who.ok) return denied(who);
 
   if (!["HD", "D"].includes(app.grade)) {
     return Response.json(
@@ -74,7 +77,8 @@ export async function POST(request) {
 
   // Seeded verified students skip the email step; everyone else needs a
   // Deakin address. Only the verified flag is stored, never the address.
-  const profile = getProfile(app.profile_id);
+  const profile = getProfile(app.profile_id) ?? (await realProfiles([app.profile_id])).get(app.profile_id);
+  if (!profile) return Response.json({ error: "Finish setting up your account first." }, { status: 403 });
   const emailOk = /^[^\s@]+@deakin\.edu\.au$/i.test(app.email ?? "");
   if (!profile.verified && !emailOk) {
     return Response.json(
