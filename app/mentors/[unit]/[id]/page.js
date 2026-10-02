@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -121,8 +121,10 @@ function SessionRequest({ mentor, persona }) {
   );
 }
 
-export default function MentorDetailPage() {
+function MentorDetail() {
   const { unit: rawUnit, id } = useParams();
+  // Opened from your Mentor hub (?from=hub): Back returns there.
+  const fromHub = useSearchParams().get("from") === "hub";
   const code = String(rawUnit).toUpperCase();
   const unit = getUnit(code);
   const { persona } = usePersona();
@@ -174,14 +176,20 @@ export default function MentorDetailPage() {
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <Link
-          href={`/mentors/${code}`}
-          aria-label="Back to mentors"
+          href={fromHub ? "/mentor" : `/mentors/${code}`}
+          aria-label={fromHub ? "Back to your Mentor hub" : "Back to mentors"}
           className="rounded-full p-1.5 transition-colors hover:bg-muted"
         >
           <ArrowLeft className="size-4" />
         </Link>
         <p className="min-w-0 flex-1 text-sm text-muted-foreground">
-          <span className="font-mono font-semibold text-foreground">{code}</span> mentors
+          {fromHub ? (
+            "Your Mentor hub"
+          ) : (
+            <>
+              <span className="font-mono font-semibold text-foreground">{code}</span> mentors
+            </>
+          )}
         </p>
         {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
@@ -290,5 +298,14 @@ export default function MentorDetailPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+// useSearchParams (?from=hub) needs a Suspense boundary.
+export default function MentorDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <MentorDetail />
+    </Suspense>
   );
 }
