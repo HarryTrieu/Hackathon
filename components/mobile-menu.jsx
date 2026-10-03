@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Award, MessageCircle, Search, User } from "lucide-react";
+import { MessageCircle, Search, User } from "lucide-react";
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -66,12 +66,6 @@ export function MobileMenu() {
                     {inbox.unread}
                   </span>
                 )}
-              </Link>
-            )}
-            {persona.role === "mentor" && (
-              <Link href="/mentor" onClick={close} className={ROW}>
-                <Award className="size-4" />
-                Mentor hub
               </Link>
             )}
             <Link href="/search" onClick={close} className={ROW}>

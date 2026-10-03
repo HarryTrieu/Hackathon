@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Award, Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
+import { Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { FloatingPostButton } from "@/components/floating-post-button";
 import { MobileMenu } from "@/components/mobile-menu";
 import { PostDialogButton } from "@/components/post-dialog";
+import { isMentoringPath } from "@/components/mentoring-tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { usePersona } from "@/lib/persona-context";
 import { useNotifications } from "@/lib/use-notifications";
@@ -38,8 +39,8 @@ export function LeftNav() {
 
   const items = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/mentors", label: "Find a mentor", icon: HeartHandshake },
-    ...(persona.role === "mentor" ? [{ href: "/mentor", label: "Mentor hub", icon: Award }] : []),
+    // Find a mentor and the Mentor hub, as tabs inside.
+    { href: "/mentors", label: "Mentoring", icon: HeartHandshake },
     // The demo Moderator doesn't chat; everyone else gets Messages.
     ...(isAdmin ? [] : [{ href: "/messages", label: "Messages", icon: MessageCircle, badge: inbox.unread }]),
     { href: "/search", label: "Topics", icon: Search },
@@ -64,7 +65,11 @@ export function LeftNav() {
       <nav className="flex flex-col gap-1" aria-label="Main">
         {items.map(({ href, label, icon: Icon, badge }) => {
           const active =
-            href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+            href === "/"
+              ? pathname === "/"
+              : href === "/mentors"
+                ? isMentoringPath(pathname)
+                : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={label}
@@ -101,7 +106,7 @@ export function MobileNav() {
 
   const items = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/mentors", label: "Mentors", icon: HeartHandshake },
+    { href: "/mentors", label: "Mentoring", icon: HeartHandshake },
     { href: "/communities", label: "Units", icon: Users },
     ...(canModerate(persona)
       ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
@@ -115,7 +120,11 @@ export function MobileNav() {
     >
       {items.map(({ href, label, icon: Icon, badge }) => {
         const active =
-          href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+          href === "/"
+            ? pathname === "/"
+            : href === "/mentors"
+              ? isMentoringPath(pathname)
+              : pathname === href || pathname.startsWith(`${href}/`);
         return (
           <Link
             key={label}

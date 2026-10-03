@@ -31,6 +31,7 @@ import { GUARANTEE_DAYS, formatDay } from "@/lib/membership";
 import { usePersona } from "@/lib/persona-context";
 import { POSTS } from "@/lib/seed";
 import { cn } from "@/lib/utils";
+import { MentoringTabs } from "@/components/mentoring-tabs";
 
 const CARD_HOVER = "group/card relative transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40";
 
@@ -537,6 +538,7 @@ export default function MentorHubPage() {
   return (
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+        <MentoringTabs />
         <h1 className="text-lg font-bold">Mentor hub</h1>
         <p className="text-sm text-muted-foreground">Your membership, your units, and students who need you.</p>
       </div>
