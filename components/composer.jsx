@@ -12,6 +12,7 @@ import { TypingDots } from "@/components/typing-dots";
 import { rememberMyPost } from "@/lib/my-new-posts";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const URL_PATTERN = /https?:\/\/[^\s]+/;
 
@@ -117,6 +118,7 @@ export function Composer({ onPublished, inDialog = false }) {
         ? ""
         : " Session only: add Supabase keys to save posts.";
       setStatus(aiNote + dbNote);
+      toast("Posted");
     } catch {
       setError("Posting failed. Check your connection and try again.");
     } finally {

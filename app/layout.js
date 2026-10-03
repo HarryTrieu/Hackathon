@@ -3,6 +3,7 @@ import "./globals.css";
 import { PersonaProvider } from "@/lib/persona-context";
 import { LeftNav, MobileNav } from "@/components/left-nav";
 import { RightSidebar } from "@/components/right-sidebar";
+import { Toaster } from "@/components/toaster";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({ children }) {
             <RightSidebar />
           </div>
           <MobileNav />
+          <Toaster />
         </PersonaProvider>
       </body>
     </html>

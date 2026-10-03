@@ -32,6 +32,7 @@ import { usePersona } from "@/lib/persona-context";
 import { POSTS } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 import { MentoringTabs } from "@/components/mentoring-tabs";
+import { toast } from "@/lib/toast";
 
 const CARD_HOVER = "group/card relative transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40";
 
@@ -146,7 +147,10 @@ function MembershipCard({ data, meId, onChanged }) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) setError(json.error ?? "Something went wrong.");
-      else onChanged();
+      else {
+        toast(action === "pay" ? "Membership active. You're ready to go live." : "Refund claimed. Your listing is down.");
+        onChanged();
+      }
     } catch {
       setError("Could not reach the server.");
     } finally {
@@ -266,6 +270,7 @@ function CopyLink({ path }) {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}${path}`);
       setCopied(true);
+      toast("Link copied");
       setTimeout(() => setCopied(false), 1500);
     } catch {
       // Clipboard blocked: nothing to do.

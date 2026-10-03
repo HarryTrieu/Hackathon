@@ -42,6 +42,7 @@ import {
   useNotifications,
 } from "@/lib/use-notifications";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 function timeAgo(iso) {
   const minutes = Math.max(0, (Date.now() - new Date(iso).getTime()) / 60000);
@@ -105,6 +106,62 @@ function ClearButton({ label, onClick }) {
   );
 }
 
+// Repeats from the same person merge into one row: "Hannah Vo accepted 4
+// of your session requests". Only these kinds group; the newest one leads.
+const GROUPABLE = new Set(["like", "request_update", "request_received"]);
+
+function groupNotifications(list) {
+  const groups = new Map();
+  const rows = [];
+  for (const n of list) {
+    const id = GROUPABLE.has(n.type) ? `${n.type}|${n.actor_id}|${n.status ?? ""}` : n.key;
+    const group = groups.get(id);
+    if (group) group.items.push(n);
+    else {
+      const row = { ...n, items: [n] };
+      groups.set(id, row);
+      rows.push(row);
+    }
+  }
+  return rows;
+}
+
+const unitsOf = (items) => [...new Set(items.map((i) => i.unit_code).filter(Boolean))];
+
+// A grouped row (2 or more): count, every unit, and a link to the list.
+function describeGroup(g, meId) {
+  const actor = g.actor_id ? (getProfile(g.actor_id) ?? g.actor ?? null) : null;
+  const name = <span className="font-semibold">{actor?.name ?? "Someone"}</span>;
+  const count = g.items.length;
+  const units = <span className="font-mono">{unitsOf(g.items).join(", ")}</span>;
+  switch (g.type) {
+    case "like":
+      return { icon: ThumbsUp, href: `/profile/${meId}`, body: <>{name} found {count} of your posts helpful</> };
+    case "request_update":
+      return {
+        icon: g.status === "accepted" ? CheckCircle2 : XCircle,
+        href: "/messages?tab=sessions",
+        body: (
+          <>
+            {name} {g.status === "accepted" ? "accepted" : "declined"} {count} of your session requests · {units}
+          </>
+        ),
+      };
+    case "request_received":
+      return {
+        icon: CalendarPlus,
+        href: "/messages?tab=sessions",
+        body: (
+          <>
+            {name} sent you {count} session requests · {units}
+          </>
+        ),
+      };
+    default:
+      return null;
+  }
+}
+
 // One row in the All tab: icon, who did what, and a short quote.
 function describe(n, meId) {
   const actor = n.actor_id ? (getProfile(n.actor_id) ?? n.actor ?? null) : null;
@@ -127,6 +184,7 @@ function describe(n, meId) {
     case "request_received":
       return {
         icon: CalendarPlus,
+        href: n.request_id ? `/sessions/${n.request_id}` : undefined,
         tab: "requests",
         body: (
           <>
@@ -138,6 +196,7 @@ function describe(n, meId) {
     case "request_update":
       return {
         icon: n.status === "accepted" ? CheckCircle2 : XCircle,
+        href: n.request_id ? `/sessions/${n.request_id}` : undefined,
         tab: "requests",
         body: (
           <>
@@ -149,6 +208,7 @@ function describe(n, meId) {
     case "session_end_requested":
       return {
         icon: Flag,
+        href: n.request_id ? `/sessions/${n.request_id}` : undefined,
         tab: "requests",
         body: (
           <>
@@ -160,6 +220,7 @@ function describe(n, meId) {
     case "session_rated":
       return {
         icon: Star,
+        href: n.request_id ? `/sessions/${n.request_id}` : undefined,
         tab: "requests",
         body: (
           <>
@@ -251,10 +312,11 @@ export default function NotificationsPage() {
       if (action === "accept") {
         // The mentor starts the conversation, with a suggested opener.
         const draft = firstMessage({ fromName: persona.name, toName: mentee, unitCode: req.unit_code, fromMentor: true });
+        toast("Session accepted. Say hi to get started.");
         router.push(`/sessions/${req.id}?draft=${encodeURIComponent(draft)}`);
         return;
       }
-      setNote(`Declined. ${mentee} will see it in their notifications.`);
+      toast(`Declined. ${mentee} will see it in their notifications.`);
     } catch {
       setNote("Could not reach the server. Try again.");
     }
@@ -313,8 +375,10 @@ export default function NotificationsPage() {
               </EmptyHeader>
             </Empty>
           )}
-          {notifications.map((n) => {
-            const d = describe(n, persona.id);
+          {groupNotifications(notifications).map((n) => {
+            const grouped = n.items.length > 1;
+            const d = grouped ? describeGroup(n, persona.id) : describe(n, persona.id);
+            const fresh = n.items.some((i) => notif.isFresh(i.key));
             if (!d) return null;
             const actor = n.actor_id ? (getProfile(n.actor_id) ?? n.actor ?? null) : null;
             const Icon = d.icon;
@@ -342,14 +406,12 @@ export default function NotificationsPage() {
                     <p className="mt-0.5 line-clamp-2 text-muted-foreground">{d.quote}</p>
                   )}
                 </div>
-                {notif.isFresh(n.key) && (
-                  <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="New" />
-                )}
+                {fresh && <span className="mt-1.5 size-2 shrink-0 rounded-full bg-primary" aria-label="New" />}
               </>
             );
             const rowClass = cn(
               "flex w-full items-start gap-3 border-b py-3 pr-12 pl-4 text-left transition-colors hover:bg-muted/50",
-              notif.isFresh(n.key) && "bg-primary/[0.05]"
+              fresh && "bg-primary/[0.05]"
             );
             return (
               <div key={n.key} className="group relative">
@@ -362,7 +424,10 @@ export default function NotificationsPage() {
                     {content}
                   </button>
                 )}
-                <ClearButton label="Clear notification" onClick={() => clear("all", [n.key])} />
+                <ClearButton
+                  label={grouped ? `Clear ${n.items.length} notifications` : "Clear notification"}
+                  onClick={() => clear("all", n.items.map((i) => i.key))}
+                />
               </div>
             );
           })}

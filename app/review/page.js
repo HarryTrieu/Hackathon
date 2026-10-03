@@ -22,6 +22,7 @@ import { canModerate } from "@/lib/roles";
 import { authorOf } from "@/lib/authors";
 import { getProfile, POSTS } from "@/lib/seed";
 import { flagText, isSupportFlag } from "@/lib/moderation";
+import { toast } from "@/lib/toast";
 
 // A reported post in full, with the two decisions.
 function ReportedPost({ post, onKeep, onRemove }) {
@@ -126,7 +127,7 @@ function ReviewQueue({ moderatorId }) {
       body: JSON.stringify({ id, action: "resolve", moderator_id: moderatorId }),
     });
     setReports((prev) => prev.filter((x) => x.id !== id));
-    setNote(message);
+    toast(message);
   }
 
   async function act(postId, action) {

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { SESSION_DAYS, autoEnded, formatWhen, sessionEndsAt, sessionState } from "@/lib/sessions";
 import { formatDay } from "@/lib/membership";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
 
@@ -92,7 +93,10 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
     });
     setSaving(false);
     if (!result.ok) setError(result.error);
-    else onSaved?.();
+    else {
+      toast(lateRating ? "Thanks for rating" : "Session ended. Thanks for rating");
+      onSaved?.();
+    }
   }
 
   if (!open) {
@@ -199,7 +203,10 @@ export function RequestEnd({ request, mentorId, menteeName, onSaved }) {
     const result = await update({ action: "request_end", id: request.id, mentor_id: mentorId });
     setSaving(false);
     if (!result.ok) setError(result.error);
-    else onSaved?.();
+    else {
+      toast(`Asked ${first} to end the session`);
+      onSaved?.();
+    }
   }
   return (
     <div className="space-y-1">

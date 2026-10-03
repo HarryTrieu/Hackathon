@@ -79,6 +79,7 @@ export async function GET(request) {
     ...(received.data ?? []).map((r) => ({
       key: `request-in:${r.id}`,
       type: "request_received",
+      request_id: r.id,
       actor_id: r.mentee_id,
       unit_code: r.unit_code,
       text: excerpt(r.message, 120),
@@ -92,6 +93,7 @@ export async function GET(request) {
         return {
           key: `request-out:${r.id}:${status}`,
           type: "request_update",
+          request_id: r.id,
           actor_id: r.mentor_id,
           unit_code: r.unit_code,
           status,
@@ -104,6 +106,7 @@ export async function GET(request) {
       .map((r) => ({
         key: `end-req:${r.id}`,
         type: "session_end_requested",
+        request_id: r.id,
         actor_id: r.mentor_id,
         unit_code: r.unit_code,
         created_at: r.end_requested_at,
@@ -114,6 +117,7 @@ export async function GET(request) {
       .map((r) => ({
         key: `rated:${r.id}`,
         type: "session_rated",
+        request_id: r.id,
         actor_id: r.mentee_id,
         unit_code: r.unit_code,
         rating: r.rating,

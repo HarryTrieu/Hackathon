@@ -5,6 +5,7 @@ import { Flag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const REASONS = [
   "Harassment or abuse",
@@ -46,6 +47,7 @@ export function ReportButton({ targetType, targetId, className, labelClassName, 
         return;
       }
       setState("sent");
+      toast("Reported. A moderator will look at it.");
     } catch {
       setState("idle");
       setNote("Could not reach the server.");

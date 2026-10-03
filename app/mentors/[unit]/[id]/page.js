@@ -18,6 +18,7 @@ import { UserAvatar } from "@/components/user-avatar";
 import { getUnit } from "@/lib/communities";
 import { gradeBand, mergeLocalApplications } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
+import { toast } from "@/lib/toast";
 
 // Short labels for the mentor's Part A answers, shown as chips. The full
 // questions are written for the mentor filling in the form, not the student.
@@ -63,6 +64,7 @@ function SessionRequest({ mentor, persona }) {
         body: JSON.stringify({ type: "contact_clicked", listing_id: mentor.id, mentee_id: persona.id }),
       }).catch(() => {});
       setState("sent");
+      toast(`Session request sent to ${first}`);
       setNote(
         data.persisted
           ? `Sent. Once ${first} accepts, they'll message you in Messages to agree a time and place. Listed rate: $${mentor.rate_per_hour}/h.`

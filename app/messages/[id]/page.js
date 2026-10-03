@@ -15,6 +15,7 @@ import { refreshInbox } from "@/lib/use-inbox";
 import { isOpenSession, sessionState } from "@/lib/sessions";
 import { roleLabel } from "@/lib/seed";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const POLL_MS = 4000;
 const isDemo = (id) => /^p\d+$/.test(id ?? "");
@@ -49,6 +50,48 @@ function SessionLinks({ sessions, meId }) {
           </Link>
         );
       })}
+    </div>
+  );
+}
+
+// A brand-new chat: who they are, and a few openers that fill the composer.
+function EmptyChat({ me, other, onPick, canSend }) {
+  const first = other.name.split(" ")[0];
+  const mine = new Set((me.units ?? []).map((u) => u.code));
+  const theirs = (other.units ?? []).map((u) => u.code);
+  const shared = theirs.find((c) => mine.has(c));
+  const openers = [
+    shared ? `Hi ${first}! We both have ${shared}. How are you finding it?` : `Hi ${first}! Nice to meet you on Sodu.`,
+    other.role === "mentor"
+      ? `Hi ${first}, what helped you most when you did ${theirs[0] ?? "your units"}?`
+      : `Hi ${first}, which units are you taking this trimester?`,
+    `Hey ${first}, I saw your post and wanted to say hi.`,
+  ];
+  return (
+    <div className="mx-auto flex max-w-sm flex-col items-center gap-2 py-6 text-center animate-in fade-in slide-in-from-bottom-2 duration-500">
+      <UserAvatar profile={other} className="size-16" textClassName="text-lg" />
+      <p className="font-semibold">{other.name}</p>
+      <p className="text-xs text-muted-foreground">
+        {roleLabel(other.role)} · {other.course}
+        {theirs.length > 0 && <> · {theirs.slice(0, 3).join(", ")}</>}
+      </p>
+      {canSend && (
+        <>
+          <p className="mt-2 text-sm text-muted-foreground">Start the conversation:</p>
+          <div className="flex flex-col items-center gap-1.5">
+            {openers.map((o) => (
+              <button
+                key={o}
+                type="button"
+                onClick={() => onPick(o)}
+                className="rounded-full border px-3 py-1.5 text-sm transition-colors hover:border-primary/40 hover:bg-primary/5"
+              >
+                {o}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -151,6 +194,7 @@ function Conversation() {
           ? { ...prev, messages: prev.messages.map((m) => (m.id === message.id ? { ...m, text: null, deleted: true } : m)) }
           : prev
       );
+      toast("Message deleted");
       refreshInbox();
     } catch {
       setSendError("Could not reach the server.");
@@ -164,6 +208,7 @@ function Conversation() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ profile_id: meId, other_id: otherId, action: block ? "block" : "unblock" }),
     });
+    toast(block ? `Blocked ${data.other.name.split(" ")[0]}` : `Unblocked ${data.other.name.split(" ")[0]}`);
     load();
   }
 
@@ -245,7 +290,7 @@ function Conversation() {
         {!data && !error && <Skeleton className="h-24 w-full rounded-xl" />}
         {error && <p className="text-sm text-destructive">{error}</p>}
         {data?.messages.length === 0 && (
-          <p className="text-center text-sm text-muted-foreground">No messages yet. Say hi.</p>
+          <EmptyChat me={persona} other={data.other} onPick={setText} canSend={canSend} />
         )}
         {data && <ChatItems items={data.messages} meId={meId} onDelete={remove} />}
         <div ref={endRef} />

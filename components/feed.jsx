@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2 } from "lucide-react";
+import { ArrowUp, CheckCircle2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -72,6 +72,10 @@ export function Feed() {
   // Only the newest request may update the feed, so quick tab clicks
   // cannot let an older response overwrite a newer one.
   const requestSeq = useRef(0);
+  // Posts that arrived while you were reading: shown as "N new posts"
+  // instead of reshuffling the feed under you.
+  const [waiting, setWaiting] = useState(null);
+  const [scrolledFar, setScrolledFar] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,8 +90,36 @@ export function Feed() {
     };
   }, []);
 
+  // Check for new posts every minute while the page is visible.
+  const knownIds = (dbPosts ?? []).map((p) => p.id).join(",");
+  useEffect(() => {
+    if (!knownIds) return;
+    const known = new Set(knownIds.split(","));
+    const timer = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
+      const data = await fetchPosts();
+      const fresh = (data?.posts ?? []).filter((p) => !known.has(p.id) && p.author_id !== persona.id);
+      if (fresh.length > 0) setWaiting({ data, count: fresh.length });
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [knownIds, persona.id]);
+
+  useEffect(() => {
+    const onScroll = () => setScrolledFar(window.scrollY > 1200);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  function showWaiting() {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setDbPosts(waiting.data.posts);
+    setSource(waiting.data.source);
+    setWaiting(null);
+  }
+
   // Every tab click refreshes: back to the top, latest posts from the API.
   async function reload() {
+    setWaiting(null);
     window.scrollTo({ top: 0, behavior: "instant" });
     // A just-published post is pinned for one look; after a refresh it
     // ranks like any other post.
@@ -197,6 +229,18 @@ export function Feed() {
               New
             </TabsTrigger>
           </TabsList>
+          {(waiting || scrolledFar) && (
+            <div className="pointer-events-none absolute inset-x-0 top-full flex justify-center pt-2">
+              <button
+                type="button"
+                onClick={waiting ? showWaiting : () => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="pointer-events-auto flex items-center gap-1.5 rounded-full bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground shadow-lg transition-transform hover:scale-105 animate-in fade-in slide-in-from-top-2 duration-300"
+              >
+                <ArrowUp className="size-4" />
+                {waiting ? `${waiting.count} new post${waiting.count === 1 ? "" : "s"}` : "Back to top"}
+              </button>
+            </div>
+          )}
         </div>
 
         <MentorStrip />

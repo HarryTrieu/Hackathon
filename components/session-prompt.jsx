@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { CalendarPlus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 // In a normal chat with a mentor: "Duc mentors SIT102. Want a session?",
 // with the request form right there. Hidden per chat with the X (saved in
@@ -93,7 +94,10 @@ export function SessionPrompt({ me, other, listings, onHide }) {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) return setError(json.error ?? "Could not send the request.");
-      if (json.persisted && json.request?.id) router.push(`/sessions/${json.request.id}`);
+      if (json.persisted && json.request?.id) {
+        toast(`Session request sent to ${first}`);
+        router.push(`/sessions/${json.request.id}`);
+      }
       else setError("Saved on this device only: the database isn't connected.");
     } catch {
       setError("Could not reach the server.");

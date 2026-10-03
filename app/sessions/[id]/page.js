@@ -14,6 +14,7 @@ import { usePersona } from "@/lib/persona-context";
 import { refreshInbox } from "@/lib/use-inbox";
 import { firstMessage, sessionEvents, sessionState } from "@/lib/sessions";
 import { cn } from "@/lib/utils";
+import { toast } from "@/lib/toast";
 
 const POLL_MS = 4000;
 const isDemo = (id) => /^p\d+$/.test(id ?? "");
@@ -44,6 +45,7 @@ function SessionActions({ session, me, other, iAmMentor, onChanged, onAccepted }
     const result = await post("/api/session-request", "PATCH", { action, id: session.id, mentor_id: me.id });
     setBusy(false);
     if (!result.ok) return setError(result.error);
+    toast(action === "accept" ? "Session accepted. Say hi to get started." : "Request declined");
     if (action === "accept") onAccepted();
     onChanged();
   }
