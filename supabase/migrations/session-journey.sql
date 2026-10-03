@@ -75,3 +75,21 @@ alter table mentor_memberships enable row level security;
 -- as unconfirmed after 14 days and doesn't count toward the mentor's stats.
 alter table session_requests add column if not exists ended_at timestamptz;
 alter table session_requests add column if not exists end_requested_at timestamptz;
+
+-- Each session has its own conversation, separate from Messages. It opens
+-- when the mentor accepts and becomes read-only once the session ends; the
+-- two people can still message each other in Messages.
+create table if not exists session_messages (
+  id uuid primary key default gen_random_uuid(),
+  session_id uuid not null references session_requests(id) on delete cascade,
+  sender_id text not null references profiles(id),
+  text text not null check (char_length(text) between 1 and 2000),
+  deleted_at timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists session_messages_session_created on session_messages (session_id, created_at);
+alter table session_messages enable row level security;
+alter table session_requests add column if not exists last_message_at timestamptz;
+alter table session_requests add column if not exists last_sender_id text;
+alter table session_requests add column if not exists mentor_read_at timestamptz;
+alter table session_requests add column if not exists mentee_read_at timestamptz;

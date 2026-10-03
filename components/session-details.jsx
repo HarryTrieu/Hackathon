@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, CheckCheck, Flag, MapPin, Star } from "lucide-react";
+import { CalendarClock, CheckCheck, Flag, Hourglass, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { autoCloseDate, formatWhen, sessionState } from "@/lib/sessions";
+import { SESSION_DAYS, autoEnded, formatWhen, sessionEndsAt, sessionState } from "@/lib/sessions";
 import { formatDay } from "@/lib/membership";
 import { cn } from "@/lib/utils";
 
@@ -40,8 +40,22 @@ export function SessionPlan({ request }) {
   );
 }
 
+// "Ends automatically on ..." for both sides while a session runs.
+function EndsNotice({ request, mentee }) {
+  return (
+    <p className="flex items-start gap-1.5 rounded-lg bg-amber-500/10 px-2.5 py-1.5 text-[11px] text-amber-800 dark:text-amber-300">
+      <Hourglass className="mt-px size-3.5 shrink-0" />
+      <span>
+        Sessions last up to {SESSION_DAYS} days. This one ends by itself on {formatDay(sessionEndsAt(request))} and
+        {mentee ? " counts as a paid session even if you don't end it." : " counts as completed even if the student doesn't end it."}
+      </span>
+    </p>
+  );
+}
+
 // Mentee side: end an accepted session with 1 to 5 stars, did it help, and
-// an optional comment. Collapsed to one button until you start.
+// an optional comment. Collapsed to one button until you start. After the
+// 5-day limit ends it, you can still rate it.
 export function EndSession({ request, menteeId, mentorName, onSaved }) {
   const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
@@ -52,7 +66,8 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
   const state = sessionState(request);
   const first = mentorName?.split(" ")[0] ?? "Your mentor";
 
-  if (state === "completed") {
+  const lateRating = autoEnded(request);
+  if (state === "completed" && !lateRating) {
     return typeof request.rating === "number" ? (
       <p className="text-xs text-muted-foreground">
         Session ended. You rated it{" "}
@@ -61,7 +76,7 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
       </p>
     ) : null;
   }
-  if (state !== "active" && state !== "ending" && state !== "unconfirmed") return null;
+  if (state !== "active" && state !== "ending" && !lateRating) return null;
 
   async function submit(event) {
     event.preventDefault();
@@ -80,19 +95,22 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
     else onSaved?.();
   }
 
-  const nudge = state !== "active" && (
-    <p className="text-xs text-muted-foreground">{first} marked this session as done. Rate it to close it.</p>
-  );
-
   if (!open) {
     return (
       <div className="space-y-1.5">
-        {nudge}
+        {state === "ending" && (
+          <p className="text-xs text-muted-foreground">{first} marked this session as done. Rate it to close it.</p>
+        )}
+        {lateRating && (
+          <p className="text-xs text-muted-foreground">
+            This session ended by itself after {SESSION_DAYS} days. How did it go?
+          </p>
+        )}
         <Button size="sm" variant={state === "active" ? "outline" : "default"} className="rounded-full" onClick={() => setOpen(true)}>
-          <Flag data-icon="inline-start" />
-          End session and rate
+          {lateRating ? <Star data-icon="inline-start" /> : <Flag data-icon="inline-start" />}
+          {lateRating ? "Rate this session" : "End session and rate"}
         </Button>
-        <p className="text-[11px] text-muted-foreground">You can keep chatting afterwards; this only closes the session.</p>
+        {!lateRating && <EndsNotice request={request} mentee />}
       </div>
     );
   }
@@ -145,7 +163,7 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" className="rounded-full" disabled={saving || rating === 0 || helped === null}>
-          End session
+          {lateRating ? "Send rating" : "End session"}
         </Button>
         <Button type="button" size="sm" variant="ghost" className="rounded-full" onClick={() => setOpen(false)}>
           Not yet
@@ -164,18 +182,14 @@ export function RequestEnd({ request, mentorId, menteeName, onSaved }) {
 
   if (state === "ending") {
     return (
-      <p className="text-xs text-muted-foreground">
-        You marked this as done. Waiting for {first} to end it and rate it. If they don&apos;t, it closes on{" "}
-        {formatDay(autoCloseDate(request))} without counting toward your stats.
-      </p>
+      <div className="space-y-1.5">
+        <p className="text-xs text-muted-foreground">You marked this as done. Waiting for {first} to end it and rate it.</p>
+        <EndsNotice request={request} />
+      </div>
     );
   }
-  if (state === "unconfirmed") {
-    return (
-      <p className="text-xs text-muted-foreground">
-        Closed without {first}&apos;s confirmation, so it doesn&apos;t count toward your stats.
-      </p>
-    );
+  if (state === "completed" && autoEnded(request)) {
+    return <p className="text-xs text-muted-foreground">This session ended by itself after {SESSION_DAYS} days.</p>;
   }
   if (state !== "active") return null;
 
@@ -193,9 +207,8 @@ export function RequestEnd({ request, mentorId, menteeName, onSaved }) {
         <CheckCheck data-icon="inline-start" />
         Mark as done
       </Button>
-      <p className="text-[11px] text-muted-foreground">
-        {first} ends the session and rates it. Only sessions they confirm count toward your ranking.
-      </p>
+      <p className="text-[11px] text-muted-foreground">Asks {first} to end the session and rate it.</p>
+      <EndsNotice request={request} />
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );

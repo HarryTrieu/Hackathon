@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { MessageCircle, Search, X } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { CalendarCheck, MessageCircle, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -20,44 +21,110 @@ function timeAgo(iso) {
   return `${Math.round(minutes / 60 / 24)}d`;
 }
 
-const TABS = {
-  all: { label: "All", match: () => true },
-  unread: { label: "Unread", match: (c) => c.unread },
-  // Chats with someone you've sent or received a session request with.
-  sessions: { label: "Sessions", match: (c) => Boolean(c.session) },
+const TAB_LABELS = { all: "All", unread: "Unread", sessions: "Sessions" };
+
+const STATE_CHIP = {
+  pending: { label: "Waiting", className: "bg-muted text-muted-foreground" },
+  active: { label: "In progress", className: "bg-primary/15 text-primary" },
+  ending: { label: "Wrapping up", className: "bg-primary/15 text-primary" },
+  completed: { label: "Ended", className: "bg-muted text-muted-foreground" },
+  declined: { label: "Declined", className: "bg-muted text-muted-foreground" },
 };
 
-const EMPTY_TAB = {
-  unread: "You're all caught up.",
-  sessions: "No chats about a mentoring session yet. Request one from a mentor's page.",
-};
+// Session rooms (each session's own conversation), for the Sessions tab.
+function useSessions(personaId) {
+  const [state, setState] = useState({ personaId: null, sessions: [] });
+  useEffect(() => {
+    if (!personaId) return;
+    let cancelled = false;
+    const load = () =>
+      fetch(`/api/session-chat?profile_id=${encodeURIComponent(personaId)}`, { cache: "no-store" })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (!cancelled && data) setState({ personaId, sessions: data.sessions ?? [] });
+        })
+        .catch(() => {});
+    load();
+    const timer = setInterval(load, 15_000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [personaId]);
+  return state.personaId === personaId ? state.sessions : [];
+}
 
-export default function MessagesPage() {
+function Row({ href, other, time, text, unread, chip }) {
+  return (
+    <li>
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center gap-3 border-b px-4 py-3 transition-colors hover:bg-muted/50",
+          unread && "bg-primary/[0.05]"
+        )}
+      >
+        <UserAvatar profile={other} className="size-10" textClassName="text-xs" />
+        <div className="min-w-0 flex-1">
+          <p className="flex items-center gap-2 text-sm">
+            <span className={cn("truncate", unread ? "font-bold" : "font-semibold")}>{other.name}</span>
+            {chip}
+            <span className="ml-auto shrink-0 text-xs text-muted-foreground">{timeAgo(time)}</span>
+          </p>
+          <p className={cn("truncate text-sm", unread ? "text-foreground" : "text-muted-foreground")}>{text}</p>
+        </div>
+        {unread && <span className="size-2.5 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
+      </Link>
+    </li>
+  );
+}
+
+function MessagesInbox() {
   const { persona } = usePersona();
   const inbox = useInbox(persona.id);
-  const [tab, setTab] = useState("all");
+  const sessions = useSessions(persona.role === "admin" ? null : persona.id);
+  const [tab, setTab] = useState(useSearchParams().get("tab") === "sessions" ? "sessions" : "all");
   const [query, setQuery] = useState("");
 
   const needle = query.trim().toLowerCase();
-  const shown = inbox.conversations.filter(
-    (c) =>
-      TABS[tab].match(c) &&
-      (!needle || c.other.name.toLowerCase().includes(needle) || c.other.handle?.toLowerCase().includes(needle))
-  );
+  const byName = (other) => !needle || other.name.toLowerCase().includes(needle) || other.handle?.toLowerCase().includes(needle);
+  const chats = inbox.conversations.filter((c) => (tab === "unread" ? c.unread : true) && byName(c.other));
+  const rooms = sessions.filter((s) => byName(s.other));
   const counts = {
-    unread: inbox.conversations.filter(TABS.unread.match).length,
-    sessions: inbox.conversations.filter(TABS.sessions.match).length,
+    unread: inbox.conversations.filter((c) => c.unread).length + sessions.filter((s) => s.unread).length,
+    sessions: sessions.filter((s) => ["pending", "active", "ending"].includes(s.state)).length,
   };
-  const hasChats = persona.role !== "admin" && inbox.ready && !inbox.error && inbox.conversations.length > 0;
+  const unreadRooms = sessions.filter((s) => s.unread && byName(s.other));
+  const hasAnything = persona.role !== "admin" && inbox.ready && !inbox.error && (inbox.conversations.length > 0 || sessions.length > 0);
+
+  const roomRow = (s) => (
+    <Row
+      key={s.id}
+      href={`/sessions/${s.id}`}
+      other={s.other}
+      time={s.last_message_at}
+      unread={s.unread}
+      text={`${s.last_sender_id === persona.id ? "You: " : ""}${s.last_text ?? ""}`}
+      chip={
+        <span className="flex shrink-0 items-center gap-1 text-xs">
+          <CalendarCheck className="size-3.5 text-primary" />
+          <span className="font-mono">{s.unit_code}</span>
+          <span className={cn("rounded-full px-1.5 py-px text-[10px] font-medium", STATE_CHIP[s.state]?.className)}>
+            {STATE_CHIP[s.state]?.label}
+          </span>
+        </span>
+      }
+    />
+  );
 
   return (
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold">Messages</h1>
         <p className="text-sm text-muted-foreground">
-          Chat with mentors and students. No AI reads your messages.
+          Chat with anyone. Each mentoring session gets its own chat under Sessions. No AI reads your messages.
         </p>
-        {hasChats && (
+        {hasAnything && (
           <>
             <label className="relative mt-3 block">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
@@ -82,7 +149,7 @@ export default function MessagesPage() {
             </label>
             <Tabs value={tab} onValueChange={setTab} className="-mx-4 -mb-3 mt-2 gap-0">
               <TabsList variant="line" className="w-full justify-start px-2">
-                {Object.entries(TABS).map(([key, { label }]) => (
+                {Object.entries(TAB_LABELS).map(([key, label]) => (
                   <TabsTrigger key={key} value={key} className="flex-none px-3 py-2">
                     {label}
                     {counts[key] > 0 && (
@@ -114,7 +181,7 @@ export default function MessagesPage() {
 
       {inbox.error && <p className="px-4 py-4 text-sm text-destructive">{inbox.error}</p>}
 
-      {persona.role !== "admin" && inbox.ready && !inbox.error && inbox.conversations.length === 0 && (
+      {persona.role !== "admin" && inbox.ready && !inbox.error && !hasAnything && (
         <Empty className="my-12">
           <EmptyHeader>
             <EmptyMedia variant="icon">
@@ -123,44 +190,54 @@ export default function MessagesPage() {
             <EmptyTitle>No messages yet</EmptyTitle>
             <EmptyDescription>
               Open someone&apos;s profile or a mentor page and tap Message. When a mentor accepts your session
-              request, they&apos;ll message you here.
+              request, the session gets its own chat under Sessions.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>
       )}
 
-      {hasChats && shown.length === 0 && (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-          {needle ? `No one called "${query.trim()}"${tab === "all" ? "" : ` in ${TABS[tab].label}`}.` : EMPTY_TAB[tab]}
-        </p>
+      {hasAnything && tab === "sessions" && (
+        <>
+          {rooms.length === 0 && (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+              {needle ? `No sessions with "${query.trim()}".` : "No sessions yet. Request one from a mentor's page."}
+            </p>
+          )}
+          <ul>{rooms.map(roomRow)}</ul>
+        </>
       )}
 
-      <ul>
-        {shown.map((c) => (
-          <li key={c.id}>
-            <Link
-              href={`/messages/${c.other.id}`}
-              className={cn(
-                "flex items-center gap-3 border-b px-4 py-3 transition-colors hover:bg-muted/50",
-                c.unread && "bg-primary/[0.05]"
-              )}
-            >
-              <UserAvatar profile={c.other} className="size-10" textClassName="text-xs" />
-              <div className="min-w-0 flex-1">
-                <p className="flex items-center gap-2 text-sm">
-                  <span className={cn("truncate", c.unread ? "font-bold" : "font-semibold")}>{c.other.name}</span>
-                  <span className="shrink-0 text-xs text-muted-foreground">{timeAgo(c.last_message_at)}</span>
-                </p>
-                <p className={cn("truncate text-sm", c.unread ? "text-foreground" : "text-muted-foreground")}>
-                  {c.last_sender_id === persona.id ? "You: " : ""}
-                  {c.last_text}
-                </p>
-              </div>
-              {c.unread && <span className="size-2.5 shrink-0 rounded-full bg-primary" aria-label="Unread" />}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      {hasAnything && tab !== "sessions" && (
+        <>
+          {tab === "unread" && unreadRooms.length > 0 && <ul>{unreadRooms.map(roomRow)}</ul>}
+          {chats.length === 0 && (tab !== "unread" || unreadRooms.length === 0) && (
+            <p className="px-4 py-10 text-center text-sm text-muted-foreground">
+              {needle ? `No one called "${query.trim()}".` : tab === "unread" ? "You're all caught up." : "No chats yet."}
+            </p>
+          )}
+          <ul>
+            {chats.map((c) => (
+              <Row
+                key={c.id}
+                href={`/messages/${c.other.id}`}
+                other={c.other}
+                time={c.last_message_at}
+                unread={c.unread}
+                text={`${c.last_sender_id === persona.id ? "You: " : ""}${c.last_text}`}
+              />
+            ))}
+          </ul>
+        </>
+      )}
     </div>
+  );
+}
+
+// useSearchParams (?tab=sessions) needs a Suspense boundary.
+export default function MessagesPage() {
+  return (
+    <Suspense fallback={null}>
+      <MessagesInbox />
+    </Suspense>
   );
 }

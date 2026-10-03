@@ -3,109 +3,51 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, Ban, CalendarCheck, Send, ShieldAlert, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Ban, CalendarCheck, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
-import { EndSession, ReceivedRating, RequestEnd } from "@/components/session-details";
+import { ChatItems, Composer } from "@/components/chat-thread";
 import { usePersona } from "@/lib/persona-context";
 import { refreshInbox } from "@/lib/use-inbox";
-import { firstMessage, isOpenSession, sessionState } from "@/lib/sessions";
+import { isOpenSession, sessionState } from "@/lib/sessions";
 import { roleLabel } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 
 const POLL_MS = 4000;
 const isDemo = (id) => /^p\d+$/.test(id ?? "");
 
-function timeOf(iso) {
-  return new Date(iso).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
-}
-
-// Session milestones shown inside the conversation, between the messages.
-// The chat itself never closes; sessions start and end inside it.
-function sessionEvents(sessions, meId, other) {
-  const first = (id) => (id === meId ? "You" : other.name.split(" ")[0]);
-  const events = [];
-  for (const s of sessions) {
-    const unit = s.unit_code;
-    events.push({ at: s.created_at, text: `${first(s.mentee_id)} requested a ${unit} session` });
-    const state = sessionState(s);
-    if (state === "declined") events.push({ at: s.decided_at ?? s.created_at, text: `${unit} session declined` });
-    if (state !== "pending" && state !== "declined" && s.decided_at) {
-      events.push({ at: s.decided_at, text: `${unit} session started`, tone: "start" });
-    }
-    if (s.end_requested_at) events.push({ at: s.end_requested_at, text: `${first(s.mentor_id)} marked the ${unit} session as done` });
-    if (state === "completed") {
-      const rated = typeof s.rating === "number" ? ` · ${"★".repeat(s.rating)}${"☆".repeat(5 - s.rating)}` : "";
-      events.push({ at: s.ended_at ?? s.rated_at ?? s.created_at, text: `${unit} session ended${rated}`, tone: "end" });
-    }
-  }
-  return events.map((e, i) => ({ ...e, id: `event-${i}`, event: true }));
-}
-
-// Session requests between the two of you, shown above the chat.
-function SessionPanel({ sessions, me, other, onChanged, onAccepted }) {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
-  const current = sessions.find(isOpenSession);
-  if (!current) return null;
-  const iAmMentor = current.mentor_id === me.id;
-  const state = sessionState(current);
-
-  async function decide(action) {
-    setBusy(true);
-    setError(null);
-    const res = await fetch("/api/session-request", {
-      method: "PATCH",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ action, id: current.id, mentor_id: me.id }),
-    });
-    const data = await res.json().catch(() => ({}));
-    setBusy(false);
-    if (!res.ok) {
-      setError(data.error ?? "Could not update the request.");
-      return;
-    }
-    if (action === "accept") onAccepted(current);
-    onChanged();
-  }
-
+// Sessions between you two live in their own rooms; open ones are linked
+// above the chat.
+function SessionLinks({ sessions, meId }) {
+  const open = sessions.filter(isOpenSession);
+  if (open.length === 0) return null;
   return (
-    <div className="space-y-2 border-b bg-primary/[0.04] px-4 py-3 text-sm">
-      <p className="flex items-center gap-2 font-semibold">
-        <CalendarCheck className="size-4 text-primary" />
-        {iAmMentor ? `${other.name.split(" ")[0]} asked you for a ` : "Your "}
-        <span className="font-mono">{current.unit_code}</span> session
-        <span className="font-normal text-muted-foreground">
-          · {state === "pending" ? "waiting for an answer" : state === "ending" ? "wrapping up" : "in progress"}
-        </span>
-      </p>
-      {current.status === "sent" && iAmMentor && (
-        <div className="flex gap-2">
-          <Button size="sm" className="rounded-full" disabled={busy} onClick={() => decide("accept")}>
-            Accept and reply
-          </Button>
-          <Button size="sm" variant="outline" className="rounded-full" disabled={busy} onClick={() => decide("decline")}>
-            Decline
-          </Button>
-        </div>
-      )}
-      {current.status === "sent" && !iAmMentor && (
-        <p className="text-xs text-muted-foreground">
-          Once {other.name.split(" ")[0]} accepts, they&apos;ll message you here to arrange a time and place.
-        </p>
-      )}
-      {state !== "pending" &&
-        (iAmMentor ? (
-          <>
-            <ReceivedRating request={current} />
-            <RequestEnd request={current} mentorId={me.id} menteeName={other.name} onSaved={onChanged} />
-          </>
-        ) : (
-          <EndSession request={current} menteeId={me.id} mentorName={other.name} onSaved={onChanged} />
-        ))}
-      {error && <p className="text-xs text-destructive">{error}</p>}
+    <div className="space-y-1.5 border-b bg-primary/[0.04] px-4 py-2.5">
+      {open.map((s) => {
+        const state = sessionState(s);
+        return (
+          <Link
+            key={s.id}
+            href={`/sessions/${s.id}`}
+            className="group flex items-center gap-2 rounded-lg text-sm transition-colors hover:text-primary"
+          >
+            <CalendarCheck className="size-4 text-primary" />
+            <span className="font-semibold">
+              {s.mentor_id === meId ? "Session you're mentoring" : "Your session"} ·{" "}
+              <span className="font-mono">{s.unit_code}</span>
+            </span>
+            <span className="text-muted-foreground">
+              · {state === "pending" ? (s.mentor_id === meId ? "needs your answer" : "waiting for an answer") : "in progress"}
+            </span>
+            <span className="ml-auto flex items-center gap-0.5 text-xs font-medium text-primary">
+              Open session
+              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+            </span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -275,19 +217,7 @@ function Conversation() {
         </p>
       )}
 
-      {data && (
-        <SessionPanel
-          sessions={data.sessions}
-          me={persona}
-          other={data.other}
-          onChanged={load}
-          onAccepted={(req) =>
-            setText(
-              firstMessage({ fromName: persona.name, toName: data.other.name, unitCode: req.unit_code, fromMentor: true })
-            )
-          }
-        />
-      )}
+      {data && <SessionLinks sessions={data.sessions} meId={meId} />}
 
       <div className="flex-1 space-y-2 px-4 py-4">
         {!data && !error && <Skeleton className="h-24 w-full rounded-xl" />}
@@ -295,67 +225,7 @@ function Conversation() {
         {data?.messages.length === 0 && (
           <p className="text-center text-sm text-muted-foreground">No messages yet. Say hi.</p>
         )}
-        {data &&
-          [...data.messages, ...sessionEvents(data.sessions, meId, data.other)]
-            .sort((a, b) => Date.parse(a.created_at ?? a.at) - Date.parse(b.created_at ?? b.at))
-            .map((m) => {
-          if (m.event) {
-            return (
-              <p key={m.id} className="flex justify-center py-1">
-                <span
-                  className={cn(
-                    "rounded-full px-3 py-1 text-[11px] font-medium",
-                    m.tone === "start" && "bg-primary/10 text-primary",
-                    m.tone === "end" && "bg-primary text-primary-foreground",
-                    !m.tone && "bg-muted text-muted-foreground"
-                  )}
-                >
-                  {m.text} · {timeOf(m.at)}
-                </span>
-              </p>
-            );
-          }
-          const mine = m.sender_id === meId;
-          return (
-            <div key={m.id} className={cn("group flex items-center gap-1", mine ? "justify-end" : "justify-start")}>
-              {mine && !m.deleted && (
-                <button
-                  type="button"
-                  onClick={() => remove(m)}
-                  aria-label="Delete message"
-                  title="Delete message"
-                  className="rounded-full p-1.5 text-muted-foreground opacity-60 transition hover:bg-muted hover:text-destructive hover:opacity-100 md:opacity-0 md:focus-visible:opacity-100 md:group-hover:opacity-100"
-                >
-                  <Trash2 className="size-3.5" />
-                </button>
-              )}
-              <div
-                className={cn(
-                  "max-w-[80%] rounded-2xl px-3.5 py-2 text-sm",
-                  m.deleted
-                    ? "border border-dashed bg-transparent text-muted-foreground"
-                    : mine
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted"
-                )}
-              >
-                {m.deleted ? (
-                  <p className="italic">{mine ? "You deleted this message" : "This message was deleted"}</p>
-                ) : (
-                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
-                )}
-                <p
-                  className={cn(
-                    "mt-0.5 text-[10px]",
-                    mine && !m.deleted ? "text-primary-foreground/70" : "text-muted-foreground"
-                  )}
-                >
-                  {timeOf(m.created_at)}
-                </p>
-              </div>
-            </div>
-          );
-        })}
+        {data && <ChatItems items={data.messages} meId={meId} onDelete={remove} />}
         <div ref={endRef} />
       </div>
 
@@ -365,22 +235,13 @@ function Conversation() {
           <p className="text-sm text-muted-foreground">You blocked {other.name.split(" ")[0]}. Unblock to send messages.</p>
         )}
         {canSend && (
-          <form onSubmit={send} className="flex items-end gap-2">
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) send(e);
-              }}
-              rows={text.includes("\n") || text.length > 80 ? 3 : 1}
-              maxLength={2000}
-              placeholder={`Message ${other.name.split(" ")[0]}...`}
-              className="min-h-10 flex-1 resize-none rounded-2xl border bg-transparent px-4 py-2 text-base outline-none focus:border-primary/50 md:text-sm"
-            />
-            <Button type="submit" size="icon-lg" className="rounded-full" disabled={!text.trim() || sending} aria-label="Send">
-              <Send />
-            </Button>
-          </form>
+          <Composer
+            value={text}
+            onChange={setText}
+            onSend={send}
+            sending={sending}
+            placeholder={`Message ${other.name.split(" ")[0]}...`}
+          />
         )}
         {sendError && <p className="mt-1 text-xs text-destructive">{sendError}</p>}
       </div>

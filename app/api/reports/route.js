@@ -49,6 +49,7 @@ export async function GET(request) {
 async function withConversations(db, reports) {
   return Promise.all(
     reports.map(async (r) => {
+      if (r.target_type === "chat" && r.target_id.startsWith("session:")) return withSessionChat(db, r);
       if (r.target_type !== "chat" || !r.target_id.startsWith("dm:")) return r;
       const other = r.target_id.slice(3);
       const [a, b] = r.reporter_id < other ? [r.reporter_id, other] : [other, r.reporter_id];
@@ -62,6 +63,23 @@ async function withConversations(db, reports) {
       return { ...r, reported_id: other, conversation: (messages ?? []).reverse() };
     })
   );
+}
+
+// A reported session room ("session:<id>"): its last 20 messages, but only
+// if the reporter was in that session.
+async function withSessionChat(db, r) {
+  const id = r.target_id.slice("session:".length);
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return r;
+  const { data: session } = await db.from("session_requests").select("mentor_id, mentee_id").eq("id", id).maybeSingle();
+  if (!session || ![session.mentor_id, session.mentee_id].includes(r.reporter_id)) return { ...r, conversation: [] };
+  const { data: messages } = await db
+    .from("session_messages")
+    .select("sender_id, text, created_at, deleted_at")
+    .eq("session_id", id)
+    .order("created_at", { ascending: false })
+    .limit(20);
+  const reported = session.mentor_id === r.reporter_id ? session.mentee_id : session.mentor_id;
+  return { ...r, reported_id: reported, conversation: (messages ?? []).reverse() };
 }
 
 export async function POST(request) {

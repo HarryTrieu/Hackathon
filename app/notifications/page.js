@@ -251,7 +251,7 @@ export default function NotificationsPage() {
       if (action === "accept") {
         // The mentor starts the conversation, with a suggested opener.
         const draft = firstMessage({ fromName: persona.name, toName: mentee, unitCode: req.unit_code, fromMentor: true });
-        router.push(`/messages/${req.mentee_id}?draft=${encodeURIComponent(draft)}`);
+        router.push(`/sessions/${req.id}?draft=${encodeURIComponent(draft)}`);
         return;
       }
       setNote(`Declined. ${mentee} will see it in their notifications.`);
@@ -437,8 +437,8 @@ export default function NotificationsPage() {
                           </div>
                         )}
                         {r.status !== "sent" && r.status !== "declined" && (
-                          <Link href={`/messages/${r.mentee_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
-                            Open chat with {mentee.name.split(" ")[0]}
+                          <Link href={`/sessions/${r.id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
+                            Open session
                           </Link>
                         )}
                         <ReceivedRating request={r} />
@@ -485,8 +485,8 @@ export default function NotificationsPage() {
                       <SessionPlan request={r} />
                       <div className="space-y-2 pt-1">
                         {r.status !== "sent" && r.status !== "declined" && (
-                          <Link href={`/messages/${r.mentor_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
-                            Open chat with {mentor.name.split(" ")[0]}
+                          <Link href={`/sessions/${r.id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
+                            Open session
                           </Link>
                         )}
                         <EndSession request={r} menteeId={persona.id} mentorName={mentor.name} onSaved={notif.reload} />
