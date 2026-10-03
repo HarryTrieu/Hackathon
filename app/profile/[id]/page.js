@@ -26,6 +26,7 @@ import { reputationFor } from "@/lib/mentors";
 import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
 import { supabaseAdmin } from "@/lib/supabase";
 import { toProfile } from "@/lib/account";
+import { BackButton } from "@/components/back-button";
 
 // Helpful votes on the person's posts: live counts from the database, like
 // the mentor page, so both pages agree. Seed counts when there is no DB.
@@ -81,7 +82,8 @@ export default async function ProfilePage({ params }) {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-6">
+      <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 pt-3 pb-6">
+        <BackButton className="-ml-2 mb-2" />
         <div className="flex items-start gap-4">
           <UserAvatar
             profile={profile}
