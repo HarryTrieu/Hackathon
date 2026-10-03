@@ -22,6 +22,7 @@ function timeAgo(iso) {
 }
 
 const TAB_LABELS = { all: "All", unread: "Unread", sessions: "Sessions" };
+const isOngoing = (s) => ["pending", "active", "ending"].includes(s.state);
 
 const STATE_CHIP = {
   pending: { label: "Waiting", className: "bg-muted text-muted-foreground" },
@@ -92,9 +93,16 @@ function MessagesInbox() {
   const rooms = sessions.filter((s) => byName(s.other));
   const counts = {
     unread: inbox.conversations.filter((c) => c.unread).length + sessions.filter((s) => s.unread).length,
-    sessions: sessions.filter((s) => ["pending", "active", "ending"].includes(s.state)).length,
+    sessions: sessions.filter(isOngoing).length,
   };
-  const unreadRooms = sessions.filter((s) => s.unread && byName(s.other));
+  // All: your chats plus sessions still running; finished sessions live
+  // only under Sessions. Unread: anything unread. Newest first.
+  const feed = [
+    ...chats.map((c) => ({ kind: "chat", item: c, time: c.last_message_at })),
+    ...rooms
+      .filter((s) => (tab === "unread" ? s.unread : isOngoing(s)))
+      .map((s) => ({ kind: "room", item: s, time: s.last_message_at })),
+  ].sort((a, b) => Date.parse(b.time) - Date.parse(a.time));
   const hasAnything = persona.role !== "admin" && inbox.ready && !inbox.error && (inbox.conversations.length > 0 || sessions.length > 0);
 
   const roomRow = (s) => (
@@ -203,29 +211,45 @@ function MessagesInbox() {
               {needle ? `No sessions with "${query.trim()}".` : "No sessions yet. Request one from a mentor's page."}
             </p>
           )}
-          <ul>{rooms.map(roomRow)}</ul>
+          {[
+            ["Ongoing", rooms.filter(isOngoing)],
+            ["Finished", rooms.filter((s) => !isOngoing(s))],
+          ].map(
+            ([title, list]) =>
+              list.length > 0 && (
+                <section key={title}>
+                  <h2 className="border-b bg-muted/40 px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {title} <span className="font-normal">· {list.length}</span>
+                  </h2>
+                  <ul>{list.map(roomRow)}</ul>
+                </section>
+              )
+          )}
         </>
       )}
 
       {hasAnything && tab !== "sessions" && (
         <>
-          {tab === "unread" && unreadRooms.length > 0 && <ul>{unreadRooms.map(roomRow)}</ul>}
-          {chats.length === 0 && (tab !== "unread" || unreadRooms.length === 0) && (
+          {feed.length === 0 && (
             <p className="px-4 py-10 text-center text-sm text-muted-foreground">
               {needle ? `No one called "${query.trim()}".` : tab === "unread" ? "You're all caught up." : "No chats yet."}
             </p>
           )}
           <ul>
-            {chats.map((c) => (
-              <Row
-                key={c.id}
-                href={`/messages/${c.other.id}`}
-                other={c.other}
-                time={c.last_message_at}
-                unread={c.unread}
-                text={`${c.last_sender_id === persona.id ? "You: " : ""}${c.last_text}`}
-              />
-            ))}
+            {feed.map(({ kind, item }) =>
+              kind === "room" ? (
+                roomRow(item)
+              ) : (
+                <Row
+                  key={item.id}
+                  href={`/messages/${item.other.id}`}
+                  other={item.other}
+                  time={item.last_message_at}
+                  unread={item.unread}
+                  text={`${item.last_sender_id === persona.id ? "You: " : ""}${item.last_text}`}
+                />
+              )
+            )}
           </ul>
         </>
       )}
