@@ -201,12 +201,8 @@ export function Feed() {
     );
   }
 
-  // Scroll up to a post you just published (e.g. from the popup while
-  // scrolled down the feed).
-  const newestId = myNewPosts[0]?.id;
-  useEffect(() => {
-    if (newestId) window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [newestId]);
+  // No jump to the top after publishing: the "Posted" toast says where it
+  // went, and the feed stays where you were reading.
 
   return (
     <div className="pb-16 md:pb-0">

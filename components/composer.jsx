@@ -118,7 +118,7 @@ export function Composer({ onPublished, inDialog = false }) {
         ? ""
         : " Session only: add Supabase keys to save posts.";
       setStatus(aiNote + dbNote);
-      toast("Posted");
+      toast("Posted. It's at the top of your feed.");
     } catch {
       setError("Posting failed. Check your connection and try again.");
     } finally {
