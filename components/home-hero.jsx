@@ -3,11 +3,12 @@ import Link from "next/link";
 import { ArrowRight, ShieldCheck, UserPlus } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MAX_CHATS_PER_DAY } from "@/lib/mentors";
 import styles from "./home-hero.module.css";
 
 const STEPS = [
   { n: "1", title: "Describe", text: "Tell the AI the mentor you want" },
-  { n: "2", title: "Preview chat", text: "Talk to their AI, 5 messages a day" },
+  { n: "2", title: "Preview chat", text: `Talk to their AI, ${MAX_CHATS_PER_DAY} messages a day` },
   { n: "3", title: "Contact", text: "Request a paid session if it fits" },
 ];
 

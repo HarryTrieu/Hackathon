@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import { UserAvatar } from "@/components/user-avatar";
 import { unitDirectory } from "@/lib/communities";
 import { SEED_MENTORS } from "@/lib/mentors";
@@ -22,6 +22,15 @@ const isTop = (l) => (l.completed_sessions ?? 0) >= 3 && (l.ratings?.average ?? 
 export function MentorStrip() {
   const { persona } = usePersona();
   const [listings, setListings] = useState(SEED_MENTORS);
+  // Desktop arrows instead of a scrollbar; each shows only when there's more
+  // to scroll that way. Phones swipe.
+  const rowRef = useRef(null);
+  const [edges, setEdges] = useState({ left: false, right: false });
+  const measure = () => {
+    const el = rowRef.current;
+    if (el) setEdges({ left: el.scrollLeft > 4, right: el.scrollLeft + el.clientWidth < el.scrollWidth - 4 });
+  };
+  const scrollBy = (dir) => rowRef.current?.scrollBy({ left: dir * 280, behavior: "smooth" });
   useEffect(() => {
     let cancelled = false;
     fetch("/api/mentors")
@@ -34,6 +43,15 @@ export function MentorStrip() {
       cancelled = true;
     };
   }, []);
+  useEffect(() => {
+    const frame = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", measure);
+    };
+    // Re-measure when the list changes.
+  }, [listings, persona.id]);
   if (persona.role === "admin") return null;
 
   const myUnits = new Set(persona.units.map((u) => u.code));
@@ -54,11 +72,34 @@ export function MentorStrip() {
   if (mentors.length === 0) return null;
 
   return (
-    <section aria-label="Mentors for you" className="border-b py-3">
+    <section aria-label="Mentors for you" className="group/strip relative border-b py-3">
       <p className="px-4 pb-2 text-xs font-semibold text-muted-foreground">
         {mentors[0].inYourUnit ? "Mentors in your units" : "Mentors for you"}
       </p>
-      <ul className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:thin]">
+      {[
+        ["left", -1, ChevronLeft, "left-1"],
+        ["right", 1, ChevronRight, "right-1"],
+      ].map(([side, dir, Icon, pos]) =>
+        edges[side] ? (
+          <button
+            key={side}
+            type="button"
+            onClick={() => scrollBy(dir)}
+            aria-label={side === "left" ? "Scroll mentors left" : "Scroll mentors right"}
+            className={cn(
+              "absolute top-1/2 z-10 hidden size-8 items-center justify-center rounded-full border bg-background/95 shadow-sm transition-opacity hover:bg-muted md:flex md:opacity-0 md:group-hover/strip:opacity-100 md:focus-visible:opacity-100",
+              pos
+            )}
+          >
+            <Icon className="size-4" />
+          </button>
+        ) : null
+      )}
+      <ul
+        ref={rowRef}
+        onScroll={measure}
+        className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {mentors.map(({ listing, profile, inYourUnit }) => (
           <li key={profile.id} className="shrink-0">
             <Link

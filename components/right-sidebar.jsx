@@ -89,7 +89,7 @@ export function RightSidebar() {
       )}
 
       <p className="px-2 text-xs text-muted-foreground">
-        Sodu demo · seeded data, no live accounts
+        Sodu demo · sample students alongside real accounts
       </p>
     </aside>
   );

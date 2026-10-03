@@ -12,8 +12,9 @@ import { getUnit } from "@/lib/communities";
 import { mergeLocalApplications } from "@/lib/mentors";
 import { cn } from "@/lib/utils";
 
-const STARTERS = [
-  "I want a mentor with a calm way of talking, who can explain Marketing so it actually makes sense.",
+// Starting points for the matcher; the first one names this unit.
+const starters = (unitName) => [
+  `I want a mentor with a calm way of talking, who can explain ${unitName ?? "this unit"} so it actually makes sense.`,
   "My exam is in two weeks. I need someone direct who focuses on exam prep.",
   "I'd like a mentor who can explain things in Vietnamese.",
   "Not sure yet. Ask me a few questions to find my match.",
@@ -169,7 +170,7 @@ export default function FindMentorPage() {
               Describe the mentor you want, or pick a starting point:
             </p>
             <div className="flex flex-col gap-2">
-              {STARTERS.map((s) => (
+              {starters(unit?.name).map((s) => (
                 <button
                   key={s}
                   type="button"

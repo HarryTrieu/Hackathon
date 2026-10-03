@@ -228,7 +228,7 @@ function MentorDetail() {
           items={[
             [mentor.reputation, "helpful votes"],
             [mentor.preview_chats ?? 0, "preview chats"],
-            [mentor.contact_requests ?? 0, "contact requests"],
+            [mentor.contact_requests ?? 0, "session requests"],
             // Shown once a mentee has rated a session, with how many did.
             ...(mentor.ratings
               ? [[`${mentor.ratings.average}★`, `${mentor.ratings.count} rating${mentor.ratings.count === 1 ? "" : "s"} · ${mentor.ratings.helpedPercent}% unstuck`]]
