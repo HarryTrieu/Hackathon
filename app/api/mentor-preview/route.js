@@ -6,6 +6,7 @@ import { getUnit } from "@/lib/communities";
 import { getProfile } from "@/lib/seed";
 import { actAs, denied } from "@/lib/actor";
 import { realProfiles } from "@/lib/account";
+import { clientIp, takeDailyQuota } from "@/lib/rate-limit";
 
 const Draft = z.object({
   profile_id: z.string().min(1).max(80),
@@ -53,6 +54,9 @@ export async function POST(request) {
   const draft = parsed.data;
   const who = await actAs(draft.profile_id);
   if (!who.ok) return denied(who);
+  if (!takeDailyQuota("mentor-preview", draft.profile_id, 15).ok) {
+    return Response.json({ error: "You've previewed your AI 15 times today. Try again tomorrow." }, { status: 429 });
+  }
   const profile = getProfile(draft.profile_id) ?? (await realProfiles([draft.profile_id])).get(draft.profile_id);
   if (!profile) return Response.json({ error: "Finish setting up your account first." }, { status: 403 });
   const listing = {

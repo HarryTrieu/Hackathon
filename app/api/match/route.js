@@ -3,6 +3,7 @@
 // mentor ranked with a reason.
 import { z } from "zod";
 import { loadListings, matchMentors } from "@/lib/mentor-ai";
+import { clientIp, takeDailyQuota } from "@/lib/rate-limit";
 
 const MatchRequest = z.object({
   unit_code: z.string().regex(/^[A-Z]{3}\d{3}$/, "Invalid unit code."),
@@ -33,6 +34,10 @@ export async function POST(request) {
     return Response.json({ error: "Last message must be from the mentee." }, { status: 400 });
   }
 
+  // The matcher needs no account, so it's capped per connection.
+  if (!takeDailyQuota("match", clientIp(request), 40).ok) {
+    return Response.json({ error: "That's a lot of matching for one day. Try again tomorrow." }, { status: 429 });
+  }
   const candidates = await loadListings({ unitCode: unit_code });
   const result = await matchMentors(candidates, messages);
   return Response.json(result);

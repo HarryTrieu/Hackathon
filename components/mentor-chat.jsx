@@ -100,7 +100,7 @@ export function MentorChat({ mentor, persona, unitName }) {
         </p>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
-            {remaining === null ? "..." : `${remaining} of ${MAX_CHATS_PER_DAY} messages left today`}
+            {remaining === null ? "..." : `${remaining} of ${MAX_CHATS_PER_DAY} AI messages left today`}
           </span>
           <ReportButton targetType="chat" targetId={mentor.id} labelClassName="max-sm:sr-only" />
         </div>
@@ -152,13 +152,10 @@ export function MentorChat({ mentor, persona, unitName }) {
 
       {outOfMessages ? (
         <div className="space-y-1 border-t bg-primary/[0.04] px-4 py-3 text-sm">
-          <p className="font-medium">That&apos;s your {MAX_CHATS_PER_DAY} messages with {first} for today.</p>
+          <p className="font-medium">That&apos;s your {MAX_CHATS_PER_DAY} AI messages for today.</p>
           <p className="text-muted-foreground">
-            Liked the vibe? Request a session below. Not a fit?{" "}
-            <Link href={`/mentors/${mentor.unit_code}`} className="text-primary hover:underline">
-              Try another mentor
-            </Link>
-            .
+            Liked the vibe? Request a session below, or message {first} directly. The AI previews reset
+            tomorrow.
           </p>
         </div>
       ) : (

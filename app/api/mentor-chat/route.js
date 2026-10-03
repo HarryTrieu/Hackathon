@@ -1,5 +1,7 @@
-// Chat with a mentor's AI preview. Limited to MAX_CHATS_PER_DAY mentee
-// messages per mentor per day (Melbourne time), counted server-side.
+// Chat with a mentor's AI preview. Limited to MAX_CHATS_PER_DAY messages per
+// person per day across all mentors (Melbourne time), counted server-side.
+// The conversation so far is read from the database, never trusted from the
+// browser, so nobody can slip a fake "mentor said..." into the AI's context.
 // Without the database the count lives in server memory, which resets on
 // restart and is per-instance on Vercel: fine for a demo, not for billing.
 import { z } from "zod";
@@ -15,19 +17,31 @@ function today() {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Australia/Melbourne" });
 }
 
-async function usedToday(db, listingId, menteeId) {
+async function usedToday(db, menteeId) {
   if (db) {
     const { count, error } = await db
       .from("mentor_chats")
       .select("id", { count: "exact", head: true })
-      .eq("mentor_listing", listingId)
       .eq("mentee_id", menteeId)
       .eq("role", "mentee")
       .eq("day", today());
     // A missing table comes back as count null with no error on HEAD requests.
     if (!error && typeof count === "number") return { used: count, store: "db" };
   }
-  return { used: memoryCounts.get(`${listingId}|${menteeId}|${today()}`) ?? 0, store: "memory" };
+  return { used: memoryCounts.get(`${menteeId}|${today()}`) ?? 0, store: "memory" };
+}
+
+// Today's conversation with this mentor's AI, oldest first (last 10 turns).
+async function storedHistory(db, listingId, menteeId) {
+  const { data } = await db
+    .from("mentor_chats")
+    .select("role, text, created_at")
+    .eq("mentor_listing", listingId)
+    .eq("mentee_id", menteeId)
+    .eq("day", today())
+    .order("created_at", { ascending: false })
+    .limit(10);
+  return (data ?? []).reverse().map(({ role, text }) => ({ role, text }));
 }
 
 const ChatRequest = z.object({
@@ -49,7 +63,7 @@ export async function GET(request) {
   }
   const who = await actAs(menteeId);
   if (!who.ok) return denied(who);
-  const { used } = await usedToday(supabaseAdmin(), listingId, menteeId);
+  const { used } = await usedToday(supabaseAdmin(), menteeId);
   return Response.json({ remaining: Math.max(0, MAX_CHATS_PER_DAY - used) });
 }
 
@@ -73,15 +87,21 @@ export async function POST(request) {
   if (!listing) return Response.json({ error: "Mentor not found." }, { status: 404 });
 
   const db = supabaseAdmin();
-  const { used, store } = await usedToday(db, listing_id, mentee_id);
+  const { used, store } = await usedToday(db, mentee_id);
   if (used >= MAX_CHATS_PER_DAY) {
     return Response.json(
-      { error: `You've used your ${MAX_CHATS_PER_DAY} messages with this mentor today. Request a session or try another mentor.`, remaining: 0 },
+      {
+        error: `You've used your ${MAX_CHATS_PER_DAY} AI messages for today. Request a session, or come back tomorrow.`,
+        remaining: 0,
+      },
       { status: 429 }
     );
   }
 
-  const { reply, mocked } = await mentorReply(listing, history, text);
+  // With the database, the history comes from what was actually said; the
+  // browser's copy is only used when there's no database (local demo).
+  const context = store === "db" ? await storedHistory(db, listing_id, mentee_id) : history;
+  const { reply, mocked } = await mentorReply(listing, context, text);
 
   let saved = false;
   if (store === "db") {
@@ -91,7 +111,7 @@ export async function POST(request) {
     ]);
     saved = !error;
   }
-  if (!saved) memoryCounts.set(`${listing_id}|${mentee_id}|${today()}`, used + 1);
+  if (!saved) memoryCounts.set(`${mentee_id}|${today()}`, used + 1);
 
   return Response.json({
     reply,
