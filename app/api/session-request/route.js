@@ -12,6 +12,7 @@ import { loadListings } from "@/lib/mentor-ai";
 import { LISTING_ID, parseListingId } from "@/lib/mentors";
 import { PLACES } from "@/lib/sessions";
 import { actAs, denied } from "@/lib/actor";
+import { ping } from "@/lib/realtime";
 
 // The session-journey migration hasn't run yet: Postgres says 42703 for an
 // unknown column in a filter, Supabase (PostgREST) PGRST204 for one in data.
@@ -101,13 +102,14 @@ export async function PATCH(request) {
         .eq("id", input.id)
         .eq("mentor_id", input.mentor_id)
         .eq("status", "sent")
-        .select("id");
+        .select("id, mentee_id");
     let { data, error } = await answer({ status, decided_at: now });
     if (missingColumn(error)) ({ data, error } = await answer({ status }));
     if (error) return Response.json({ error: "Could not update the request." }, { status: 500 });
     if (data.length === 0) {
       return Response.json({ error: "Request not found or already answered." }, { status: 409 });
     }
+    await ping([data[0].mentee_id], "request");
     return Response.json({ ok: true, status, persisted: true });
   }
 
@@ -124,7 +126,7 @@ export async function PATCH(request) {
       .eq(owner, owner === "mentee_id" ? input.mentee_id : input.mentor_id)
       .eq("status", "accepted")
       .is(unanswered, null)
-      .select("id");
+      .select("id, mentor_id, mentee_id");
 
   let result;
   if (byMentee) {
@@ -140,6 +142,8 @@ export async function PATCH(request) {
   if (result.data.length === 0) {
     return Response.json({ error: "This session is already over, or isn't yours." }, { status: 409 });
   }
+  const row = result.data[0];
+  await ping([byMentee ? row.mentor_id : row.mentee_id], "session");
   return Response.json({ ok: true, persisted: true });
 }
 
@@ -188,5 +192,6 @@ export async function POST(request) {
     }
     persisted = !error;
   }
+  if (persisted) await ping([mentorId], "request");
   return Response.json({ request: row, persisted });
 }

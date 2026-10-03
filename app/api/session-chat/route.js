@@ -12,6 +12,7 @@ import { realProfiles } from "@/lib/account";
 import { getProfile } from "@/lib/seed";
 import { canChatInSession } from "@/lib/sessions";
 import { missingTable, mySessions, roleIn } from "@/lib/session-chat";
+import { ping } from "@/lib/realtime";
 
 const MAX_PER_MINUTE = 15;
 const PROFILE_ID = /^(p\d+|u-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/;
@@ -209,5 +210,6 @@ export async function POST(request) {
       [roleIn(session, me) === "mentor" ? "mentor_read_at" : "mentee_read_at"]: now,
     })
     .eq("id", session.id);
+  await ping([otherId], "session-message");
   return Response.json({ message });
 }

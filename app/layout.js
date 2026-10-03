@@ -4,6 +4,7 @@ import { PersonaProvider } from "@/lib/persona-context";
 import { LeftNav, MobileNav } from "@/components/left-nav";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Toaster } from "@/components/toaster";
+import { RealtimeListener } from "@/components/realtime-listener";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -43,6 +44,7 @@ export default function RootLayout({ children }) {
           </div>
           <MobileNav />
           <Toaster />
+          <RealtimeListener />
         </PersonaProvider>
       </body>
     </html>

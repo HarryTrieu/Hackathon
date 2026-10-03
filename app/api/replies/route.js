@@ -6,6 +6,7 @@ import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAsAuthor, denied } from "@/lib/actor";
 import { withRealAuthors } from "@/lib/account";
+import { ping } from "@/lib/realtime";
 
 const CreateReply = z.object({
   post_id: z.string().min(1).max(64),
@@ -68,6 +69,10 @@ export async function POST(request) {
   if (!db) return Response.json({ reply: shown, persisted: false });
 
   const { error } = await db.from("replies").insert(reply);
+  if (!error) {
+    const { data: post } = await db.from("posts").select("author_id").eq("id", reply.post_id).maybeSingle();
+    if (post && post.author_id !== reply.author_id) await ping([post.author_id], "reply");
+  }
   return Response.json({ reply: shown, persisted: !error });
 }
 

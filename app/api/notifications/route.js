@@ -21,7 +21,7 @@ export async function GET(request) {
 
   // Likes and replies join their post (inner join filtered on the author),
   // so every query runs in one parallel round trip.
-  const [likes, replies, sent, received, apps] = await Promise.all([
+  const [likes, replies, sent, received, apps, followers] = await Promise.all([
     db
       .from("post_likes")
       .select("post_id, profile_id, created_at, posts!inner(text, author_id, status)")
@@ -56,6 +56,12 @@ export async function GET(request) {
       .eq("profile_id", profileId)
       .eq("is_demo", false)
       .in("status", ["approved", "rejected"]),
+    db
+      .from("follows")
+      .select("follower_id, created_at")
+      .eq("followee_id", profileId)
+      .order("created_at", { ascending: false })
+      .limit(30),
   ]);
 
   // key identifies one thing the user should see once; a request whose
@@ -125,6 +131,13 @@ export async function GET(request) {
         text: r.rating_comment ? excerpt(r.rating_comment, 120) : null,
         created_at: r.rated_at ?? r.created_at,
       })),
+    // Someone followed you (live-fixes migration; empty before it).
+    ...(followers.data ?? []).map((f) => ({
+      key: `follow:${f.follower_id}`,
+      type: "follow",
+      actor_id: f.follower_id,
+      created_at: f.created_at,
+    })),
     ...(apps.data ?? []).map((a) => ({
       key: `application:${a.id}:${a.status}`,
       type: "application",

@@ -10,3 +10,14 @@ alter table saved_posts enable row level security;
 
 -- Links on your profile (LinkedIn, GitHub, portfolio...): [{ url, label }].
 alter table profiles add column if not exists links jsonb not null default '[]';
+
+-- Following people: one row per follower and person followed.
+create table if not exists follows (
+  follower_id text not null references profiles(id),
+  followee_id text not null references profiles(id),
+  created_at timestamptz not null default now(),
+  primary key (follower_id, followee_id),
+  check (follower_id <> followee_id)
+);
+create index if not exists follows_followee on follows (followee_id, created_at desc);
+alter table follows enable row level security;

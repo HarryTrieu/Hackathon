@@ -17,7 +17,6 @@ import {
 } from "@/components/ui/empty";
 import { MentorSection } from "@/components/mentor-section";
 import { PostCard } from "@/components/post-card";
-import { ResourceLink } from "@/components/resource-link";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { StatRow } from "@/components/stat-row";
 import { MessageButton } from "@/components/message-button";
@@ -28,6 +27,9 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { toProfile } from "@/lib/account";
 import { BackButton } from "@/components/back-button";
 import { ProfileLinks } from "@/components/profile-links";
+import { ProfileResources } from "@/components/profile-resources";
+import { FollowButton } from "@/components/follow-button";
+import { followCounts } from "@/lib/follows";
 
 // Helpful votes on the person's posts: live counts from the database, like
 // the mentor page, so both pages agree. Seed counts when there is no DB.
@@ -84,6 +86,7 @@ export default async function ProfilePage({ params }) {
   const seedPosts = id.startsWith("u-") ? [] : getPostsByAuthor(id).filter((p) => !dbIds.has(p.id));
   const posts = [...dbPosts, ...seedPosts].sort((a, b) => a.hours_ago - b.hours_ago);
   const helpful = profile.role === "admin" ? 0 : await helpfulVotes(id, posts);
+  const follows = await followCounts(id);
 
   return (
     <div className="pb-16 md:pb-0">
@@ -98,7 +101,10 @@ export default async function ProfilePage({ params }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-start justify-between gap-2">
               <h1 className="text-xl font-bold">{profile.name}</h1>
-              <MessageButton profile={profile} />
+              <div className="flex shrink-0 gap-2">
+                <FollowButton profile={profile} />
+                <MessageButton profile={profile} />
+              </div>
             </div>
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -135,6 +141,7 @@ export default async function ProfilePage({ params }) {
             className="mt-4"
             items={[
               [posts.length, plural(posts.length, "post")],
+              [follows.followers, plural(follows.followers, "follower")],
               [helpful, plural(helpful, "helpful vote")],
               [profile.units.length, plural(profile.units.length, "unit")],
             ]}
@@ -216,14 +223,7 @@ export default async function ProfilePage({ params }) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col gap-2">
-                {profile.resources.length === 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    No resources listed yet.
-                  </p>
-                )}
-                {profile.resources.map((res) => (
-                  <ResourceLink key={res.url} resource={res} />
-                ))}
+                <ProfileResources profileId={profile.id} resources={profile.resources} />
               </CardContent>
             </Card>
 

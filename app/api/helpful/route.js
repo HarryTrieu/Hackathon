@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
+import { ping } from "@/lib/realtime";
 
 const Vote = z.object({
   post_id: z.string().min(1).max(64),
@@ -57,6 +58,10 @@ export async function POST(request) {
     changed = !error && data.length > 0;
   }
 
+  if (changed && action === "like") {
+    const { data: post } = await db.from("posts").select("author_id").eq("id", post_id).maybeSingle();
+    if (post && post.author_id !== profile_id) await ping([post.author_id], "like");
+  }
   if (changed) {
     const { data: post } = await db
       .from("posts")

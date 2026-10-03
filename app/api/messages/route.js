@@ -11,6 +11,7 @@ import { actAs, denied } from "@/lib/actor";
 import { realProfiles } from "@/lib/account";
 import { getProfile } from "@/lib/seed";
 import { mySessions } from "@/lib/session-chat";
+import { ping } from "@/lib/realtime";
 
 const MAX_PER_MINUTE = 15;
 // A profile id: seeded ("p13") or a real account ("u-<uuid>"). Checked before
@@ -268,5 +269,6 @@ export async function POST(request) {
     .from("conversations")
     .update({ last_message_at: now, last_sender_id: me, [me === a ? "a_read_at" : "b_read_at"]: now })
     .eq("id", convo.id);
+  await ping([other], "message");
   return Response.json({ message });
 }

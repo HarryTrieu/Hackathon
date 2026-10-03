@@ -134,9 +134,12 @@ function Conversation() {
     };
     tick().then(refreshInbox);
     const timer = setInterval(tick, POLL_MS);
+    // A realtime ping (components/realtime-listener.jsx): reload right away.
+    window.addEventListener("sodu:changed", tick);
     return () => {
       alive = false;
       clearInterval(timer);
+      window.removeEventListener("sodu:changed", tick);
     };
     // load reads meId and otherId; re-run when either changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps

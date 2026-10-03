@@ -14,6 +14,7 @@ import {
   Star,
   ThumbsUp,
   Undo2,
+  UserPlus,
   X,
   XCircle,
 } from "lucide-react";
@@ -204,6 +205,12 @@ function describe(n, meId) {
             <span className="font-mono">{n.unit_code}</span>
           </>
         ),
+      };
+    case "follow":
+      return {
+        icon: UserPlus,
+        href: actor ? `/profile/${actor.id}` : undefined,
+        body: <>{name} started following you</>,
       };
     case "session_end_requested":
       return {
