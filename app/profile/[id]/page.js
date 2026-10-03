@@ -27,6 +27,7 @@ import { getPostsByAuthor, getProfile, roleLabel } from "@/lib/seed";
 import { supabaseAdmin } from "@/lib/supabase";
 import { toProfile } from "@/lib/account";
 import { BackButton } from "@/components/back-button";
+import { ProfileLinks } from "@/components/profile-links";
 
 // Helpful votes on the person's posts: live counts from the database, like
 // the mentor page, so both pages agree. Seed counts when there is no DB.
@@ -50,7 +51,8 @@ async function realProfile(id) {
   return data ? toProfile(data) : null;
 }
 
-// A real account's own posts (newest first), from the database.
+// The person's posts (newest first), from the database. Demo personas too:
+// their new posts and edited tags live there, not in the seed.
 async function realPosts(profile) {
   const db = supabaseAdmin();
   if (!db) return [];
@@ -75,9 +77,12 @@ export default async function ProfilePage({ params }) {
   const profile = getProfile(id) ?? (await realProfile(id));
   if (!profile) notFound();
 
-  const posts = id.startsWith("u-")
-    ? await realPosts(profile)
-    : getPostsByAuthor(id).sort((a, b) => a.hours_ago - b.hours_ago);
+  // Database posts first; seed posts the database doesn't have (offline or
+  // before seeding) fill in for demo personas.
+  const dbPosts = await realPosts(profile);
+  const dbIds = new Set(dbPosts.map((p) => p.id));
+  const seedPosts = id.startsWith("u-") ? [] : getPostsByAuthor(id).filter((p) => !dbIds.has(p.id));
+  const posts = [...dbPosts, ...seedPosts].sort((a, b) => a.hours_ago - b.hours_ago);
   const helpful = profile.role === "admin" ? 0 : await helpfulVotes(id, posts);
 
   return (
@@ -122,6 +127,7 @@ export default async function ProfilePage({ params }) {
                 {profile.outcome}
               </p>
             )}
+            <ProfileLinks profileId={profile.id} links={profile.links ?? []} />
           </div>
         </div>
         {profile.role !== "admin" && (

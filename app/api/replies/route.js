@@ -1,4 +1,4 @@
-// Flat replies on posts. GET lists by post, POST creates.
+// Flat replies on posts. GET lists by post, POST creates, DELETE removes your own.
 // Without Supabase: GET returns replies:null (client falls back to seed),
 // POST returns the reply unpersisted so the UI can keep it for the session.
 import { randomUUID } from "crypto";
@@ -69,4 +69,30 @@ export async function POST(request) {
 
   const { error } = await db.from("replies").insert(reply);
   return Response.json({ reply: shown, persisted: !error });
+}
+
+const DeleteReply = z.object({
+  id: z.string().min(1).max(64),
+  author_id: z.string().min(1).max(80),
+});
+
+// Delete your own reply (only yours: the author must match).
+export async function DELETE(request) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: "Body must be JSON." }, { status: 400 });
+  }
+  const parsed = DeleteReply.safeParse(body);
+  if (!parsed.success) return Response.json({ error: "Invalid request." }, { status: 400 });
+  const { id, author_id } = parsed.data;
+  const who = await actAsAuthor(author_id);
+  if (!who.ok) return denied(who);
+  const db = supabaseAdmin();
+  if (!db) return Response.json({ ok: true, persisted: false });
+  const { data, error } = await db.from("replies").delete().eq("id", id).eq("author_id", author_id).select("id");
+  if (error) return Response.json({ error: "Could not delete the reply." }, { status: 500 });
+  if (data.length === 0) return Response.json({ error: "You can only delete your own replies." }, { status: 403 });
+  return Response.json({ ok: true, persisted: true });
 }

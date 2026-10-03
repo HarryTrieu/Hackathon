@@ -25,8 +25,9 @@ export async function POST(request) {
   if (!file || typeof file === "string" || typeof file.arrayBuffer !== "function") {
     return Response.json({ error: "No file was attached." }, { status: 400 });
   }
-  if (!file.type?.startsWith("image/")) {
-    return Response.json({ error: "Only image files are allowed." }, { status: 400 });
+  // Images for posts; PDFs too, because transcripts usually are.
+  if (!file.type?.startsWith("image/") && file.type !== "application/pdf") {
+    return Response.json({ error: "Only images or PDF files are allowed." }, { status: 400 });
   }
   if (file.size === 0) {
     return Response.json({ error: "The file is empty." }, { status: 400 });
@@ -62,8 +63,20 @@ export async function POST(request) {
     );
     const data = await res.json();
     if (!res.ok || !data.secure_url) {
-      const reason = data.error?.message || `Cloudinary returned ${res.status}.`;
-      return Response.json({ error: reason, mocked: false }, { status: 502 });
+      // Cloudinary's message can include the API key, so it stays in the
+      // server log; users get a plain message.
+      const reason = data.error?.message ?? `status ${res.status}`;
+      console.error("Cloudinary upload failed:", reason);
+      const config = /api[_ ]?key|signature|cloud name|unknown api/i.test(reason) || res.status === 401;
+      return Response.json(
+        {
+          error: config
+            ? "Image uploads aren't set up correctly on this server. Tell the Sodu team."
+            : "The image service couldn't take that file. Try a different one.",
+          mocked: false,
+        },
+        { status: 502 }
+      );
     }
     return Response.json({ url: data.secure_url, mocked: false });
   } catch {

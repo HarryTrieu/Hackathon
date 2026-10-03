@@ -18,6 +18,7 @@ import {
 } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
+import { uploadFile } from "@/lib/shrink-image";
 
 const EMPTY_STYLE = { teaching: "", tone: "", pace: "", help: [], feedback: "", languages: [], format: "" };
 const EMPTY_VOICE = { topics: "", explain: "", lost: "", about: "" };
@@ -107,12 +108,9 @@ function ApplyForm() {
     if (!file) return;
     setUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: form });
-      const data = await res.json();
-      if (res.ok) setTranscript(data.url);
-      else setError(data.error ?? "Upload failed.");
+      const result = await uploadFile(file);
+      if (result.ok) setTranscript(result.url);
+      else setError(result.error);
     } catch {
       setError("Upload failed.");
     } finally {
@@ -272,10 +270,10 @@ function ApplyForm() {
           <p className="font-medium">Transcript check (optional, this session only, not stored)</p>
           <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors hover:bg-muted">
             {uploading ? <Spinner /> : <FileUp className="size-4" />}
-            {transcript ? "Replace file" : "Upload image"}
+            {transcript ? "Replace file" : "Upload image or PDF"}
             <input
               type="file"
-              accept="image/*"
+              accept="image/*,application/pdf"
               className="hidden"
               onChange={(e) => uploadTranscript(e.target.files?.[0])}
             />

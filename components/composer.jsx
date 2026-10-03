@@ -13,6 +13,7 @@ import { rememberMyPost } from "@/lib/my-new-posts";
 import { usePersona } from "@/lib/persona-context";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
+import { uploadFile } from "@/lib/shrink-image";
 
 const URL_PATTERN = /https?:\/\/[^\s]+/;
 
@@ -61,15 +62,12 @@ export function Composer({ onPublished, inDialog = false }) {
     setError(null);
     setUploading(true);
     try {
-      const body = new FormData();
-      body.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Upload failed. Please try again.");
+      const result = await uploadFile(file);
+      if (!result.ok) {
+        setError(result.error);
         return;
       }
-      setImage({ url: data.url, mocked: Boolean(data.mocked) });
+      setImage({ url: result.url, mocked: result.mocked });
     } catch {
       setError("Upload failed. Check your connection and try again.");
     } finally {

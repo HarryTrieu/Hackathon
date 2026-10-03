@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/lib/toast";
 import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
@@ -23,6 +25,7 @@ export function RepliesPanel({ postId }) {
   const { persona } = usePersona();
   const [dbReplies, setDbReplies] = useState(null);
   const [sessionReplies, setSessionReplies] = useState([]);
+  const [removed, setRemoved] = useState([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [note, setNote] = useState(null);
@@ -47,7 +50,24 @@ export function RepliesPanel({ postId }) {
     created_at: new Date(now - r.hours_ago * 3600_000).toISOString(),
   }));
   const baseIds = new Set(base.map((r) => r.id));
-  const replies = [...base, ...sessionReplies.filter((r) => !baseIds.has(r.id))];
+  const replies = [...base, ...sessionReplies.filter((r) => !baseIds.has(r.id))].filter((r) => !removed.includes(r.id));
+
+  async function remove(reply) {
+    if (!window.confirm("Delete your reply?")) return;
+    try {
+      const res = await fetch("/api/replies", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: reply.id, author_id: persona.id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return setNote(data.error ?? "Could not delete the reply.");
+      setRemoved((prev) => [...prev, reply.id]);
+      toast("Reply deleted");
+    } catch {
+      setNote("Could not reach the server.");
+    }
+  }
 
   async function send(event) {
     event.preventDefault();
@@ -82,18 +102,29 @@ export function RepliesPanel({ postId }) {
         const author = authorOf(reply);
         if (!author) return null;
         return (
-          <div key={reply.id} className="flex gap-2.5">
+          <div key={reply.id} className="group flex gap-2.5">
             <Link href={`/profile/${author.id}`} className="shrink-0">
               <UserAvatar profile={author} className="size-7" textClassName="text-[10px]" />
             </Link>
-            <div className="min-w-0">
-              <p className="text-sm">
+            <div className="min-w-0 flex-1">
+              <p className="flex items-center gap-1 text-sm">
                 <Link href={`/profile/${author.id}`} className="font-bold hover:underline">
                   {author.name}
                 </Link>{" "}
                 <span className="text-muted-foreground">
                   · {relativeTime(reply.created_at, now)}
                 </span>
+                {reply.author_id === persona.id && (
+                  <button
+                    type="button"
+                    onClick={() => remove(reply)}
+                    aria-label="Delete your reply"
+                    title="Delete your reply"
+                    className="ml-auto rounded-full p-1 text-muted-foreground opacity-60 transition hover:bg-muted hover:text-destructive hover:opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-visible:opacity-100"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </button>
+                )}
               </p>
               <p className="text-sm leading-relaxed whitespace-pre-wrap">{reply.text}</p>
             </div>
