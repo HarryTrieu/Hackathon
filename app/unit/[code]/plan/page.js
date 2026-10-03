@@ -29,7 +29,6 @@ import { toast } from "@/lib/toast";
 import { cn } from "@/lib/utils";
 
 const KIND_ICON = { video: PlayCircle, docs: BookOpen, practice: PenLine, course: GraduationCap, shared: Link2 };
-const HOURS = [3, 5, 8, 12];
 
 function Chip({ active, onClick, children, className }) {
   return (
@@ -50,9 +49,8 @@ function Chip({ active, onClick, children, className }) {
 
 function PlanForm({ code, outline, initial, onBuilt, onCancel, meId }) {
   const [goal, setGoal] = useState(initial?.goal ?? 1);
-  const [week, setWeek] = useState(initial?.week ?? 1);
-  const [hours, setHours] = useState(initial?.hours ?? 5);
   const [weak, setWeak] = useState(initial?.weak_spots ?? []);
+  const [showWorries, setShowWorries] = useState((initial?.weak_spots?.length ?? 0) > 0);
   const [note, setNote] = useState(initial?.note ?? "");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -73,8 +71,6 @@ function PlanForm({ code, outline, initial, onBuilt, onCancel, meId }) {
           profile_id: meId,
           unit_code: code,
           goal,
-          week,
-          hours,
           weak_spots: weak.map((w) => w.slice(0, 40)),
           note: note.trim() || undefined,
         }),
@@ -102,51 +98,38 @@ function PlanForm({ code, outline, initial, onBuilt, onCancel, meId }) {
           ))}
         </div>
       </section>
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Which week of the trimester are you in?</h2>
-        <div className="flex flex-wrap gap-1.5">
-          {Array.from({ length: 11 }, (_, i) => i + 1).map((w) => (
-            <Chip key={w} active={week === w} onClick={() => setWeek(w)} className="min-w-10 px-2.5">
-              {w}
-            </Chip>
-          ))}
-        </div>
-      </section>
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">Hours a week you can give it</h2>
-        <div className="flex flex-wrap gap-2">
-          {HOURS.map((h) => (
-            <Chip key={h} active={hours === h} onClick={() => setHours(h)}>
-              {h} hours
-            </Chip>
-          ))}
-        </div>
-      </section>
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">
-          Anything you&apos;re worried about? <span className="font-normal text-muted-foreground">Pick up to 3</span>
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          {outline.map((b) => (
-            <Chip key={b.topic} active={weak.includes(b.topic)} onClick={() => toggleWeak(b.topic)}>
-              {b.topic}
-            </Chip>
-          ))}
-        </div>
-      </section>
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold">
-          Anything else? <span className="font-normal text-muted-foreground">Optional</span>
-        </h2>
-        <textarea
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          maxLength={300}
-          rows={2}
-          placeholder="e.g. I work weekends, and I fell behind in week 3"
-          className="w-full resize-none rounded-xl border bg-transparent px-3 py-2 text-base outline-none focus:border-primary/50 md:text-sm"
-        />
-      </section>
+      {!showWorries ? (
+        <button
+          type="button"
+          onClick={() => setShowWorries(true)}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          + Add topics you&apos;re worried about (optional)
+        </button>
+      ) : (
+        <section className="space-y-3">
+          <div className="space-y-2">
+            <h2 className="text-sm font-semibold">
+              Anything you&apos;re worried about? <span className="font-normal text-muted-foreground">Pick up to 3</span>
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {outline.map((b) => (
+                <Chip key={b.topic} active={weak.includes(b.topic)} onClick={() => toggleWeak(b.topic)}>
+                  {b.topic}
+                </Chip>
+              ))}
+            </div>
+          </div>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            maxLength={300}
+            rows={2}
+            placeholder="Anything else? e.g. I work weekends, or I'm new to coding"
+            className="w-full resize-none rounded-xl border bg-transparent px-3 py-2 text-base outline-none focus:border-primary/50 md:text-sm"
+          />
+        </section>
+      )}
       {error && <p className="text-sm text-destructive">{error}</p>}
       <div className="flex flex-wrap items-center gap-2">
         <Button type="submit" className="rounded-full" disabled={busy}>
@@ -200,8 +183,9 @@ function PlanView({ code, row, refs, meId, onChanged, onRebuild }) {
   const plan = row.plan;
   const steps = plan.blocks.flatMap((b) => b.steps);
   const pct = steps.length ? Math.round((done.length / steps.length) * 100) : 0;
-  const lastWeek = (b) => Number(b.weeks.split("-").at(-1));
-  const current = plan.blocks.find((b) => lastWeek(b) >= row.inputs.week)?.weeks;
+  // "Up next": the first block with steps left, so the plan follows your
+  // progress rather than a calendar week.
+  const current = plan.blocks.find((b) => b.steps.some((s) => !done.includes(s.id)))?.weeks;
 
   async function tick(stepId, next) {
     setDone((prev) => (next ? [...prev, stepId] : prev.filter((s) => s !== stepId)));
@@ -225,8 +209,6 @@ function PlanView({ code, row, refs, meId, onChanged, onRebuild }) {
       <div className="space-y-3 border-b bg-gradient-to-b from-primary/[0.08] to-transparent px-4 py-5">
         <div className="flex flex-wrap items-center gap-1.5">
           <Badge>{GRADES[row.inputs.goal]}</Badge>
-          <Badge variant="outline">From week {row.inputs.week}</Badge>
-          <Badge variant="outline">{row.inputs.hours} h/week</Badge>
           <Badge variant="outline" className="text-muted-foreground">
             <Sparkles data-icon="inline-start" />
             {row.mocked ? "Built without AI (fallback)" : "AI-generated"}
@@ -246,7 +228,7 @@ function PlanView({ code, row, refs, meId, onChanged, onRebuild }) {
         </div>
         <Button size="sm" variant="outline" className="rounded-full" onClick={onRebuild}>
           <RefreshCw data-icon="inline-start" />
-          Make a new plan
+          Change grade or rebuild
         </Button>
       </div>
 
@@ -269,7 +251,7 @@ function PlanView({ code, row, refs, meId, onChanged, onRebuild }) {
                 <span className="font-semibold">
                   {block.weeks.includes("-") ? "Weeks" : "Week"} {block.weeks}
                 </span>
-                {here && <Badge>You are here</Badge>}
+                {here && <Badge>Up next</Badge>}
                 <span className="text-sm text-muted-foreground">{block.focus}</span>
               </div>
               <ul className="space-y-2">
