@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldAlert, ShieldCheck, EyeOff, Lock } from "lucide-react";
+import { ShieldAlert, ShieldCheck, EyeOff, HeartHandshake, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +21,37 @@ import { usePersona } from "@/lib/persona-context";
 import { canModerate } from "@/lib/roles";
 import { authorOf } from "@/lib/authors";
 import { getProfile, POSTS } from "@/lib/seed";
+import { flagText, isSupportFlag } from "@/lib/moderation";
+
+// A reported post in full, with the two decisions.
+function ReportedPost({ post, onKeep, onRemove }) {
+  const author = post && authorOf(post);
+  if (!post || !author) return <p className="text-xs text-muted-foreground">This post was deleted or can&apos;t be found.</p>;
+  return (
+    <div className="space-y-2 rounded-lg border bg-muted/30 p-3">
+      <div className="flex items-center gap-2">
+        <UserAvatar profile={author} className="size-7" textClassName="text-[10px]" />
+        <span className="text-sm font-semibold">{author.name}</span>
+        <span className="text-xs text-muted-foreground">@{author.handle}</span>
+        {post.status === "removed" && <Badge variant="destructive">Already removed</Badge>}
+      </div>
+      <p className="text-sm leading-relaxed whitespace-pre-wrap">{post.text}</p>
+      {post.flag_reason && <p className="text-xs text-destructive">AI flag: {flagText(post.flag_reason)}</p>}
+      <div className="flex gap-2">
+        <Button size="sm" variant="outline" onClick={onKeep}>
+          <ShieldCheck data-icon="inline-start" />
+          Keep post
+        </Button>
+        {post.status !== "removed" && (
+          <Button size="sm" variant="destructive" onClick={onRemove}>
+            <EyeOff data-icon="inline-start" />
+            Remove from feed
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // Only the admin persona moderates. The nav hides the link for everyone else;
 // this covers someone opening /review directly. UI gate only: the review
@@ -46,6 +77,8 @@ export default function ReviewPage() {
 
 function ReviewQueue({ moderatorId }) {
   const [flagged, setFlagged] = useState(null);
+  // Every post, so a reported post can be shown in full.
+  const [posts, setPosts] = useState(POSTS);
   const [reports, setReports] = useState(null);
   const [funnel, setFunnel] = useState(null);
   const [source, setSource] = useState("seed");
@@ -60,6 +93,7 @@ function ReviewQueue({ moderatorId }) {
       .then((data) => {
         if (cancelled) return;
         const base = data?.posts ?? POSTS;
+        setPosts(base);
         setSource(data?.source ?? "seed");
         setFlagged(base.filter((p) => p.flag_reason && p.status !== "removed"));
       })
@@ -84,6 +118,16 @@ function ReviewQueue({ moderatorId }) {
       cancelled = true;
     };
   }, [moderatorId]);
+
+  async function resolveReport(id, message) {
+    await fetch("/api/reports", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, action: "resolve", moderator_id: moderatorId }),
+    });
+    setReports((prev) => prev.filter((x) => x.id !== id));
+    setNote(message);
+  }
 
   async function act(postId, action) {
     try {
@@ -180,6 +224,16 @@ function ReviewQueue({ moderatorId }) {
                       </span>
                     </div>
                     <p className="text-sm">{r.reason}</p>
+                    {r.target_type === "post" && (
+                      <ReportedPost
+                        post={posts.find((p) => p.id === r.target_id)}
+                        onKeep={() => resolveReport(r.id, "Post kept, report resolved.")}
+                        onRemove={async () => {
+                          await act(r.target_id, "remove");
+                          await resolveReport(r.id, "Post removed, report resolved.");
+                        }}
+                      />
+                    )}
                 {r.conversation && (
                   <div className="space-y-1 rounded-lg border bg-muted/30 p-2 text-xs">
                     <p className="font-medium text-muted-foreground">
@@ -255,10 +309,18 @@ function ReviewQueue({ moderatorId }) {
                       </span>
                     </div>
                     <p className="text-sm leading-relaxed">{post.text}</p>
-                    <p className="flex items-start gap-1.5 rounded-lg bg-destructive/5 p-2 text-sm text-destructive">
-                      <ShieldAlert className="mt-0.5 size-4 shrink-0" />
-                      {post.flag_reason}
-                    </p>
+                    {isSupportFlag(post.flag_reason) ? (
+                      <p className="flex items-start gap-1.5 rounded-lg bg-primary/5 p-2 text-sm text-primary">
+                        <HeartHandshake className="mt-0.5 size-4 shrink-0" />
+                        {flagText(post.flag_reason).replace(/\.$/, "")}. The post stays visible with support contacts; consider
+                        checking in with the author.
+                      </p>
+                    ) : (
+                      <p className="flex items-start gap-1.5 rounded-lg bg-destructive/5 p-2 text-sm text-destructive">
+                        <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                        {post.flag_reason.replace(/\.$/, "")}. Hidden in the feed until you decide.
+                      </p>
+                    )}
                     <div className="flex gap-2">
                       <Button size="sm" onClick={() => act(post.id, "approve")}>
                         <ShieldCheck data-icon="inline-start" />

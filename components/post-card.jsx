@@ -14,10 +14,12 @@ import {
   BadgeCheck,
   Trash2,
   EyeOff,
+  HeartHandshake,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { UserAvatar } from "@/components/user-avatar";
+import { SUPPORT_CONTACTS, isHiddenByFlag, isSupportFlag } from "@/lib/moderation";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { LinkPreview } from "@/components/link-preview";
 import { RepliesPanel } from "@/components/replies";
@@ -53,8 +55,37 @@ function displayText(post) {
     : post.text;
 }
 
+// Under a post the AI read as someone struggling: support, not a penalty.
+function SupportBox() {
+  return (
+    <div className="mt-2.5 rounded-xl border border-primary/30 bg-primary/[0.05] p-3 text-sm">
+      <p className="flex items-center gap-1.5 font-medium">
+        <HeartHandshake className="size-4 text-primary" />
+        Going through a hard time? You don&apos;t have to handle it alone.
+      </p>
+      <ul className="mt-1.5 space-y-0.5 text-muted-foreground">
+        {SUPPORT_CONTACTS.map((c) => (
+          <li key={c.name}>
+            <span className="font-medium text-foreground">{c.name}</span> ·{" "}
+            {c.href ? (
+              <a href={c.href} className="text-primary hover:underline">
+                {c.detail}
+              </a>
+            ) : (
+              c.detail
+            )}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 export function PostCard({ post, author, reason, onDeleted }) {
   const { persona } = usePersona();
+  // Flagged posts start collapsed behind the AI's reason ("Show anyway").
+  const [revealed, setRevealed] = useState(false);
+  const hiddenByFlag = isHiddenByFlag(post) && !revealed;
   const { set: likedSet, ready: likesReady } = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
   const [vote, setVote] = useState(null);
@@ -199,8 +230,8 @@ It is hidden, not deleted. ${restore}`)) return;
               {author.course}
               {author.year ? ` · Year ${author.year}` : " · Alumni"}
             </Badge>
-            {post.flag_reason && (
-              <Badge variant="destructive" title={post.flag_reason}>
+            {post.flag_reason && !isSupportFlag(post.flag_reason) && post.status !== "approved" && (
+              <Badge variant="destructive">
                 <ShieldAlert data-icon="inline-start" />
                 Flagged for review
               </Badge>
@@ -212,111 +243,132 @@ It is hidden, not deleted. ${restore}`)) return;
             )}
           </div>
 
-          <p
-            className={cn(
-              "mt-1.5 text-[15px] leading-relaxed whitespace-pre-wrap",
-              clampable && !expanded && "line-clamp-4"
-            )}
-            lang={post.lang}
-          >
-            {text}
-          </p>
-          {clampable && (
-            <button
-              type="button"
-              onClick={() => setExpanded((v) => !v)}
-              className="mt-0.5 text-sm font-medium text-primary hover:underline"
-            >
-              {expanded ? "Show less" : "Show more"}
-            </button>
-          )}
-
-          {post.image_url && (
-            <ImageLightbox
-              src={post.image_url}
-              alt={`Shared by ${author.name}`}
-              className="mt-2.5 rounded-2xl border"
-              imgClassName="aspect-[16/10] w-full object-cover"
-            />
-          )}
-
-          {post.link_preview && (
-            <LinkPreview preview={post.link_preview} className="mt-2.5" />
-          )}
-
-          {post.tldr && (
-            <div className="mt-2.5 rounded-xl border bg-muted/40 p-3">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                <Sparkles className="size-3.5 text-primary" />
-                AI summary · AI-generated
+          {hiddenByFlag ? (
+            <div className="mt-2 rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-sm">
+              <p className="flex items-start gap-1.5 font-medium text-destructive">
+                <ShieldAlert className="mt-0.5 size-4 shrink-0" />
+                Hidden while a moderator reviews it
               </p>
-              <p className="text-sm">{post.tldr}</p>
+              <p className="mt-1 text-muted-foreground">AI flag: {post.flag_reason}</p>
+              <button
+                type="button"
+                onClick={() => setRevealed(true)}
+                className="mt-1.5 text-sm font-medium text-primary hover:underline"
+              >
+                Show anyway
+              </button>
             </div>
-          )}
-
-          {post.lang !== "en" && post.summary_en && (
-            <div className="mt-2.5 rounded-xl border bg-muted/40 p-3">
-              <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
-                <Languages className="size-3.5 text-primary" />
-                English summary · AI-generated
-              </p>
-              <p className="text-sm">{post.summary_en}</p>
-            </div>
-          )}
-
-          {editingTags ? (
-            <form onSubmit={saveTags} className="mt-2.5 flex flex-wrap items-center gap-2">
-              <input
-                value={tagDraft}
-                onChange={(e) => setTagDraft(e.target.value)}
-                placeholder="comma, separated, tags"
-                autoFocus
-                className="h-8 min-w-0 flex-1 rounded-full border bg-transparent px-3 text-sm outline-none focus:border-primary/50"
-              />
-              <Button type="submit" size="sm" className="rounded-full">
-                Save tags
-              </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingTags(false)}>
-                Cancel
-              </Button>
-              {tagError && <p className="w-full text-xs text-destructive">{tagError}</p>}
-            </form>
           ) : (
-            (post.unit_codes.length > 0 || tags.length > 0 || isAuthor) && (
-              <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                {post.unit_codes.map((code) => (
-                  <Link key={code} href={`/unit/${code}`}>
-                    <Badge
-                      variant="outline"
-                      className={cn("font-mono", CHIP_HOVER, "cursor-pointer")}
-                    >
-                      {code}
-                    </Badge>
-                  </Link>
-                ))}
-                {tags.map((tag) => (
-                  <Link key={tag} href={`/search?tag=${encodeURIComponent(tag)}`}>
-                    <Badge variant="secondary" className={cn(CHIP_HOVER, "cursor-pointer")}>
-                      {tag}
-                    </Badge>
-                  </Link>
-                ))}
-                {isAuthor && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTagDraft(tags.join(", "));
-                      setEditingTags(true);
-                    }}
-                    className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-primary"
-                    title="AI picked these tags. Fix them if they're wrong."
-                  >
-                    <Pencil className="size-3" />
-                    Edit tags
-                  </button>
+            <>
+              <p
+                className={cn(
+                  "mt-1.5 text-[15px] leading-relaxed whitespace-pre-wrap",
+                  clampable && !expanded && "line-clamp-4"
                 )}
-              </div>
-            )
+                lang={post.lang}
+              >
+                {text}
+              </p>
+              {clampable && (
+                <button
+                  type="button"
+                  onClick={() => setExpanded((v) => !v)}
+                  className="mt-0.5 text-sm font-medium text-primary hover:underline"
+                >
+                  {expanded ? "Show less" : "Show more"}
+                </button>
+              )}
+
+              {post.image_url && (
+                <ImageLightbox
+                  src={post.image_url}
+                  alt={`Shared by ${author.name}`}
+                  className="mt-2.5 rounded-2xl border"
+                  imgClassName="aspect-[16/10] w-full object-cover"
+                />
+              )}
+
+              {post.link_preview && (
+                <LinkPreview preview={post.link_preview} className="mt-2.5" />
+              )}
+
+              {post.tldr && (
+                <div className="mt-2.5 rounded-xl border bg-muted/40 p-3">
+                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Sparkles className="size-3.5 text-primary" />
+                    AI summary · AI-generated
+                  </p>
+                  <p className="text-sm">{post.tldr}</p>
+                </div>
+              )}
+
+              {post.lang !== "en" && post.summary_en && (
+                <div className="mt-2.5 rounded-xl border bg-muted/40 p-3">
+                  <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                    <Languages className="size-3.5 text-primary" />
+                    English summary · AI-generated
+                  </p>
+                  <p className="text-sm">{post.summary_en}</p>
+                </div>
+              )}
+
+              {editingTags ? (
+                <form onSubmit={saveTags} className="mt-2.5 flex flex-wrap items-center gap-2">
+                  <input
+                    value={tagDraft}
+                    onChange={(e) => setTagDraft(e.target.value)}
+                    placeholder="comma, separated, tags"
+                    autoFocus
+                    className="h-8 min-w-0 flex-1 rounded-full border bg-transparent px-3 text-sm outline-none focus:border-primary/50"
+                  />
+                  <Button type="submit" size="sm" className="rounded-full">
+                    Save tags
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => setEditingTags(false)}>
+                    Cancel
+                  </Button>
+                  {tagError && <p className="w-full text-xs text-destructive">{tagError}</p>}
+                </form>
+              ) : (
+                (post.unit_codes.length > 0 || tags.length > 0 || isAuthor) && (
+                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                    {post.unit_codes.map((code) => (
+                      <Link key={code} href={`/unit/${code}`}>
+                        <Badge
+                          variant="outline"
+                          className={cn("font-mono", CHIP_HOVER, "cursor-pointer")}
+                        >
+                          {code}
+                        </Badge>
+                      </Link>
+                    ))}
+                    {tags.map((tag) => (
+                      <Link key={tag} href={`/search?tag=${encodeURIComponent(tag)}`}>
+                        <Badge variant="secondary" className={cn(CHIP_HOVER, "cursor-pointer")}>
+                          {tag}
+                        </Badge>
+                      </Link>
+                    ))}
+                    {isAuthor && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setTagDraft(tags.join(", "));
+                          setEditingTags(true);
+                        }}
+                        className="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-primary"
+                        title="AI picked these tags. Fix them if they're wrong."
+                      >
+                        <Pencil className="size-3" />
+                        Edit tags
+                      </button>
+                    )}
+                  </div>
+                )
+              )}
+
+              {isSupportFlag(post.flag_reason) && <SupportBox />}
+            </>
           )}
 
           {/* On phones the labels are screen-reader only, so the row fits at 390px. */}
