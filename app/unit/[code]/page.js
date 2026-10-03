@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Users, Star } from "lucide-react";
+import { ArrowLeft, ArrowRight, Route, Users, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -24,6 +24,9 @@ import {
 import { getProfile, POSTS } from "@/lib/seed";
 import { authorOf } from "@/lib/authors";
 import { cn } from "@/lib/utils";
+import { OUTLINES } from "@/lib/study-outlines";
+
+const hasStudyPlan = (code) => Boolean(OUTLINES[code]);
 
 export default function UnitPage() {
   const { code: rawCode } = useParams();
@@ -182,6 +185,24 @@ export default function UnitPage() {
         </div>
         {note && <p className="mt-1.5 text-xs text-muted-foreground">{note}</p>}
       </div>
+
+      {hasStudyPlan(unit.code) && (
+        <Link
+          href={`/unit/${unit.code}/plan`}
+          className="group flex items-center gap-3 border-b bg-gradient-to-r from-primary/[0.08] to-transparent px-4 py-3 transition-colors hover:from-primary/[0.14]"
+        >
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+            <Route className="size-4" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Study plan for {unit.code}</span>
+            <span className="block text-xs text-muted-foreground">
+              A week-by-week road map from what students here shared, tuned to your target grade.
+            </span>
+          </span>
+          <ArrowRight className="size-4 text-primary transition-transform group-hover:translate-x-0.5" />
+        </Link>
+      )}
 
       <div className="border-b px-4 py-3">
         <p className="mb-2 text-xs font-semibold text-muted-foreground">
