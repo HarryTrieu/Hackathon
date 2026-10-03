@@ -4,6 +4,7 @@
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, denied } from "@/lib/actor";
 import { realProfiles } from "@/lib/account";
+import { isCompletedSession } from "@/lib/sessions";
 
 function excerpt(text, max = 80) {
   if (!text) return "";
@@ -83,15 +84,29 @@ export async function GET(request) {
       text: excerpt(r.message, 120),
       created_at: r.created_at,
     })),
+    // A completed session was accepted first; keep that notification as is.
     ...(sent.data ?? [])
       .filter((r) => r.status !== "sent")
+      .map((r) => {
+        const status = r.status === "declined" ? "declined" : "accepted";
+        return {
+          key: `request-out:${r.id}:${status}`,
+          type: "request_update",
+          actor_id: r.mentor_id,
+          unit_code: r.unit_code,
+          status,
+          created_at: r.created_at,
+        };
+      }),
+    // Your mentor marked a session as done: end it with a rating.
+    ...(sent.data ?? [])
+      .filter((r) => r.end_requested_at && !isCompletedSession(r))
       .map((r) => ({
-        key: `request-out:${r.id}:${r.status}`,
-        type: "request_update",
+        key: `end-req:${r.id}`,
+        type: "session_end_requested",
         actor_id: r.mentor_id,
         unit_code: r.unit_code,
-        status: r.status,
-        created_at: r.created_at,
+        created_at: r.end_requested_at,
       })),
     // A mentee rated one of your sessions (session-journey columns).
     ...(received.data ?? [])

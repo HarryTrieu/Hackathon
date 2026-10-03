@@ -9,6 +9,7 @@ import {
   BellOff,
   CalendarPlus,
   CheckCircle2,
+  Flag,
   MessageCircle,
   Star,
   ThumbsUp,
@@ -28,7 +29,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { UserAvatar } from "@/components/user-avatar";
-import { ConfirmHeld, RateSession, ReceivedRating, SessionPlan } from "@/components/session-details";
+import { EndSession, ReceivedRating, RequestEnd, SessionPlan } from "@/components/session-details";
 import { firstMessage } from "@/lib/sessions";
 import { usePersona } from "@/lib/persona-context";
 import { getProfile } from "@/lib/seed";
@@ -54,6 +55,7 @@ const STATUS_BADGE = {
   sent: { label: "Pending", variant: "outline" },
   accepted: { label: "Accepted", variant: "default" },
   declined: { label: "Declined", variant: "secondary" },
+  completed: { label: "Completed", variant: "secondary" },
 };
 
 function StatusBadge({ status }) {
@@ -141,6 +143,17 @@ function describe(n, meId) {
           <>
             {name} {n.status === "accepted" ? "accepted" : "declined"} your session request ·{" "}
             <span className="font-mono">{n.unit_code}</span>
+          </>
+        ),
+      };
+    case "session_end_requested":
+      return {
+        icon: Flag,
+        tab: "requests",
+        body: (
+          <>
+            {name} marked your <span className="font-mono">{n.unit_code}</span> session as done. End it and rate it
+            when you&apos;re ready.
           </>
         ),
       };
@@ -423,13 +436,13 @@ export default function NotificationsPage() {
                             </Button>
                           </div>
                         )}
-                        {r.status === "accepted" && (
+                        {r.status !== "sent" && r.status !== "declined" && (
                           <Link href={`/messages/${r.mentee_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
                             Open chat with {mentee.name.split(" ")[0]}
                           </Link>
                         )}
                         <ReceivedRating request={r} />
-                        <ConfirmHeld request={r} mentorId={persona.id} onSaved={notif.reload} />
+                        <RequestEnd request={r} mentorId={persona.id} menteeName={mentee.name} onSaved={notif.reload} />
                       </div>
                     </div>
                   );
@@ -471,12 +484,12 @@ export default function NotificationsPage() {
                       <p className="text-muted-foreground">{r.message}</p>
                       <SessionPlan request={r} />
                       <div className="space-y-2 pt-1">
-                        {r.status === "accepted" && (
+                        {r.status !== "sent" && r.status !== "declined" && (
                           <Link href={`/messages/${r.mentor_id}`} className={cn(buttonVariants({ size: "sm", variant: "outline" }), "rounded-full")}>
                             Open chat with {mentor.name.split(" ")[0]}
                           </Link>
                         )}
-                        <RateSession request={r} menteeId={persona.id} onSaved={notif.reload} />
+                        <EndSession request={r} menteeId={persona.id} mentorName={mentor.name} onSaved={notif.reload} />
                       </div>
                     </div>
                   </div>

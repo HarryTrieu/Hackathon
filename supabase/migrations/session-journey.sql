@@ -69,3 +69,9 @@ create table if not exists mentor_memberships (
 );
 create index if not exists mentor_memberships_profile on mentor_memberships (profile_id, paid_at desc);
 alter table mentor_memberships enable row level security;
+
+-- Ending a session: the student ends it (with their rating); the mentor can
+-- only ask them to ("Mark as done"). If the student never answers, it shows
+-- as unconfirmed after 14 days and doesn't count toward the mentor's stats.
+alter table session_requests add column if not exists ended_at timestamptz;
+alter table session_requests add column if not exists end_requested_at timestamptz;

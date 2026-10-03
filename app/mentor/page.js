@@ -115,7 +115,7 @@ function Hero({ persona, data }) {
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         <StatTile icon={Bot} label="students tried your AI" value={total("preview_chats")} />
         <StatTile icon={MessageSquare} label="session requests" value={total("requests")} />
-        <StatTile icon={CalendarCheck} label="sessions accepted" value={total("accepted")} />
+        <StatTile icon={CalendarCheck} label="sessions completed" value={total("completed")} />
         <StatTile
           icon={Star}
           label="average rating"

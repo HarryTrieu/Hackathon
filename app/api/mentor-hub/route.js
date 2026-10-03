@@ -9,6 +9,7 @@ import { actAs, denied } from "@/lib/actor";
 import { loadListings } from "@/lib/mentor-ai";
 import { POSTS } from "@/lib/seed";
 import { getUnit } from "@/lib/communities";
+import { isCompletedSession } from "@/lib/sessions";
 import {
   activeMembership,
   guaranteeState,
@@ -26,7 +27,7 @@ const notReady = () =>
 async function sessionRequestsFor(db, me) {
   const { data } = await db
     .from("session_requests")
-    .select("mentor_listing, unit_code, status, created_at")
+    .select("*")
     .eq("mentor_id", me);
   return data ?? [];
 }
@@ -133,7 +134,8 @@ export async function GET(request) {
         // Seeded demo mentors keep their demo numbers once listed.
         preview_chats: isSeedProfile(me) && listed.has(l.id) ? l.preview_chats : (chats.get(l.id) ?? 0),
         requests: requests.filter((r) => r.mentor_listing === l.id).length,
-        accepted: requests.filter((r) => r.mentor_listing === l.id && r.status === "accepted").length,
+        // Sessions the student ended and rated: what ranking counts.
+        completed: requests.filter((r) => r.mentor_listing === l.id && isCompletedSession(r)).length,
         ratings: l.ratings,
       })),
       demand: await demandFor(db, me, unitCodes, allListed),

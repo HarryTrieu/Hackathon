@@ -1,7 +1,7 @@
 // Session requests between a mentee and a mentor, end to end:
 //   POST   mentee asks for a session (message, proposed time and place)
-//   PATCH  mentor accepts or declines; later the mentee rates the session
-//          and the mentor confirms whether it happened
+//   PATCH  mentor accepts or declines; the mentor can ask to wrap up
+//          ("Mark as done"); the mentee ends the session with a rating
 //   GET    a mentor's incoming requests
 // No payments: the request records the listed rate and the two people
 // arrange the rest once it's accepted (contacts show in Notifications).
@@ -51,21 +51,21 @@ const Update = z.discriminatedUnion("action", [
     id: z.string().uuid(),
     mentor_id: z.string().min(1).max(80),
   }),
-  // Mentee rates an accepted session, once.
+  // Mentee ends an accepted session with a rating, once. "rate" is the
+  // older name for the same thing.
   z.object({
-    action: z.literal("rate"),
+    action: z.enum(["end", "rate"]),
     id: z.string().uuid(),
     mentee_id: z.string().min(1).max(80),
     rating: z.number().int().min(1, "Pick 1 to 5 stars.").max(5),
     helped: z.boolean({ message: "Say whether it helped." }),
     comment: z.string().trim().max(500).optional(),
   }),
-  // Mentor confirms whether an accepted session happened, once.
+  // Mentor asks the mentee to end it ("Mark as done"), once.
   z.object({
-    action: z.literal("held"),
+    action: z.literal("request_end"),
     id: z.string().uuid(),
     mentor_id: z.string().min(1).max(80),
-    held: z.boolean(),
   }),
 ]);
 
@@ -82,7 +82,8 @@ export async function PATCH(request) {
   }
   const input = parsed.data;
   // Each action belongs to one side of the request.
-  const who = await actAs(input.action === "rate" ? input.mentee_id : input.mentor_id);
+  const byMentee = input.action === "end" || input.action === "rate";
+  const who = await actAs(byMentee ? input.mentee_id : input.mentor_id);
   if (!who.ok) return denied(who);
 
   const db = supabaseAdmin();
@@ -110,34 +111,34 @@ export async function PATCH(request) {
     return Response.json({ ok: true, status, persisted: true });
   }
 
-  if (!db) return Response.json({ error: "Ratings need the database." }, { status: 503 });
+  if (!db) return Response.json({ error: "Sessions need the database." }, { status: 503 });
+  const needsUpdate = () =>
+    Response.json({ error: "The database needs the session-journey update for this." }, { status: 503 });
 
-  const patch =
-    input.action === "rate"
-      ? { rating: input.rating, helped: input.helped, rating_comment: input.comment || null, rated_at: now }
-      : { held: input.held, held_at: now };
-  const owner = input.action === "rate" ? ["mentee_id", input.mentee_id] : ["mentor_id", input.mentor_id];
-  const answered = input.action === "rate" ? "rating" : "held";
-  const { data, error } = await db
-    .from("session_requests")
-    .update(patch)
-    .eq("id", input.id)
-    .eq(owner[0], owner[1])
-    .eq("status", "accepted")
-    .is(answered, null)
-    .select("id");
-  if (missingColumn(error)) {
-    return Response.json(
-      { error: "The database needs the session-journey update before sessions can be rated." },
-      { status: 503 }
-    );
+  // Only an accepted (still open) session of yours, and only once.
+  const open = (patch, owner, unanswered) =>
+    db
+      .from("session_requests")
+      .update(patch)
+      .eq("id", input.id)
+      .eq(owner, owner === "mentee_id" ? input.mentee_id : input.mentor_id)
+      .eq("status", "accepted")
+      .is(unanswered, null)
+      .select("id");
+
+  let result;
+  if (byMentee) {
+    const rating = { rating: input.rating, helped: input.helped, rating_comment: input.comment || null, rated_at: now };
+    result = await open({ ...rating, ended_at: now, status: "completed" }, "mentee_id", "rating");
+    // Before ended_at exists: still end it (status) with the rating.
+    if (missingColumn(result.error)) result = await open({ ...rating, status: "completed" }, "mentee_id", "rating");
+  } else {
+    result = await open({ end_requested_at: now }, "mentor_id", "end_requested_at");
   }
-  if (error) return Response.json({ error: "Could not save that." }, { status: 500 });
-  if (data.length === 0) {
-    return Response.json(
-      { error: "Only an accepted session can be answered, and only once." },
-      { status: 409 }
-    );
+  if (missingColumn(result.error)) return needsUpdate();
+  if (result.error) return Response.json({ error: "Could not save that." }, { status: 500 });
+  if (result.data.length === 0) {
+    return Response.json({ error: "This session is already over, or isn't yours." }, { status: 409 });
   }
   return Response.json({ ok: true, persisted: true });
 }

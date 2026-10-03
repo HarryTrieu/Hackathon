@@ -8,10 +8,10 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
-import { ConfirmHeld, RateSession, ReceivedRating } from "@/components/session-details";
+import { EndSession, ReceivedRating, RequestEnd } from "@/components/session-details";
 import { usePersona } from "@/lib/persona-context";
 import { refreshInbox } from "@/lib/use-inbox";
-import { firstMessage } from "@/lib/sessions";
+import { firstMessage, isOpenSession, sessionState } from "@/lib/sessions";
 import { roleLabel } from "@/lib/seed";
 import { cn } from "@/lib/utils";
 
@@ -22,13 +22,36 @@ function timeOf(iso) {
   return new Date(iso).toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit" });
 }
 
+// Session milestones shown inside the conversation, between the messages.
+// The chat itself never closes; sessions start and end inside it.
+function sessionEvents(sessions, meId, other) {
+  const first = (id) => (id === meId ? "You" : other.name.split(" ")[0]);
+  const events = [];
+  for (const s of sessions) {
+    const unit = s.unit_code;
+    events.push({ at: s.created_at, text: `${first(s.mentee_id)} requested a ${unit} session` });
+    const state = sessionState(s);
+    if (state === "declined") events.push({ at: s.decided_at ?? s.created_at, text: `${unit} session declined` });
+    if (state !== "pending" && state !== "declined" && s.decided_at) {
+      events.push({ at: s.decided_at, text: `${unit} session started`, tone: "start" });
+    }
+    if (s.end_requested_at) events.push({ at: s.end_requested_at, text: `${first(s.mentor_id)} marked the ${unit} session as done` });
+    if (state === "completed") {
+      const rated = typeof s.rating === "number" ? ` · ${"★".repeat(s.rating)}${"☆".repeat(5 - s.rating)}` : "";
+      events.push({ at: s.ended_at ?? s.rated_at ?? s.created_at, text: `${unit} session ended${rated}`, tone: "end" });
+    }
+  }
+  return events.map((e, i) => ({ ...e, id: `event-${i}`, event: true }));
+}
+
 // Session requests between the two of you, shown above the chat.
 function SessionPanel({ sessions, me, other, onChanged, onAccepted }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
-  const current = sessions.find((s) => s.status === "sent" || s.status === "accepted");
+  const current = sessions.find(isOpenSession);
   if (!current) return null;
   const iAmMentor = current.mentor_id === me.id;
+  const state = sessionState(current);
 
   async function decide(action) {
     setBusy(true);
@@ -55,7 +78,7 @@ function SessionPanel({ sessions, me, other, onChanged, onAccepted }) {
         {iAmMentor ? `${other.name.split(" ")[0]} asked you for a ` : "Your "}
         <span className="font-mono">{current.unit_code}</span> session
         <span className="font-normal text-muted-foreground">
-          · {current.status === "sent" ? "waiting for an answer" : "accepted"}
+          · {state === "pending" ? "waiting for an answer" : state === "ending" ? "wrapping up" : "in progress"}
         </span>
       </p>
       {current.status === "sent" && iAmMentor && (
@@ -73,14 +96,14 @@ function SessionPanel({ sessions, me, other, onChanged, onAccepted }) {
           Once {other.name.split(" ")[0]} accepts, they&apos;ll message you here to arrange a time and place.
         </p>
       )}
-      {current.status === "accepted" &&
+      {state !== "pending" &&
         (iAmMentor ? (
           <>
             <ReceivedRating request={current} />
-            <ConfirmHeld request={current} mentorId={me.id} onSaved={onChanged} />
+            <RequestEnd request={current} mentorId={me.id} menteeName={other.name} onSaved={onChanged} />
           </>
         ) : (
-          <RateSession request={current} menteeId={me.id} onSaved={onChanged} />
+          <EndSession request={current} menteeId={me.id} mentorName={other.name} onSaved={onChanged} />
         ))}
       {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
@@ -272,7 +295,26 @@ function Conversation() {
         {data?.messages.length === 0 && (
           <p className="text-center text-sm text-muted-foreground">No messages yet. Say hi.</p>
         )}
-        {data?.messages.map((m) => {
+        {data &&
+          [...data.messages, ...sessionEvents(data.sessions, meId, data.other)]
+            .sort((a, b) => Date.parse(a.created_at ?? a.at) - Date.parse(b.created_at ?? b.at))
+            .map((m) => {
+          if (m.event) {
+            return (
+              <p key={m.id} className="flex justify-center py-1">
+                <span
+                  className={cn(
+                    "rounded-full px-3 py-1 text-[11px] font-medium",
+                    m.tone === "start" && "bg-primary/10 text-primary",
+                    m.tone === "end" && "bg-primary text-primary-foreground",
+                    !m.tone && "bg-muted text-muted-foreground"
+                  )}
+                >
+                  {m.text} · {timeOf(m.at)}
+                </span>
+              </p>
+            );
+          }
           const mine = m.sender_id === meId;
           return (
             <div key={m.id} className={cn("group flex items-center gap-1", mine ? "justify-end" : "justify-start")}>

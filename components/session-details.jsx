@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, MapPin, Star } from "lucide-react";
+import { CalendarClock, CheckCheck, Flag, MapPin, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatWhen } from "@/lib/sessions";
+import { autoCloseDate, formatWhen, sessionState } from "@/lib/sessions";
+import { formatDay } from "@/lib/membership";
 import { cn } from "@/lib/utils";
 
 const stars = (n) => "★".repeat(n) + "☆".repeat(5 - n);
@@ -39,30 +40,35 @@ export function SessionPlan({ request }) {
   );
 }
 
-// Mentee side, after an accepted session: 1 to 5 stars, did it help, comment.
-export function RateSession({ request, menteeId, onSaved }) {
+// Mentee side: end an accepted session with 1 to 5 stars, did it help, and
+// an optional comment. Collapsed to one button until you start.
+export function EndSession({ request, menteeId, mentorName, onSaved }) {
+  const [open, setOpen] = useState(false);
   const [rating, setRating] = useState(0);
   const [helped, setHelped] = useState(null);
   const [comment, setComment] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const state = sessionState(request);
+  const first = mentorName?.split(" ")[0] ?? "Your mentor";
 
-  if (request.status !== "accepted") return null;
-  if (typeof request.rating === "number") {
-    return (
+  if (state === "completed") {
+    return typeof request.rating === "number" ? (
       <p className="text-xs text-muted-foreground">
-        You rated this session <span className="text-primary" aria-label={`${request.rating} out of 5 stars`}>{stars(request.rating)}</span>
-        {request.helped === true ? ", and it helped you get unstuck." : request.helped === false ? "." : ""}
+        Session ended. You rated it{" "}
+        <span className="text-primary" aria-label={`${request.rating} out of 5 stars`}>{stars(request.rating)}</span>
+        {request.helped === true ? ", and it helped you get unstuck." : "."}
       </p>
-    );
+    ) : null;
   }
+  if (state !== "active" && state !== "ending" && state !== "unconfirmed") return null;
 
   async function submit(event) {
     event.preventDefault();
     setSaving(true);
     setError(null);
     const result = await update({
-      action: "rate",
+      action: "end",
       id: request.id,
       mentee_id: menteeId,
       rating,
@@ -74,9 +80,26 @@ export function RateSession({ request, menteeId, onSaved }) {
     else onSaved?.();
   }
 
+  const nudge = state !== "active" && (
+    <p className="text-xs text-muted-foreground">{first} marked this session as done. Rate it to close it.</p>
+  );
+
+  if (!open) {
+    return (
+      <div className="space-y-1.5">
+        {nudge}
+        <Button size="sm" variant={state === "active" ? "outline" : "default"} className="rounded-full" onClick={() => setOpen(true)}>
+          <Flag data-icon="inline-start" />
+          End session and rate
+        </Button>
+        <p className="text-[11px] text-muted-foreground">You can keep chatting afterwards; this only closes the session.</p>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={submit} className="space-y-2 rounded-lg border p-2.5">
-      <p className="text-xs font-semibold">After your session: how did it go?</p>
+    <form onSubmit={submit} className="space-y-2 rounded-lg border bg-background p-2.5">
+      <p className="text-xs font-semibold">How did the session go?</p>
       <div className="flex gap-0.5" role="radiogroup" aria-label="Rating">
         {[1, 2, 3, 4, 5].map((n) => (
           <button
@@ -86,7 +109,7 @@ export function RateSession({ request, menteeId, onSaved }) {
             aria-checked={rating === n}
             aria-label={`${n} star${n === 1 ? "" : "s"}`}
             onClick={() => setRating(n)}
-            className="rounded p-0.5"
+            className="rounded p-0.5 transition-transform hover:scale-110"
           >
             <Star className={cn("size-5", n <= rating ? "fill-primary text-primary" : "text-muted-foreground")} />
           </button>
@@ -120,43 +143,60 @@ export function RateSession({ request, menteeId, onSaved }) {
         className="h-9 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
       />
       {error && <p className="text-xs text-destructive">{error}</p>}
-      <Button type="submit" size="sm" className="rounded-full" disabled={saving || rating === 0 || helped === null}>
-        Send rating
-      </Button>
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="rounded-full" disabled={saving || rating === 0 || helped === null}>
+          End session
+        </Button>
+        <Button type="button" size="sm" variant="ghost" className="rounded-full" onClick={() => setOpen(false)}>
+          Not yet
+        </Button>
+      </div>
     </form>
   );
 }
 
-// Mentor side, after accepting: did the session actually happen?
-export function ConfirmHeld({ request, mentorId, onSaved }) {
+// Mentor side: you can't end a session yourself, only ask the student to.
+export function RequestEnd({ request, mentorId, menteeName, onSaved }) {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  if (request.status !== "accepted") return null;
-  if (typeof request.held === "boolean") {
+  const state = sessionState(request);
+  const first = menteeName?.split(" ")[0] ?? "The student";
+
+  if (state === "ending") {
     return (
       <p className="text-xs text-muted-foreground">
-        {request.held ? "You confirmed this session happened." : "You said this session didn't happen."}
+        You marked this as done. Waiting for {first} to end it and rate it. If they don&apos;t, it closes on{" "}
+        {formatDay(autoCloseDate(request))} without counting toward your stats.
       </p>
     );
   }
-  async function answer(held) {
+  if (state === "unconfirmed") {
+    return (
+      <p className="text-xs text-muted-foreground">
+        Closed without {first}&apos;s confirmation, so it doesn&apos;t count toward your stats.
+      </p>
+    );
+  }
+  if (state !== "active") return null;
+
+  async function ask() {
     setSaving(true);
     setError(null);
-    const result = await update({ action: "held", id: request.id, mentor_id: mentorId, held });
+    const result = await update({ action: "request_end", id: request.id, mentor_id: mentorId });
     setSaving(false);
     if (!result.ok) setError(result.error);
     else onSaved?.();
   }
   return (
-    <div className="flex flex-wrap items-center gap-2 text-xs">
-      <span className="font-semibold">After the session: did it happen?</span>
-      <Button size="sm" variant="outline" className="h-7 rounded-full" disabled={saving} onClick={() => answer(true)}>
-        Yes
+    <div className="space-y-1">
+      <Button size="sm" variant="outline" className="rounded-full" disabled={saving} onClick={ask}>
+        <CheckCheck data-icon="inline-start" />
+        Mark as done
       </Button>
-      <Button size="sm" variant="ghost" className="h-7 rounded-full" disabled={saving} onClick={() => answer(false)}>
-        No
-      </Button>
-      {error && <span className="w-full text-destructive">{error}</span>}
+      <p className="text-[11px] text-muted-foreground">
+        {first} ends the session and rates it. Only sessions they confirm count toward your ranking.
+      </p>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
