@@ -221,11 +221,14 @@ function MembershipCard({ data, meId, onChanged }) {
 // Applied -> Approved -> Member -> Live, so you can see what's left to do.
 function Steps({ listing, member }) {
   const rejected = listing.status === "rejected";
+  const approved = listing.status === "approved";
+  // Ticks in order: a step only counts once every step before it is done
+  // (a demo account's included membership doesn't jump ahead of approval).
   const steps = [
     { label: "Applied", done: true },
-    { label: rejected ? "Not approved" : "Approved", done: listing.status === "approved", failed: rejected },
-    { label: "Member", done: member },
-    { label: "Live", done: listing.listed },
+    { label: rejected ? "Not approved" : "Approved", done: approved, failed: rejected },
+    { label: "Member", done: approved && member },
+    { label: "Live", done: approved && member && listing.listed },
   ];
   return (
     <ol className="grid grid-cols-4">
