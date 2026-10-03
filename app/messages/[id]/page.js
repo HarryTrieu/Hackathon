@@ -3,12 +3,13 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Ban, CalendarCheck, ShieldAlert } from "lucide-react";
+import { ArrowLeft, ArrowRight, Ban, CalendarCheck, CalendarPlus, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ChatItems, Composer } from "@/components/chat-thread";
+import { SessionPrompt, useMentorListings, useSessionPromptHidden } from "@/components/session-prompt";
 import { usePersona } from "@/lib/persona-context";
 import { refreshInbox } from "@/lib/use-inbox";
 import { isOpenSession, sessionState } from "@/lib/sessions";
@@ -63,6 +64,8 @@ function Conversation() {
   const [sendError, setSendError] = useState(null);
   const endRef = useRef(null);
   const meId = persona.id;
+  const mentorListings = useMentorListings(otherId);
+  const [promptHidden, setPromptHidden] = useSessionPromptHidden(otherId);
 
   async function load() {
     try {
@@ -174,6 +177,10 @@ function Conversation() {
   const other = data?.other;
   const demoChat = isDemo(meId) || isDemo(otherId);
   const canSend = data && !data.blocked_me && !data.blocked_by_me;
+  // "<name> is a mentor": when they have a live listing and you have no open
+  // session with them yet.
+  const canBook =
+    canSend && other?.role === "mentor" && mentorListings.length > 0 && !data.sessions.some(isOpenSession);
 
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
@@ -196,6 +203,18 @@ function Conversation() {
         )}
         {other && (
           <>
+            {canBook && promptHidden && (
+              <Button
+                size="icon-sm"
+                variant="ghost"
+                className="rounded-full text-primary"
+                aria-label={`Book a session with ${other.name.split(" ")[0]}`}
+                title="Book a session"
+                onClick={() => setPromptHidden(false)}
+              >
+                <CalendarPlus />
+              </Button>
+            )}
             <ReportButton targetType="chat" targetId={`dm:${otherId}`} formClassName="absolute right-4 top-12 z-20 w-72 bg-popover shadow-lg" />
             <Button
               size="sm"
@@ -218,6 +237,9 @@ function Conversation() {
       )}
 
       {data && <SessionLinks sessions={data.sessions} meId={meId} />}
+      {canBook && !promptHidden && (
+        <SessionPrompt me={persona} other={other} listings={mentorListings} onHide={() => setPromptHidden(true)} />
+      )}
 
       <div className="flex-1 space-y-2 px-4 py-4">
         {!data && !error && <Skeleton className="h-24 w-full rounded-xl" />}
