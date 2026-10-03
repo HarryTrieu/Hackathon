@@ -84,8 +84,7 @@ export function LeftNav() {
         })}
       </nav>
 
-      {/* The moderator account reviews content, it does not post. */}
-      {!isAdmin && <PostDialogButton />}
+      <PostDialogButton />
 
       <div className="mt-auto space-y-2">
         <ThemeToggle className="w-full justify-start text-foreground/80" />
@@ -136,8 +135,7 @@ export function MobileNav() {
         );
       })}
       <MobileMenu />
-      {/* The moderator account reviews content, it does not post. */}
-      {persona.role !== "admin" && <FloatingPostButton />}
+      <FloatingPostButton />
     </nav>
   );
 }

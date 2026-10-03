@@ -4,7 +4,7 @@
 import { randomUUID } from "crypto";
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
-import { actAs, denied } from "@/lib/actor";
+import { actAsAuthor, denied } from "@/lib/actor";
 import { withRealAuthors } from "@/lib/account";
 
 const CreateReply = z.object({
@@ -47,7 +47,7 @@ export async function POST(request) {
       { status: 400 }
     );
   }
-  const who = await actAs(parsed.data.author_id);
+  const who = await actAsAuthor(parsed.data.author_id);
   if (!who.ok) return denied(who);
   const text = parsed.data.text.trim();
   if (!text) {

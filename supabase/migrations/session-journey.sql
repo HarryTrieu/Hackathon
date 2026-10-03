@@ -93,3 +93,11 @@ alter table session_requests add column if not exists last_message_at timestampt
 alter table session_requests add column if not exists last_sender_id text;
 alter table session_requests add column if not exists mentor_read_at timestamptz;
 alter table session_requests add column if not exists mentee_read_at timestamptz;
+
+-- The demo Moderator can post (announcements). Posts need an author row in
+-- profiles. Its role is stored as 'mentee' only because the role check
+-- allows mentor/mentee; the app shows it as "Sodu Moderator" (Admin) from
+-- lib/seed.js. Adds the row once, changes nothing if it exists.
+insert into profiles (id, name, handle, role, course, verified, is_demo)
+values ('admin', 'Sodu Moderator', 'sodu-mod', 'mentee', 'Sodu Team', true, true)
+on conflict (id) do nothing;

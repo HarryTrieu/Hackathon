@@ -2,10 +2,10 @@ import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { enrichPost } from "@/lib/enrich";
 import { supabaseAdmin } from "@/lib/supabase";
-import { actAs, denied } from "@/lib/actor";
+import { actAsAuthor, denied } from "@/lib/actor";
 import { withRealAuthors } from "@/lib/account";
 
-// Who may post as author_id is checked by actAs() after parsing.
+// Who may post as author_id is checked by actAsAuthor() after parsing.
 const CreatePost = z.object({
   author_id: z.string().min(1).max(80),
   text: z.string().trim().min(1, "Post text is required.").max(2000),
@@ -67,7 +67,7 @@ export async function POST(request) {
   }
 
   const { author_id, text, image_url, link_preview } = parsed.data;
-  const who = await actAs(author_id);
+  const who = await actAsAuthor(author_id);
   if (!who.ok) return denied(who);
   const ai = await enrichPost(text);
 
@@ -138,7 +138,7 @@ export async function PATCH(request) {
     );
   }
   const { id, author_id } = parsed.data;
-  const who = await actAs(author_id);
+  const who = await actAsAuthor(author_id);
   if (!who.ok) return denied(who);
   const tags = [...new Set(parsed.data.tags)];
 
@@ -179,7 +179,7 @@ export async function DELETE(request) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? "Invalid request." }, { status: 400 });
   }
   const { id, author_id } = parsed.data;
-  const who = await actAs(author_id);
+  const who = await actAsAuthor(author_id);
   if (!who.ok) return denied(who);
   const db = supabaseAdmin();
   if (!db) return Response.json({ ok: true, persisted: false });

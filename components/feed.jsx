@@ -210,11 +210,9 @@ export function Feed() {
           </div>
         )}
         {/* Phones post from the floating + in the bottom nav instead. */}
-        {persona.role !== "admin" && (
-          <div className="hidden md:block">
-            <Composer />
-          </div>
-        )}
+        <div className="hidden md:block">
+          <Composer />
+        </div>
 
         {reloading && <FeedSkeleton />}
         <TabsContent value="for-you" className={reloading ? "hidden" : undefined}>
