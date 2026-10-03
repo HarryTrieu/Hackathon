@@ -20,7 +20,7 @@ const ROW = "flex w-full items-center gap-3 rounded-full px-3 py-2.5 text-sm tra
 // only live in the desktop left nav.
 export function MobileMenu() {
   const pathname = usePathname();
-  const { persona } = usePersona();
+  const { persona, face } = usePersona();
   const inbox = useInbox(persona.role === "admin" ? null : persona.id);
   const [open, setOpen] = useState(false);
   const profileHref = `/profile/${persona.id}`;
@@ -39,7 +39,7 @@ export function MobileMenu() {
         )}
       >
         <UserAvatar
-          profile={persona}
+          profile={face}
           className={cn("size-5 ring-2 ring-offset-1 ring-offset-background", active ? "ring-primary" : "ring-transparent")}
           textClassName="text-[8px]"
         />

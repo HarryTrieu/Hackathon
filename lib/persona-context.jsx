@@ -22,6 +22,19 @@ export function PersonaProvider({ children }) {
   const actingAsDemo = saved.actingAsDemo && saved.accountId === userId;
   const realActive = account.status === "ready" && !actingAsDemo;
   const persona = realActive ? account.profile : getProfile(demoId);
+  // Who to show on the account card and the phone's Me tab. Signed in but
+  // not set up yet (/welcome), that's the Google account itself, while the
+  // rest of the app falls back to the demo persona until setup is done.
+  const meta = account.user?.user_metadata ?? {};
+  const face =
+    account.status === "needs-profile" && !actingAsDemo
+      ? {
+          id: persona.id,
+          name: meta.full_name ?? meta.name ?? account.user?.email ?? "Your account",
+          handle: account.user?.email ?? "new-account",
+          avatar: meta.avatar_url ?? meta.picture ?? null,
+        }
+      : persona;
 
   // Signing in in another tab signs this tab in too (Supabase shares the
   // session). Keep this tab on the demo account it was showing; signing in
@@ -44,6 +57,7 @@ export function PersonaProvider({ children }) {
     <PersonaContext.Provider
       value={{
         persona,
+        face,
         personaId: persona.id,
         setPersonaId: pickDemo,
         pickGoogle: () => save({ demoId, actingAsDemo: false, accountId: userId }),

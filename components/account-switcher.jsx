@@ -32,7 +32,9 @@ function Tag({ google = false }) {
 // Your Google account stays signed in while you try demo accounts; one click
 // switches back to it. Only "Sign out" removes it.
 function AccountList({ onDone }) {
-  const { persona, personaId, setPersonaId, pickGoogle, account, realActive } = usePersona();
+  const { persona, personaId, setPersonaId, pickGoogle, account, realActive, actingAsDemo } = usePersona();
+  // Mid-setup on /welcome you're the Google account, not the fallback demo.
+  const settingUp = account.status === "needs-profile" && !actingAsDemo;
   const pathname = usePathname();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
@@ -146,7 +148,7 @@ function AccountList({ onDone }) {
         <ul className="flex flex-col">
           {PERSONA_IDS.map((id) => {
             const p = getProfile(id);
-            const current = !realActive && id === persona.id;
+            const current = !realActive && !settingUp && id === persona.id;
             return (
               <li key={id}>
                 <button
@@ -182,10 +184,11 @@ function AccountList({ onDone }) {
 // Otherwise the card opens the list in a centred "Switch account" popup
 // (desktop left nav), which closes with X, Esc, a click outside, or a pick.
 export function AccountSwitcher({ inline = false }) {
-  const { persona, account, realActive, actingAsDemo } = usePersona();
+  const { account, realActive, actingAsDemo, face } = usePersona();
   const [open, setOpen] = useState(false);
   const google = realActive;
   const needsSetup = account.status === "needs-profile" && !actingAsDemo;
+  const shown = face;
 
   if (inline) return <AccountList />;
 
@@ -198,14 +201,14 @@ export function AccountSwitcher({ inline = false }) {
         aria-label="Switch account"
         className="flex w-full items-center gap-2 rounded-xl border bg-card p-2.5 text-left transition-colors duration-300 ease-out hover:border-primary/30"
       >
-        <UserAvatar profile={persona} className="size-8" textClassName="text-xs" />
+        <UserAvatar profile={shown} className="size-8" textClassName="text-xs" />
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
-            <span className="truncate text-sm font-semibold">{persona.name}</span>
-            <Tag google={google} />
+            <span className="truncate text-sm font-semibold">{shown.name}</span>
+            <Tag google={google || needsSetup} />
           </span>
           <span className={cn("block truncate text-xs", needsSetup ? "font-medium text-primary" : "text-muted-foreground")}>
-            {needsSetup ? "Google signed in: finish setup" : subtitle(persona)}
+            {needsSetup ? "Google signed in: finish setup" : subtitle(face)}
           </span>
         </span>
         <ChevronsUpDown className="size-4 shrink-0 text-muted-foreground" />
