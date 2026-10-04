@@ -19,6 +19,7 @@ import { pinMyNewPosts, unpinMyNewPosts, useMyNewPosts } from "@/lib/my-new-post
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
 import { IncrementalList } from "@/components/incremental-list";
+import { DemoBanner, GettingStarted } from "@/components/onboarding-cards";
 
 // Feed data from the API, or null when it is unavailable (seed fallback).
 async function fetchPosts() {
@@ -242,6 +243,8 @@ export function Feed() {
           )}
         </div>
 
+        <DemoBanner />
+        <GettingStarted />
         <MentorStrip />
         <HomeHero />
         {followed.tags.length > 0 && (

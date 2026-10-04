@@ -89,3 +89,47 @@ export async function POST(request) {
   const saved = await findProfile(user.id);
   return Response.json({ user: publicUser(user), profile: saved.profile ?? null }, { headers: NO_STORE });
 }
+
+// Delete my account: your personal details are wiped and your Google sign-in
+// is removed. Posts, replies and messages stay so threads still make sense,
+// but show as "Deleted user". Saves, follows, memberships and mentor
+// listings are removed.
+export async function DELETE() {
+  const user = await getAuthUser();
+  if (!user) return Response.json({ error: "Sign in with Google first." }, { status: 401 });
+  const db = supabaseAdmin();
+  if (!db) return Response.json({ error: "Accounts need the database." }, { status: 503 });
+  const { profile } = await findProfile(user.id);
+  if (profile) {
+    const id = profile.id;
+    const { error } = await db
+      .from("profiles")
+      .update({
+        name: "Deleted user",
+        handle: `deleted-${id.slice(-6)}`,
+        course: "Other",
+        year: null,
+        units: [],
+        goals: [],
+        skills: [],
+        resources: [],
+        avatar_url: null,
+        verified: false,
+        auth_user_id: null,
+      })
+      .eq("id", id);
+    if (error) return Response.json({ error: "Could not delete your account. Try again." }, { status: 500 });
+    // Best effort: some of these tables only exist after later migrations.
+    await Promise.all([
+      db.from("profiles").update({ links: [] }).eq("id", id),
+      db.from("saved_posts").delete().eq("profile_id", id),
+      db.from("follows").delete().or(`follower_id.eq.${id},followee_id.eq.${id}`),
+      db.from("interest_members").delete().eq("profile_id", id),
+      db.from("unit_members").delete().eq("profile_id", id),
+      db.from("mentor_profiles").delete().eq("profile_id", id).eq("is_demo", false),
+    ]);
+  }
+  // Remove the Google sign-in itself, so nothing links back to the person.
+  await db.auth.admin.deleteUser(user.id);
+  return Response.json({ ok: true });
+}

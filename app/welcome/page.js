@@ -11,6 +11,7 @@ import { AuthButton } from "@/components/auth-button";
 import { UNIVERSITY, unitDirectory } from "@/lib/communities";
 import { COURSES, GOALS, MAX_GOALS, MAX_UNITS, YEARS, goalLabel } from "@/lib/onboarding";
 import { setAccountProfile, useAccount } from "@/lib/use-account";
+import { signOut } from "@/lib/use-auth";
 import { cn } from "@/lib/utils";
 
 function Chip({ active, onClick, children, disabled = false }) {
@@ -38,6 +39,50 @@ function Field({ label, hint, children }) {
         {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
       {children}
+    </div>
+  );
+}
+
+// Delete my account (editing your details only): wipes your personal
+// details and your Google sign-in; posts stay but show "Deleted user".
+function DeleteAccount() {
+  const router = useRouter();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
+
+  async function remove() {
+    if (
+      !window.confirm(
+        "Delete your Sodu account? Your name, course, units, links and saves are removed and your Google sign-in is disconnected. Your posts and messages stay, shown as \"Deleted user\". This can't be undone."
+      )
+    )
+      return;
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/me", { method: "DELETE" });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) return setError(data.error ?? "Could not delete your account.");
+      await signOut();
+      router.push("/");
+    } catch {
+      setError("Could not reach the server.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-6 space-y-1 border-t pt-4 text-center">
+      <button
+        type="button"
+        onClick={remove}
+        disabled={busy}
+        className="text-sm font-medium text-destructive hover:underline disabled:opacity-50"
+      >
+        Delete my account
+      </button>
+      {error && <p className="text-xs text-destructive">{error}</p>}
     </div>
   );
 }
@@ -154,13 +199,24 @@ function WelcomeForm({ account }) {
       </Field>
       <div className="space-y-2 px-4 py-4">
         {error && <p className="text-sm text-destructive">{error}</p>}
+        {(!name.trim() || !course || !year) && (
+          <p className="text-center text-xs text-muted-foreground">
+            Still needed: {[!name.trim() && "your name", !course && "your course", !year && "your year"].filter(Boolean).join(", ")}.
+          </p>
+        )}
         <Button type="submit" className="w-full rounded-full" disabled={saving || !name.trim() || !course || !year}>
           {saving ? <Spinner data-icon="inline-start" /> : <CheckCircle2 data-icon="inline-start" />}
           {existing ? "Save changes" : "Finish setting up"}
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          We keep your name, course, year, units, goals and Google profile picture. Never your password.
+          We keep your name, course, year, units, goals and Google profile picture. Never your password. By
+          continuing you agree to how we use your data in our{" "}
+          <Link href="/privacy" className="text-primary hover:underline">
+            privacy page
+          </Link>
+          .
         </p>
+        {existing && <DeleteAccount />}
       </div>
     </form>
   );
