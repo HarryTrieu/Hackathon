@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { CalendarClock, CheckCheck, Flag, Hourglass, MapPin, Star } from "lucide-react";
+import { CalendarClock, CheckCheck, Flag, Hourglass, MapPin, ReceiptText, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SESSION_DAYS, autoEnded, formatWhen, sessionEndsAt, sessionState } from "@/lib/sessions";
 import { formatDay } from "@/lib/membership";
+import { SODU_CUT, aud, sessionPayment } from "@/lib/payments";
 import { cn } from "@/lib/utils";
 import { toast } from "@/lib/toast";
 
@@ -66,6 +67,7 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
   const [error, setError] = useState(null);
   const state = sessionState(request);
   const first = mentorName?.split(" ")[0] ?? "Your mentor";
+  const pay = sessionPayment(request);
 
   const lateRating = autoEnded(request);
   if (state === "completed" && !lateRating) {
@@ -94,7 +96,7 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
     setSaving(false);
     if (!result.ok) setError(result.error);
     else {
-      toast(lateRating ? "Thanks for rating" : "Session ended. Thanks for rating");
+      toast(lateRating ? "Thanks for rating" : pay ? `Session ended. Paid ${aud(pay.price)} (demo)` : "Session ended. Thanks for rating");
       onSaved?.();
     }
   }
@@ -164,10 +166,15 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
         placeholder="Optional: what helped, or what could be better"
         className="h-9 w-full rounded-lg border bg-transparent px-3 text-base outline-none focus:border-primary/50 md:text-sm"
       />
+      {pay && !lateRating && (
+        <p className="text-xs text-muted-foreground">
+          Ending the session pays {first} {aud(pay.price)} for one hour. Demo payment: no card is charged.
+        </p>
+      )}
       {error && <p className="text-xs text-destructive">{error}</p>}
       <div className="flex gap-2">
         <Button type="submit" size="sm" className="rounded-full" disabled={saving || rating === 0 || helped === null}>
-          {lateRating ? "Send rating" : "End session"}
+          {lateRating ? "Send rating" : pay ? `End session and pay ${aud(pay.price)}` : "End session"}
         </Button>
         <Button type="button" size="sm" variant="ghost" className="rounded-full" onClick={() => setOpen(false)}>
           Not yet
@@ -231,6 +238,48 @@ export function ReceivedRating({ request }) {
         {request.helped === true ? " · helped them get unstuck" : request.helped === false ? " · didn't quite get them unstuck" : ""}
       </p>
       {request.rating_comment && <p className="mt-0.5 text-muted-foreground">&ldquo;{request.rating_comment}&rdquo;</p>}
+    </div>
+  );
+}
+
+// Both sides, once a session has ended: a demo receipt for the student and a
+// demo payout for the mentor. Nothing is charged; see lib/payments.js.
+export function PaymentReceipt({ request, side, otherName }) {
+  const pay = sessionPayment(request);
+  if (!pay || sessionState(request) !== "completed") return null;
+  const auto = autoEnded(request);
+  const day = formatDay(auto ? sessionEndsAt(request) : (request.ended_at ?? request.rated_at ?? request.created_at));
+  const first = otherName?.split(" ")[0] ?? (side === "mentor" ? "The student" : "your mentor");
+  const rows =
+    side === "mentor"
+      ? [
+          ["Session (1 hour)", aud(pay.price)],
+          [`Sodu fee (${Math.round(SODU_CUT * 100)}%)`, `-${aud(pay.fee)}`],
+          ["You receive", aud(pay.payout)],
+        ]
+      : [
+          [`Session with ${first} (1 hour)`, aud(pay.price)],
+          ["Total paid", aud(pay.price)],
+        ];
+  return (
+    <div className="max-w-sm space-y-1.5 rounded-lg border bg-background p-2.5 text-xs">
+      <p className="flex items-center gap-1.5 font-semibold">
+        <ReceiptText className="size-3.5 text-primary" />
+        {side === "mentor" ? `Payout from ${first}` : "Payment receipt"}
+        <span className="ml-auto rounded bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">Demo</span>
+      </p>
+      <dl className="space-y-0.5">
+        {rows.map(([label, value], i) => (
+          <div key={label} className={cn("flex justify-between gap-3", i === rows.length - 1 && "border-t pt-1 font-semibold")}>
+            <dt>{label}</dt>
+            <dd className="tabular-nums">{value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="text-[11px] text-muted-foreground">
+        {pay.receipt} · {day}
+        {auto ? ` · charged when the session ended after ${SESSION_DAYS} days` : ""}. No money moves in the demo.
+      </p>
     </div>
   );
 }

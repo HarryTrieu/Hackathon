@@ -9,7 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ChatItems, Composer } from "@/components/chat-thread";
-import { EndSession, ReceivedRating, RequestEnd } from "@/components/session-details";
+import { EndSession, PaymentReceipt, ReceivedRating, RequestEnd } from "@/components/session-details";
 import { usePersona } from "@/lib/persona-context";
 import { refreshInbox } from "@/lib/use-inbox";
 import { firstMessage, sessionEvents, sessionState } from "@/lib/sessions";
@@ -78,9 +78,13 @@ function SessionActions({ session, me, other, iAmMentor, onChanged, onAccepted }
           <>
             <ReceivedRating request={session} />
             <RequestEnd request={session} mentorId={me.id} menteeName={other.name} onSaved={onChanged} />
+            <PaymentReceipt request={session} side="mentor" otherName={other.name} />
           </>
         ) : (
-          <EndSession request={session} menteeId={me.id} mentorName={other.name} onSaved={onChanged} />
+          <>
+            <EndSession request={session} menteeId={me.id} mentorName={other.name} onSaved={onChanged} />
+            <PaymentReceipt request={session} side="mentee" otherName={other.name} />
+          </>
         ))}
       {state === "declined" && <p className="text-xs text-muted-foreground">This request was declined.</p>}
       {error && <p className="text-xs text-destructive">{error}</p>}

@@ -58,7 +58,7 @@ Secret keys are only read on the server and never prefixed with `NEXT_PUBLIC_`. 
 ## Tests
 
 ```bash
-npm test                  # 40 unit tests: session, money, ranking and safety rules (seconds, no keys)
+npm test                  # 43 unit tests: session, money, ranking and safety rules (seconds, no keys)
 npm run test:permissions  # 37 private actions tried by the wrong person; needs the app running on :3107
 npm run test:ai           # 32 real Gemini cases; needs GEMINI_API_KEY, writes tests/ai-report.md
 ```
