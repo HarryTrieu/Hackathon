@@ -5,6 +5,7 @@ import { LeftNav, MobileNav } from "@/components/left-nav";
 import { RightSidebar } from "@/components/right-sidebar";
 import { Toaster } from "@/components/toaster";
 import { RealtimeListener } from "@/components/realtime-listener";
+import { MobileTopBar } from "@/components/mobile-drawer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,7 +40,10 @@ export default function RootLayout({ children }) {
         <PersonaProvider>
           <div className="mx-auto flex min-h-svh max-w-6xl">
             <LeftNav />
-            <main className="min-w-0 flex-1 border-x">{children}</main>
+            <main className="min-w-0 flex-1 border-x">
+              <MobileTopBar />
+              {children}
+            </main>
             <RightSidebar />
           </div>
           <MobileNav />

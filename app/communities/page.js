@@ -34,7 +34,7 @@ export default function CommunitiesPage() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <h1 className="text-lg font-bold">Communities</h1>
         <p className="text-sm text-muted-foreground">
           {UNIVERSITY} · interests for life outside class, and one community per unit: join the ones

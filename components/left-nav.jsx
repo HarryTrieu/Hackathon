@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { Bell, Home, HeartHandshake, MessageCircle, User, Users, GraduationCap, ShieldAlert, Search } from "lucide-react";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { FloatingPostButton } from "@/components/floating-post-button";
-import { MobileMenu } from "@/components/mobile-menu";
 import { PostDialogButton } from "@/components/post-dialog";
 import { isMentoringPath } from "@/components/mentoring-tabs";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -109,6 +108,9 @@ export function MobileNav() {
   // Items waiting in /review (moderators only).
   const review = useReviewCount(canModerate(persona) ? persona.id : null);
 
+  // The profile, Topics and settings live in the top bar's drawer
+  // (components/mobile-drawer.jsx); the last slot goes straight to Messages.
+  const inbox = useInbox(persona.role === "admin" ? null : persona.id);
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentoring", icon: HeartHandshake },
@@ -116,12 +118,13 @@ export function MobileNav() {
     ...(canModerate(persona)
       ? [{ href: "/review", label: "Review", icon: ShieldAlert, badge: review?.total ?? 0 }]
       : [{ href: "/notifications", label: "Alerts", icon: Bell, badge: unreadCount }]),
+    ...(persona.role === "admin" ? [] : [{ href: "/messages", label: "Messages", icon: MessageCircle, badge: inbox.unread }]),
   ];
 
   return (
     <nav
       aria-label="Mobile"
-      className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around border-t bg-background/95 py-2 backdrop-blur md:hidden"
+      className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around border-t bg-background md:bg-background/95 py-2 md:backdrop-blur md:hidden"
     >
       {items.map(({ href, label, icon: Icon, badge }) => {
         const active =
@@ -148,7 +151,6 @@ export function MobileNav() {
           </Link>
         );
       })}
-      <MobileMenu />
       <FloatingPostButton />
     </nav>
   );

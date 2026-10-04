@@ -18,6 +18,7 @@ import { useHiddenAds } from "@/lib/use-hidden-ads";
 import { pinMyNewPosts, unpinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
+import { IncrementalList } from "@/components/incremental-list";
 
 // Feed data from the API, or null when it is unavailable (seed fallback).
 async function fetchPosts() {
@@ -207,7 +208,7 @@ export function Feed() {
   return (
     <div className="pb-16 md:pb-0">
       <Tabs value={tab} onValueChange={changeTab} className="gap-0">
-        <div className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur">
+        <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 md:backdrop-blur">
           <div className="flex items-center justify-between px-4 pt-3">
             <h1 className="text-lg font-bold">Home</h1>
             <Badge variant="outline" className="text-muted-foreground">
@@ -258,18 +259,18 @@ export function Feed() {
         <TabsContent value="for-you" className={reloading ? "hidden" : undefined}>
           {/* key on persona so switching re-mounts and fades the new order in */}
           <div key={persona.id} className="animate-in fade-in duration-500">
-            {withSponsored(forYou, ads).map(renderItem)}
+            <IncrementalList items={withSponsored(forYou, ads)} render={renderItem} />
             <CaughtUp />
           </div>
         </TabsContent>
 
         <TabsContent value="hot" className={reloading ? "hidden" : undefined}>
-          {withSponsored(hot, ads).map(renderItem)}
+          <IncrementalList items={withSponsored(hot, ads)} render={renderItem} />
           <CaughtUp />
         </TabsContent>
 
         <TabsContent value="new" className={reloading ? "hidden" : undefined}>
-          {withSponsored(fresh, ads).map(renderItem)}
+          <IncrementalList items={withSponsored(fresh, ads)} render={renderItem} />
           <CaughtUp />
         </TabsContent>
       </Tabs>

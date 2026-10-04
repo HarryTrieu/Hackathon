@@ -250,7 +250,7 @@ function Topics() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         {tag && <BackButton className="-ml-2 mb-1" />}
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <Search className="size-5 text-primary" />

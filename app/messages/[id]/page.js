@@ -232,7 +232,7 @@ function Conversation() {
 
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-4 py-2.5 backdrop-blur">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-2.5 md:backdrop-blur">
         <Link href="/messages" aria-label="Back to messages" className="rounded-full p-1.5 transition-colors hover:bg-muted">
           <ArrowLeft className="size-4" />
         </Link>
@@ -299,7 +299,7 @@ function Conversation() {
         <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-16 border-t bg-background/95 px-4 py-3 backdrop-blur md:bottom-0">
+      <div className="sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
         {data?.blocked_me && <p className="text-sm text-muted-foreground">You can&apos;t message this person.</p>}
         {data?.blocked_by_me && (
           <p className="text-sm text-muted-foreground">You blocked {other.name.split(" ")[0]}. Unblock to send messages.</p>

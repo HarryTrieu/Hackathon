@@ -176,7 +176,7 @@ function MentorDetail() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <Link
           href={fromHub ? "/mentor" : `/mentors/${code}`}
           aria-label={fromHub ? "Back to your Mentor hub" : "Back to mentors"}

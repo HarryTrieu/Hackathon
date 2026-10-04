@@ -171,7 +171,7 @@ function Welcome() {
 
   return (
     <div className="pb-24 md:pb-8">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <GraduationCap className="size-5 text-primary" />
           {account.status === "ready" ? "Your details" : "Welcome to Sodu"}

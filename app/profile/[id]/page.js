@@ -74,8 +74,10 @@ async function realPosts(profile) {
 
 const plural = (n, word) => `${word}${n === 1 ? "" : "s"}`;
 
-export default async function ProfilePage({ params }) {
+export default async function ProfilePage({ params, searchParams }) {
   const { id } = await params;
+  // ?tab=saved opens your Saved tab (the phone menu links there).
+  const { tab } = (await searchParams) ?? {};
   const profile = getProfile(id) ?? (await realProfile(id));
   if (!profile) notFound();
 
@@ -151,7 +153,7 @@ export default async function ProfilePage({ params }) {
 
       <MentorSection profileId={profile.id} />
 
-      <Tabs defaultValue="posts" className="gap-0">
+      <Tabs defaultValue={tab === "saved" || tab === "path" ? tab : "posts"} className="gap-0">
         <div className="border-b">
           <TabsList variant="line" className="w-full justify-start px-2">
             <TabsTrigger value="posts" className="flex-none px-3 py-2">

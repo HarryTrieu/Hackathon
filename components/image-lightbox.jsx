@@ -6,6 +6,21 @@ import { XIcon } from "lucide-react";
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+// Smaller versions for phones: picsum and Cloudinary both resize by URL.
+function responsive(src) {
+  const pic = /^(https:\/\/picsum\.photos\/id\/\d+)\/(\d+)\/(\d+)$/.exec(src ?? "");
+  if (pic) {
+    const [, base, w, h] = pic;
+    const at = (width) => `${base}/${width}/${Math.round((width * h) / w)} ${width}w`;
+    return { src: `${base}/800/${Math.round((800 * h) / w)}`, srcSet: [480, 800, Number(w)].map(at).join(", ") };
+  }
+  if (/^https:\/\/res\.cloudinary\.com\/[^/]+\/image\/upload\//.test(src ?? "")) {
+    const at = (width) => `${src.replace("/upload/", `/upload/f_auto,q_auto,w_${width}/`)} ${width}w`;
+    return { src: src.replace("/upload/", "/upload/f_auto,q_auto,w_800/"), srcSet: [480, 800, 1200].map(at).join(", ") };
+  }
+  return { src };
+}
+
 // An image you can click to see full size on a dark backdrop. Esc, the X
 // or a click outside the image closes it.
 export function ImageLightbox({ src, alt, className, imgClassName }) {
@@ -22,9 +37,11 @@ export function ImageLightbox({ src, alt, className, imgClassName }) {
         {/* Uploaded and demo URLs are arbitrary, so next/image is not usable here. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={src}
+          {...responsive(src)}
+          sizes="(max-width: 768px) 100vw, 600px"
           alt={alt}
           loading="lazy"
+          decoding="async"
           className={cn("transition-opacity duration-300 hover:opacity-90", imgClassName)}
         />
       </button>

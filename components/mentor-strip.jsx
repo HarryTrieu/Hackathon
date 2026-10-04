@@ -81,9 +81,11 @@ export function MentorStrip() {
   return (
     <section aria-label="Mentors for you" className="group/strip relative border-b py-3">
       <p className="px-4 pb-2 text-xs font-semibold text-muted-foreground">
-        {followed.length > 0 && <span className="text-foreground">Following</span>}
-        {followed.length > 0 && mentors.length > 0 && " · then "}
-        {mentors.length > 0 && (mentors[0].inYourUnit ? "Mentors in your units" : "Mentors for you")}
+        {followed.length > 0
+          ? "Following"
+          : mentors[0].inYourUnit
+            ? "Mentors in your units"
+            : "Mentors for you"}
       </p>
       {[
         ["left", -1, ChevronLeft, "left-1"],

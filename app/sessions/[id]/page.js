@@ -234,7 +234,7 @@ function SessionRoom() {
 
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
-      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background/95 px-4 py-2.5 backdrop-blur">
+      <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-2.5 md:backdrop-blur">
         <Link href="/messages?tab=sessions" aria-label="Back to sessions" className="rounded-full p-1.5 transition-colors hover:bg-muted">
           <ArrowLeft className="size-4" />
         </Link>
@@ -289,7 +289,7 @@ function SessionRoom() {
         <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-16 border-t bg-background/95 px-4 py-3 backdrop-blur md:bottom-0">
+      <div className="sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
         {current &&
           (current.can_send ? (
             <Composer

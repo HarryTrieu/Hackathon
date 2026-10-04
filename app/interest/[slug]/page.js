@@ -85,7 +85,7 @@ export default function InterestPage() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <BackButton fallback="/communities" className="-ml-2 mb-1" />
         <div className="flex items-center gap-3">
           <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-2xl" aria-hidden>

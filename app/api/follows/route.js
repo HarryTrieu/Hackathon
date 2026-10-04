@@ -1,11 +1,12 @@
 // Following people.
 //   GET  ?viewer=V                       ids V follows (Home strip)
+//   GET  ?counts=P                       { followers, following } for P (phone menu)
 //   POST { follower_id, followee_id, follow }   follow or unfollow
 // Counts for a profile page are read on the server (lib/follows.js).
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAsAuthor, denied } from "@/lib/actor";
-import { followingIds } from "@/lib/follows";
+import { followCounts, followingIds } from "@/lib/follows";
 import { realProfiles } from "@/lib/account";
 import { getProfile } from "@/lib/seed";
 import { ping } from "@/lib/realtime";
@@ -15,7 +16,14 @@ const PROFILE_ID = /^(p\d+|u-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-
 const missingTable = (error) => ["PGRST205", "42P01"].includes(error?.code);
 
 export async function GET(request) {
-  const viewer = new URL(request.url).searchParams.get("viewer");
+  const params = new URL(request.url).searchParams;
+  const countsFor = params.get("counts");
+  if (countsFor) {
+    if (!PROFILE_ID.test(countsFor) && countsFor !== "admin") return Response.json({ error: "Unknown profile." }, { status: 400 });
+    const { followers, following } = await followCounts(countsFor);
+    return Response.json({ followers, following }, { headers: NO_STORE });
+  }
+  const viewer = params.get("viewer");
   const who = await actAsAuthor(viewer);
   if (!who.ok) return denied(who);
   const ids = await followingIds(viewer);

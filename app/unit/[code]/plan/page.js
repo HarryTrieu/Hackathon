@@ -368,7 +368,7 @@ export default function StudyPlanPage() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <BackButton fallback={`/unit/${code}`} className="-ml-2 mb-1" />
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <Route className="size-5 text-primary" />

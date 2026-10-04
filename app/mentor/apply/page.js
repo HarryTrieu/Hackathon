@@ -197,7 +197,7 @@ function ApplyForm() {
 
   return (
     <div className="pb-24 md:pb-8">
-      <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
+      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <BackButton fallback="/mentor" className="-ml-2 mb-1" />
         <h1 className="text-lg font-bold">Become a mentor</h1>
         <p className="text-sm text-muted-foreground">
