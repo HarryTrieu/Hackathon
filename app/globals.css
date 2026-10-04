@@ -154,6 +154,18 @@
        Base UI's popup scroll lock uses the same setting. */
     scrollbar-gutter: stable;
   }
+  /* A very long word or link (no spaces) breaks onto the next line instead
+     of pushing a post, reply or chat bubble wider than the screen. Inherited,
+     so it covers every block of user text. */
+  body {
+    overflow-wrap: break-word;
+  }
+  /* Textareas grow with their content (field-sizing), and Safari sizes them
+     to the longest unbroken word, so a long one widened the composer past the
+     screen. "anywhere" lets that word break when sizing too. */
+  textarea {
+    overflow-wrap: anywhere;
+  }
 }
 
 /* iOS Safari zooms into any focused field under 16px and does not zoom back.

@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-10-04 · Long unbroken text wraps on phones
+- Did: a long word or link with no spaces pushed the composer (and could push posts, replies, chat bubbles) wider than the phone screen. `body` gets `overflow-wrap: break-word` (inherited by all user text) and `textarea` gets `overflow-wrap: anywhere`, because field-sizing textareas size to the longest unbroken word
+- Files: `app/globals.css`
+- Test: iPhone 16 emulation (393x852, Edge via CDP): a 300-char word in a post and in the Create post dialog wraps, page width stays 393. Not tested on a real iPhone / Safari
+
 ### 2026-09-27 13:45 · Lan's resources with YouTube thumbnails
 - Did: Lan (p8) gets 6 resources: 3 YouTube videos (4Ps explainer, Accounting Stuff financial statements, McKinsey case interview demo) and 3 sites (Deakin Abroad trimester abroad, DeakinTALENT, HubSpot Academy). New `ResourceLink` card on every profile's Path tab: YouTube watch links show the video thumbnail with a play badge, other links show the site icon (Google favicon service), plus an optional `note` line
 - Files: `components/resource-link.jsx`, `app/profile/[id]/page.js`, `lib/seed.js`
