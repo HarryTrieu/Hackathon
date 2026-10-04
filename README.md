@@ -15,6 +15,16 @@ Open http://localhost:3000. No environment variables are required: the app runs
 entirely from labelled seed data, and every route that touches a third party falls
 back to mock data.
 
+## Tests
+
+```bash
+npm test                  # unit tests: session, money, ranking and safety rules (seconds, no keys)
+npm run test:permissions  # private actions tried by the wrong person; needs the app running on :3107
+npm run test:ai           # real Gemini calls; needs GEMINI_API_KEY in .env.local, writes tests/ai-report.md
+```
+
+Point the permission tests at another copy with `SODU_URL=https://... npm run test:permissions`.
+
 ## Demo path
 
 1. Home shows the "For you" feed for the active persona, each post with a reason

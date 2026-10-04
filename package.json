@@ -8,7 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node --env-file=.env.local scripts/seed.mjs"
+    "seed": "node --env-file=.env.local scripts/seed.mjs",
+    "test": "node --import ./tests/alias.mjs --test \"tests/unit/*.test.mjs\"",
+    "test:permissions": "node --test tests/permissions.test.mjs",
+    "test:ai": "node --env-file=.env.local --import ./tests/alias.mjs tests/ai-eval.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
