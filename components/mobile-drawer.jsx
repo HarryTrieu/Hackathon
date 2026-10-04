@@ -43,6 +43,31 @@ export function MobileTopBar() {
   const close = () => setOpen(false);
   const isAdmin = persona.role === "admin";
 
+  // Scroll direction on <html data-scroll>: down hides the bar (and Home's
+  // tabs), any scroll up shows it again. See app/globals.css.
+  useEffect(() => {
+    let last = window.scrollY;
+    let frame = 0;
+    const onScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const y = window.scrollY;
+        const root = document.documentElement;
+        if (y < 60) root.dataset.scroll = "up";
+        else if (y > last + 6) root.dataset.scroll = "down";
+        else if (y < last - 6) root.dataset.scroll = "up";
+        last = y;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(frame);
+      document.documentElement.dataset.scroll = "up";
+    };
+  }, []);
+
   const items = [
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
     ...(isAdmin ? [] : [{ href: `/profile/${persona.id}?tab=saved`, label: "Saved", icon: Bookmark }]),
@@ -53,7 +78,10 @@ export function MobileTopBar() {
   ];
 
   return (
-    <div className="flex items-center gap-3 border-b px-4 py-2 md:hidden">
+    <div
+      id="mobile-top-bar"
+      className="sticky top-[0px] z-30 flex h-12 items-center gap-3 border-b bg-background px-4 md:hidden"
+    >
       <button
         type="button"
         onClick={() => setOpen(true)}

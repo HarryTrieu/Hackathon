@@ -37,42 +37,12 @@ export default function CommunitiesPage() {
       <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <h1 className="text-lg font-bold max-md:sr-only">Communities</h1>
         <p className="text-sm text-muted-foreground">
-          {UNIVERSITY} · interests for life outside class, and one community per unit: join the ones
-          you are taking, mentor the ones you have beaten.
+          {UNIVERSITY} · one community per unit: join the ones you are taking, mentor the ones you
+          have beaten. Interests for life outside class are at the bottom.
         </p>
       </div>
 
       <div className="space-y-6 px-4 py-4">
-        <section>
-          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-            <Sparkles className="size-4 text-primary" />
-            Interests: life outside your units
-          </h2>
-          <div className="grid gap-3 sm:grid-cols-3">
-            {INTERESTS.map((interest) => {
-              const count = postsForInterest(interest, posts).length;
-              return (
-                <Link key={interest.slug} href={`/interest/${interest.slug}`}>
-                  <Card className="group/card relative h-full py-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40">
-                    <HoverGlow />
-                    <CardContent className="relative flex items-center gap-2.5 px-3">
-                      <span className="text-2xl" aria-hidden>
-                        {interest.emoji}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-semibold">{interest.name}</span>
-                        <span className="block text-xs text-muted-foreground">
-                          {count} {count === 1 ? "post" : "posts"}
-                        </span>
-                      </span>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-
         {groups.map(([course, units]) => (
           <section key={course}>
             <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
@@ -116,6 +86,36 @@ export default function CommunitiesPage() {
             </div>
           </section>
         ))}
+
+        <section>
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <Sparkles className="size-4 text-primary" />
+            Interests: life outside your units
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {INTERESTS.map((interest) => {
+              const count = postsForInterest(interest, posts).length;
+              return (
+                <Link key={interest.slug} href={`/interest/${interest.slug}`}>
+                  <Card className="group/card relative h-full py-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40">
+                    <HoverGlow />
+                    <CardContent className="relative flex items-center gap-2.5 px-3">
+                      <span className="text-2xl" aria-hidden>
+                        {interest.emoji}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{interest.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {count} {count === 1 ? "post" : "posts"}
+                        </span>
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
       </div>
     </div>
   );
