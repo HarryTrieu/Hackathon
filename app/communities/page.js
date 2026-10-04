@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Users, MessageSquareText, GraduationCap } from "lucide-react";
+import { Users, MessageSquareText, GraduationCap, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { HoverGlow } from "@/components/hover-glow";
 import { UNIVERSITY, unitsByCourse } from "@/lib/communities";
 import { POSTS } from "@/lib/seed";
+import { INTERESTS, postsForInterest } from "@/lib/interests";
 
 export default function CommunitiesPage() {
   const [posts, setPosts] = useState(POSTS);
@@ -17,7 +18,11 @@ export default function CommunitiesPage() {
     fetch("/api/posts")
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.posts) setPosts(data.posts);
+        // Database posts plus sample interest posts it doesn't have yet.
+        if (!cancelled && data?.posts) {
+          const ids = new Set(data.posts.map((p) => p.id));
+          setPosts([...data.posts, ...POSTS.filter((p) => p.id.startsWith("in") && !ids.has(p.id))]);
+        }
       })
       .catch(() => {});
     return () => {
@@ -32,12 +37,42 @@ export default function CommunitiesPage() {
       <div className="sticky top-0 z-10 border-b bg-background/95 px-4 py-3 backdrop-blur">
         <h1 className="text-lg font-bold">Communities</h1>
         <p className="text-sm text-muted-foreground">
-          {UNIVERSITY} · one community per unit. Join the ones you are taking,
-          mentor the ones you have beaten.
+          {UNIVERSITY} · interests for life outside class, and one community per unit: join the ones
+          you are taking, mentor the ones you have beaten.
         </p>
       </div>
 
       <div className="space-y-6 px-4 py-4">
+        <section>
+          <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+            <Sparkles className="size-4 text-primary" />
+            Interests: life outside your units
+          </h2>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {INTERESTS.map((interest) => {
+              const count = postsForInterest(interest, posts).length;
+              return (
+                <Link key={interest.slug} href={`/interest/${interest.slug}`}>
+                  <Card className="group/card relative h-full py-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md hover:ring-primary/40">
+                    <HoverGlow />
+                    <CardContent className="relative flex items-center gap-2.5 px-3">
+                      <span className="text-2xl" aria-hidden>
+                        {interest.emoji}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm font-semibold">{interest.name}</span>
+                        <span className="block text-xs text-muted-foreground">
+                          {count} {count === 1 ? "post" : "posts"}
+                        </span>
+                      </span>
+                    </CardContent>
+                  </Card>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
         {groups.map(([course, units]) => (
           <section key={course}>
             <h2 className="mb-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">

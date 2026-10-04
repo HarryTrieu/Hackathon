@@ -14,6 +14,7 @@ import { useNotifications } from "@/lib/use-notifications";
 import { useInbox } from "@/lib/use-inbox";
 import { canModerate } from "@/lib/roles";
 import { cn } from "@/lib/utils";
+import { useReviewCount } from "@/lib/use-review-count";
 
 // Unread count on the bell, capped so the badge stays small.
 function UnreadBadge({ count, className }) {
@@ -35,6 +36,8 @@ export function LeftNav() {
   const { persona } = usePersona();
   const isAdmin = persona.role === "admin";
   const { unreadCount } = useNotifications(persona.id, pathname);
+  // Items waiting in /review (moderators only).
+  const review = useReviewCount(canModerate(persona) ? persona.id : null);
   const inbox = useInbox(isAdmin ? null : persona.id);
 
   const items = [
@@ -47,7 +50,7 @@ export function LeftNav() {
     { href: "/communities", label: "Communities", icon: Users },
     // The demo Moderator works from the review queue instead of notifications;
     // a real moderator account gets both.
-    ...(canModerate(persona) ? [{ href: "/review", label: "Review", icon: ShieldAlert }] : []),
+    ...(canModerate(persona) ? [{ href: "/review", label: "Review", icon: ShieldAlert, badge: review?.total ?? 0 }] : []),
     ...(isAdmin ? [] : [{ href: "/notifications", label: "Notifications", icon: Bell, badge: unreadCount }]),
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
   ];
@@ -103,13 +106,15 @@ export function MobileNav() {
   const pathname = usePathname();
   const { persona } = usePersona();
   const { unreadCount } = useNotifications(persona.id, pathname);
+  // Items waiting in /review (moderators only).
+  const review = useReviewCount(canModerate(persona) ? persona.id : null);
 
   const items = [
     { href: "/", label: "Home", icon: Home },
     { href: "/mentors", label: "Mentoring", icon: HeartHandshake },
     { href: "/communities", label: "Units", icon: Users },
     ...(canModerate(persona)
-      ? [{ href: "/review", label: "Review", icon: ShieldAlert }]
+      ? [{ href: "/review", label: "Review", icon: ShieldAlert, badge: review?.total ?? 0 }]
       : [{ href: "/notifications", label: "Alerts", icon: Bell, badge: unreadCount }]),
   ];
 

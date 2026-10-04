@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAs, actAsModerator, denied } from "@/lib/actor";
+import { pingModerators } from "@/lib/realtime";
 
 const CreateReport = z.object({
   target_type: z.enum(["mentor", "chat", "post"]),
@@ -125,7 +126,10 @@ export async function POST(request) {
   const db = supabaseAdmin();
   if (db) {
     const { data, error } = await db.from("reports").insert(report).select("*").single();
-    if (!error && data) return Response.json({ report: data, persisted: true });
+    if (!error && data) {
+      await pingModerators(db, "review");
+      return Response.json({ report: data, persisted: true });
+    }
   }
   const local = { id: `rep-${parsed.data.reporter_id}-${parsed.data.target_id}`, ...report };
   const store = memoryStore();

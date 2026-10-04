@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { UserAvatar } from "@/components/user-avatar";
 import { GRADE_LABELS, mergeLocalApplications, saveLocalApplication } from "@/lib/mentors";
 import { usePersona } from "@/lib/persona-context";
+import { refreshReviewCount } from "@/lib/use-review-count";
 
 // Pending mentor applications. A person checks grade + transcript and
 // approves; only then does the AI mentor appear in search.
@@ -48,6 +49,7 @@ export function MentorApplications() {
         saveLocalApplication({ ...raw, status: data.status });
       }
       setApps((prev) => prev.filter((a) => a.id !== app.id));
+      refreshReviewCount(persona.id);
       setNote(
         `${app.profile.name} ${action === "approve" ? "approved: their AI mentor is now live" : "rejected"} for ${app.unit_code}.`
       );

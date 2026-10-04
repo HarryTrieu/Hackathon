@@ -19,7 +19,8 @@ const URL_PATTERN = /https?:\/\/[^\s]+/;
 
 // inDialog: rendered inside the left-nav "Create post" popup instead of
 // inline at the top of the feed.
-export function Composer({ onPublished, inDialog = false }) {
+// interest: posting from an interest community page (adds its tag).
+export function Composer({ onPublished, inDialog = false, interest, placeholder }) {
   const { persona } = usePersona();
   const [text, setText] = useState("");
   const [image, setImage] = useState(null); // { url, mocked }
@@ -86,6 +87,7 @@ export function Composer({ onPublished, inDialog = false }) {
         body: JSON.stringify({
           author_id: persona.id,
           text: text.trim(),
+          interest,
           image_url: image?.url,
           link_preview: shownPreview
             ? {
@@ -137,7 +139,7 @@ export function Composer({ onPublished, inDialog = false }) {
               setText(e.target.value);
               setStatus(null);
             }}
-            placeholder="Share what you learned..."
+            placeholder={placeholder ?? "Share what you learned..."}
             className={cn(
               inDialog ? "min-h-32" : "min-h-16",
               "resize-none border-none bg-transparent p-0 text-base shadow-none focus-visible:ring-0 dark:bg-transparent"

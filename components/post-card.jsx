@@ -32,6 +32,7 @@ import { useSavedPosts } from "@/lib/use-saved-posts";
 import { ReportButton } from "@/components/report-button";
 import { cn } from "@/lib/utils";
 import styles from "./post-card.module.css";
+import { PostTranslation } from "@/components/post-translation";
 
 function relativeTime(hoursAgo) {
   if (hoursAgo < 1) return "now";
@@ -86,6 +87,7 @@ export function PostCard({ post, author, reason, onDeleted }) {
   // Flagged posts start collapsed behind the AI's reason ("Show anyway").
   const [revealed, setRevealed] = useState(false);
   const hiddenByFlag = isHiddenByFlag(post) && !revealed;
+  const [translating, setTranslating] = useState(false);
   const { set: likedSet, ready: likesReady } = useLikedPosts(persona.id);
   const [expanded, setExpanded] = useState(false);
   const [vote, setVote] = useState(null);
@@ -278,6 +280,7 @@ It is hidden, not deleted. ${restore}`)) return;
                   {expanded ? "Show less" : "Show more"}
                 </button>
               )}
+              {translating && <PostTranslation post={post} onClose={() => setTranslating(false)} />}
 
               {post.image_url && (
                 <ImageLightbox
@@ -443,6 +446,19 @@ It is hidden, not deleted. ${restore}`)) return;
                 <MessageCircleQuestion data-icon="inline-start" />
                 Ask <span className="max-sm:hidden">{author.name.split(" ")[0]}&apos;s</span> AI
               </Link>
+            )}
+            {!hiddenByFlag && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setTranslating((v) => !v)}
+                aria-pressed={translating}
+                title="Translate this post"
+                className={cn("text-muted-foreground transition-colors hover:text-primary", translating && "text-primary")}
+              >
+                <Languages data-icon="inline-start" />
+                <span className="max-sm:sr-only">Translate</span>
+              </Button>
             )}
             {isAuthor && (
               <Button

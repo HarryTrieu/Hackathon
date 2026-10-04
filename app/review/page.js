@@ -23,6 +23,7 @@ import { authorOf } from "@/lib/authors";
 import { getProfile, POSTS } from "@/lib/seed";
 import { flagText, isSupportFlag } from "@/lib/moderation";
 import { toast } from "@/lib/toast";
+import { refreshReviewCount, useReviewCount } from "@/lib/use-review-count";
 
 // A reported post in full, with the two decisions.
 function ReportedPost({ post, onKeep, onRemove }) {
@@ -85,7 +86,14 @@ function ReviewQueue({ moderatorId }) {
   const [source, setSource] = useState("seed");
   const [note, setNote] = useState(null);
   // Follows the demo order: approve a mentor, resolve a report, remove a post.
-  const [tab, setTab] = useState("mentors");
+  // Opens on whichever queue has something waiting (flagged posts first),
+  // until the moderator picks a tab.
+  const counts = useReviewCount(moderatorId);
+  const [picked, setPicked] = useState(null);
+  const tab =
+    picked ??
+    (counts?.flagged ? "flagged" : counts?.reports ? "reports" : "mentors");
+  const setTab = setPicked;
 
   useEffect(() => {
     let cancelled = false;
@@ -128,6 +136,7 @@ function ReviewQueue({ moderatorId }) {
     });
     setReports((prev) => prev.filter((x) => x.id !== id));
     toast(message);
+    refreshReviewCount(moderatorId);
   }
 
   async function act(postId, action) {
@@ -143,6 +152,7 @@ function ReviewQueue({ moderatorId }) {
         return;
       }
       setFlagged((prev) => prev.filter((p) => p.id !== postId));
+      refreshReviewCount(moderatorId);
       setNote(
         data.mocked
           ? `Post ${action === "approve" ? "approved" : "removed"} for this session only (no database configured).`
@@ -185,6 +195,7 @@ function ReviewQueue({ moderatorId }) {
         <TabsList variant="line" className="w-full justify-start overflow-x-auto overflow-y-hidden border-b px-2 [scrollbar-width:none]">
           <TabsTrigger value="mentors" className="flex-none px-3 py-2">
             Mentor applications
+            {counts?.applications > 0 && <Badge className="ml-1.5">{counts.applications}</Badge>}
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex-none px-3 py-2">
             Reports
@@ -259,6 +270,7 @@ function ReviewQueue({ moderatorId }) {
                           body: JSON.stringify({ id: r.id, action: "resolve", moderator_id: moderatorId }),
                         });
                         setReports((prev) => prev.filter((x) => x.id !== r.id));
+                        refreshReviewCount(moderatorId);
                         setNote("Report marked resolved.");
                       }}
                     >

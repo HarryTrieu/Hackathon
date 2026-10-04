@@ -4,12 +4,16 @@ import { enrichPost } from "@/lib/enrich";
 import { supabaseAdmin } from "@/lib/supabase";
 import { actAsAuthor, denied } from "@/lib/actor";
 import { withRealAuthors } from "@/lib/account";
+import { pingModerators } from "@/lib/realtime";
+import { INTEREST_SLUGS, getInterest } from "@/lib/interests";
 
 // Who may post as author_id is checked by actAsAuthor() after parsing.
 const CreatePost = z.object({
   author_id: z.string().min(1).max(80),
   text: z.string().trim().min(1, "Post text is required.").max(2000),
   image_url: z.string().max(500).optional(),
+  // Posted from an interest community page: that interest's main tag is added.
+  interest: z.enum(INTEREST_SLUGS).optional(),
   link_preview: z
     .object({
       url: z.string().url(),
@@ -66,7 +70,7 @@ export async function POST(request) {
     );
   }
 
-  const { author_id, text, image_url, link_preview } = parsed.data;
+  const { author_id, text, image_url, link_preview, interest } = parsed.data;
   const who = await actAsAuthor(author_id);
   if (!who.ok) return denied(who);
   const ai = await enrichPost(text);
@@ -78,7 +82,7 @@ export async function POST(request) {
     text,
     tldr: ai.tldr,
     summary_en: ai.summary_en,
-    tags: ai.tags,
+    tags: interest ? [...new Set([getInterest(interest).tags[0], ...ai.tags])] : ai.tags,
     unit_codes: ai.unit_codes,
     topic: ai.topic,
     helpful_count: 0,
@@ -96,6 +100,8 @@ export async function POST(request) {
   if (db) {
     const { error } = await db.from("posts").insert(post);
     persisted = !error;
+    // Flagged posts land in /review: tell the moderators right away.
+    if (persisted && post.flag_reason) await pingModerators(db, "review");
   }
 
   // Even unpersisted posts return 200: the feed shows them for this session

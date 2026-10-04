@@ -15,7 +15,7 @@ export function RealtimeListener() {
 
   useEffect(() => {
     const supabase = browserSupabase();
-    if (!supabase || !id || id === "admin") return;
+    if (!supabase || !id) return;
     let channel = null;
     let cancelled = false;
     fetch(`/api/realtime?profile_id=${encodeURIComponent(id)}`, { cache: "no-store" })
