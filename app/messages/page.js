@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { CalendarCheck, MessageCircle, Search, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -84,7 +84,12 @@ function MessagesInbox() {
   const { persona } = usePersona();
   const inbox = useInbox(persona.id);
   const sessions = useSessions(persona.role === "admin" ? null : persona.id);
-  const [tab, setTab] = useState(useSearchParams().get("tab") === "sessions" ? "sessions" : "all");
+  // The tab is kept in the URL (?tab=unread or sessions), so coming Back
+  // from a chat or a session lands on the same tab.
+  const router = useRouter();
+  const param = useSearchParams().get("tab");
+  const tab = param === "sessions" || param === "unread" ? param : "all";
+  const setTab = (next) => router.replace(next === "all" ? "/messages" : `/messages?tab=${next}`, { scroll: false });
   const [query, setQuery] = useState("");
 
   const needle = query.trim().toLowerCase();

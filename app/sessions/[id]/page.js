@@ -3,9 +3,10 @@
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, CalendarCheck, Lock, MessageCircle, ShieldAlert } from "lucide-react";
+import { CalendarCheck, Lock, MessageCircle, ShieldAlert } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BackArrow } from "@/components/back-button";
 import { ReportButton } from "@/components/report-button";
 import { UserAvatar } from "@/components/user-avatar";
 import { ChatItems, Composer } from "@/components/chat-thread";
@@ -239,9 +240,7 @@ function SessionRoom() {
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-2.5 md:backdrop-blur">
-        <Link href="/messages?tab=sessions" aria-label="Back to sessions" className="rounded-full p-1.5 transition-colors hover:bg-muted">
-          <ArrowLeft className="size-4" />
-        </Link>
+        <BackArrow fallback="/messages?tab=sessions" />
         {current ? (
           <Link href={`/profile/${other.id}`} className="flex min-w-0 flex-1 items-center gap-2">
             <UserAvatar profile={other} className="size-8" textClassName="text-xs" />

@@ -1,9 +1,10 @@
 "use client";
 
+import { BackArrow } from "@/components/back-button";
 import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, ArrowRight, Ban, CalendarCheck, CalendarPlus, ShieldAlert } from "lucide-react";
+import { ArrowRight, Ban, CalendarCheck, CalendarPlus, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ReportButton } from "@/components/report-button";
@@ -233,9 +234,7 @@ function Conversation() {
   return (
     <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-2.5 md:backdrop-blur">
-        <Link href="/messages" aria-label="Back to messages" className="rounded-full p-1.5 transition-colors hover:bg-muted">
-          <ArrowLeft className="size-4" />
-        </Link>
+        <BackArrow fallback="/messages" />
         {other ? (
           <Link href={`/profile/${other.id}`} className="flex min-w-0 flex-1 items-center gap-2">
             <UserAvatar profile={other} className="size-8" textClassName="text-xs" />

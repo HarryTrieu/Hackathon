@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   BadgeCheck,
   Bell,
@@ -254,10 +254,14 @@ function describe(n, meId) {
   }
 }
 
-export default function NotificationsPage() {
+function Notifications() {
   const { persona } = usePersona();
   const router = useRouter();
-  const [tab, setTab] = useState("all");
+  // The tab is kept in the URL (?tab=requests), so coming Back from a
+  // session lands on the same tab.
+  const tab = useSearchParams().get("tab") === "requests" ? "requests" : "all";
+  const setTab = (next) =>
+    router.replace(next === "requests" ? "/notifications?tab=requests" : "/notifications", { scroll: false });
   const [note, setNote] = useState(null);
   const notif = useNotifications(persona.id);
   const { ready, notifications, requests } = notif;
@@ -572,5 +576,14 @@ export default function NotificationsPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+// useSearchParams (?tab=requests) needs a Suspense boundary.
+export default function NotificationsPage() {
+  return (
+    <Suspense fallback={null}>
+      <Notifications />
+    </Suspense>
   );
 }
