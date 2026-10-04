@@ -335,7 +335,7 @@ export default function NotificationsPage() {
     <div className="pb-16 md:pb-0">
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 md:backdrop-blur">
-          <h1 className="px-4 pt-3 text-lg font-bold">Notifications</h1>
+          <h1 className="px-4 pt-3 text-lg font-bold max-md:sr-only">Notifications</h1>
           <TabsList variant="line" className="w-full justify-start px-2">
             <TabsTrigger value="all" className="flex-none px-3 py-2">
               All

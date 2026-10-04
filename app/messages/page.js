@@ -128,7 +128,7 @@ function MessagesInbox() {
   return (
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
-        <h1 className="text-lg font-bold">Messages</h1>
+        <h1 className="text-lg font-bold max-md:sr-only">Messages</h1>
         <p className="text-sm text-muted-foreground">
           Chat with anyone. Each mentoring session gets its own chat under Sessions. No AI reads your messages.
         </p>

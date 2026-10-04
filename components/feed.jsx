@@ -209,7 +209,9 @@ export function Feed() {
     <div className="pb-16 md:pb-0">
       <Tabs value={tab} onValueChange={changeTab} className="gap-0">
         <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 md:backdrop-blur">
-          <div className="flex items-center justify-between px-4 pt-3">
+          {/* Phones: the bottom bar already says Home, so the title row is
+              hidden (still read by screen readers) and the tabs come first. */}
+          <div className="flex items-center justify-between px-4 pt-3 max-md:sr-only">
             <h1 className="text-lg font-bold">Home</h1>
             <Badge variant="outline" className="text-muted-foreground">
               {source === "supabase" ? "Live data" : "Demo data"}

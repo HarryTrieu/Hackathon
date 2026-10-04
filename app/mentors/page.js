@@ -37,7 +37,7 @@ export default function MentorsPage() {
     <div className="pb-16 md:pb-0">
       <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
         <MentoringTabs />
-        <h1 className="text-lg font-bold">Find a mentor</h1>
+        <h1 className="text-lg font-bold max-md:sr-only">Find a mentor</h1>
         <p className="text-sm text-muted-foreground">
           Peer mentors who scored Distinction or above. Chat with their AI first, then book the real person.
         </p>
