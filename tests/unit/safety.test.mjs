@@ -26,6 +26,13 @@ test("fallback flags scams, threats and harassment", async () => {
   assert.match(await flagOf("you're stupid, go back to your country"), /^Hate or harassment/);
 });
 
+test("fallback flags inviting people to commit a crime, with no hobby tag", async () => {
+  const r = await enrichPost("I want to rob someone, anyone wants to join? Bring your gym and sport mates");
+  assert.match(r.flag_reason, /^Violence or illegal activity/);
+  assert.ok(!r.tags.some((t) => ["sport", "gym", "fitness"].includes(t)), r.tags.join(","));
+  assert.equal(await flagOf("Anyone keen to attack the SIT102 exam revision together?"), null);
+});
+
 test("fallback flags a personal phone or email, but not a Deakin email", async () => {
   assert.match(await flagOf("Text me on 0412 345 678 for notes"), /^Personal contact details/);
   assert.match(await flagOf("email me at minh.study@gmail.com"), /^Personal contact details/);
