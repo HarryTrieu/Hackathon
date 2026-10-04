@@ -1,7 +1,9 @@
-import { Fragment } from "react";
+"use client";
+
+import { Fragment, useSyncExternalStore } from "react";
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, UserPlus } from "lucide-react";
-import { buttonVariants } from "@/components/ui/button";
+import { ArrowRight, ChevronDown, ChevronUp, ShieldCheck, UserPlus } from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MAX_CHATS_PER_DAY } from "@/lib/mentors";
 import styles from "./home-hero.module.css";
@@ -15,12 +17,75 @@ const STEPS = [
 // Animation delay per position: step, arrow, step, arrow, step.
 const DELAY = [styles.d0, styles.d1, styles.d2, styles.d3, styles.d4];
 
+// Folded or not, remembered in this browser (it's only a preference, so a
+// blocked or cleared storage just shows the banner open).
+const KEY = "sodu.heroFolded";
+const listeners = new Set();
+function readFolded() {
+  try {
+    return localStorage.getItem(KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function setFolded(value) {
+  try {
+    if (value) localStorage.setItem(KEY, "1");
+    else localStorage.removeItem(KEY);
+  } catch {
+    // Storage blocked: the change still applies until the page reloads.
+  }
+  memory = value;
+  for (const cb of listeners) cb();
+}
+let memory = null;
+function subscribe(cb) {
+  listeners.add(cb);
+  return () => listeners.delete(cb);
+}
+const useFolded = () => useSyncExternalStore(subscribe, () => memory ?? readFolded(), () => false);
+
 export function HomeHero() {
+  const folded = useFolded();
+
+  if (folded) {
+    return (
+      <section className="flex items-center gap-2 border-b px-4 py-2 text-sm">
+        <Link href="/mentors" className="min-w-0 flex-1 truncate font-medium hover:text-primary">
+          Find a Deakin peer who already passed your unit
+        </Link>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="shrink-0 rounded-full text-muted-foreground"
+          onClick={() => setFolded(false)}
+          aria-expanded="false"
+        >
+          Show
+          <ChevronDown data-icon="inline-end" />
+        </Button>
+      </section>
+    );
+  }
+
   return (
     <section className="space-y-3 border-b bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent px-4 py-4 sm:space-y-4 sm:py-5">
-      <p className="text-base font-bold leading-snug sm:text-lg">
-        Find a Deakin peer who already passed your unit, try their AI first, then book the real person.
-      </p>
+      <div className="flex items-start gap-2">
+        <p className="flex-1 text-base font-bold leading-snug sm:text-lg">
+          Find a Deakin peer who already passed your unit, try their AI first, then book the real person.
+        </p>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          className="-mr-2 -mt-1 shrink-0 rounded-full text-muted-foreground"
+          onClick={() => setFolded(true)}
+          aria-label="Fold this banner"
+          aria-expanded="true"
+          title="Fold"
+        >
+          <ChevronUp />
+        </Button>
+      </div>
       <div className="flex flex-wrap gap-2">
         <Link href="/mentors" className={cn(buttonVariants(), "rounded-full", styles.cta)}>
           Find a mentor
