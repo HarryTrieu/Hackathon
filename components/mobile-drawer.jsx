@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
-import { Bookmark, GraduationCap, HeartHandshake, Search, ShieldAlert, User, Users } from "lucide-react";
+import { Bookmark, GraduationCap, HeartHandshake, Pencil, Search, ShieldAlert, User, Users } from "lucide-react";
 import { Dialog, DialogOverlay, DialogPortal, DialogTitle } from "@/components/ui/dialog";
 import { AccountSwitcher } from "@/components/account-switcher";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -70,6 +70,7 @@ export function MobileTopBar() {
 
   const items = [
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
+    ...(persona.id.startsWith("u-") ? [{ href: "/welcome", label: "Edit profile", icon: Pencil }] : []),
     ...(isAdmin ? [] : [{ href: `/profile/${persona.id}?tab=saved`, label: "Saved", icon: Bookmark }]),
     { href: "/mentors", label: "Mentoring", icon: HeartHandshake },
     { href: "/communities", label: "Communities", icon: Users },

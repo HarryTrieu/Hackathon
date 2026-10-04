@@ -41,15 +41,21 @@ export function initials(name) {
     .slice(0, 2);
 }
 
+// Google profile photos (lh3.googleusercontent.com) sometimes refuse a
+// request, e.g. when many load at once. Load them without a referrer and
+// retry once before falling back to initials.
 export function UserAvatar({ profile, className, textClassName }) {
-  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0); // 0 first try, 1 retry, 2 gave up
+  const src = avatarUrl(profile);
   return (
     <Avatar className={cn("size-10", className)}>
-      {!failed && (
+      {attempt < 2 && (
         <AvatarImage
-          src={avatarUrl(profile)}
+          key={attempt}
+          src={attempt === 1 ? `${src}${src.includes("?") ? "&" : "?"}retry=1` : src}
           alt={`${profile.name} profile picture`}
-          onError={() => setFailed(true)}
+          referrerPolicy="no-referrer"
+          onError={() => (attempt === 0 ? setTimeout(() => setAttempt(1), 1500) : setAttempt(2))}
         />
       )}
       <AvatarFallback className={cn("font-semibold", tintFor(profile.handle), textClassName)}>
