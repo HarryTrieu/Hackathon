@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { AuthButton } from "@/components/auth-button";
+import { BackButton } from "@/components/back-button";
 import { UNIVERSITY, unitDirectory } from "@/lib/communities";
 import { COURSES, GOALS, MAX_GOALS, MAX_UNITS, YEARS, goalLabel } from "@/lib/onboarding";
 import { setAccountProfile, useAccount } from "@/lib/use-account";
@@ -228,6 +229,7 @@ function Welcome() {
   return (
     <div className="pb-24 md:pb-8">
       <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
+        {account.status === "ready" && <BackButton className="-ml-2 mb-1" />}
         <h1 className="flex items-center gap-2 text-lg font-bold">
           <GraduationCap className="size-5 text-primary" />
           {account.status === "ready" ? "Your details" : "Welcome to Sodu"}
