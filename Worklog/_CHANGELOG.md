@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-10-04 · Custom 404 page
+- Did: `app/not-found.js` replaces Next's bare "404 | This page could not be found" (which forced its own black/white colours). Inside the app shell (nav and phone bottom bar stay), "Page not found" with Back to Home and Find a mentor. Covers unknown URLs and every `notFound()` call (e.g. `/profile/p999`)
+- Files: `app/not-found.js`
+- Test: eslint 0; `/abc-xyz` returns 404 with title "Page not found · Sodu"; screenshots desktop light, iPhone 16 emulation light and dark
+
 ### 2026-10-04 · Long unbroken text wraps on phones
 - Did: a long word or link with no spaces pushed the composer (and could push posts, replies, chat bubbles) wider than the phone screen. `body` gets `overflow-wrap: break-word` (inherited by all user text) and `textarea` gets `overflow-wrap: anywhere`, because field-sizing textareas size to the longest unbroken word
 - Files: `app/globals.css`
