@@ -2,6 +2,11 @@
 
 Newest entries at the top. No secrets.
 
+### 2026-10-05 · MentorME Futura Remix ad pinned to the top of the feed
+- Did: first real sponsored post, from MentorME's Facebook post about the Futura Remix national hackathon. Text and details come from their poster (timeline, team roles, 3-day format, from $5); poster saved as `public/sponsored/mentorme-futura.webp` (1200px). New ad fields: `real` (no "Demo advertiser" badge), `url` (CTA opens the post in a new tab and still counts the click), `pinned` (shown to everyone, first in `sponsoredFor` and placed above the first post by `withSponsored`), `poster` (square, uncropped image)
+- Files: `lib/sponsored.js`, `components/sponsored-card.jsx`, `public/sponsored/mentorme-futura.webp`
+- Test: eslint 0; `npm test` 43/43; iPhone 16 emulation: the ad is the first article on Home, link and rel correct, no demo badge. The national final was 2 Oct, so the copy describes the event and says "See the post" rather than asking people to register
+
 ### 2026-10-04 · Custom 404 page
 - Did: `app/not-found.js` replaces Next's bare "404 | This page could not be found" (which forced its own black/white colours). Inside the app shell (nav and phone bottom bar stay), "Page not found" with Back to Home and Find a mentor. Covers unknown URLs and every `notFound()` call (e.g. `/profile/p999`)
 - Files: `app/not-found.js`

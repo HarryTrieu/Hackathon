@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, EyeOff, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ImageLightbox } from "@/components/image-lightbox";
 import { initials } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
@@ -82,9 +82,11 @@ export function SponsoredCard({ entry, viewerId, onHide }) {
           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
             <span className="text-sm font-bold">{ad.advertiser}</span>
             <Badge variant="secondary">Sponsored</Badge>
-            <Badge variant="outline" className="text-muted-foreground">
-              Demo advertiser
-            </Badge>
+            {!ad.real && (
+              <Badge variant="outline" className="text-muted-foreground">
+                Demo advertiser
+              </Badge>
+            )}
           </div>
 
           <h3 className="mt-1.5 font-semibold leading-snug">{ad.headline}</h3>
@@ -95,7 +97,9 @@ export function SponsoredCard({ entry, viewerId, onHide }) {
               src={ad.image}
               alt={ad.imageAlt ?? `${ad.advertiser} sponsored image`}
               className="mt-2.5 rounded-2xl border"
-              imgClassName="aspect-video w-full object-cover"
+              imgClassName={
+                ad.poster ? "aspect-square w-full bg-white object-contain" : "aspect-video w-full object-cover"
+              }
             />
           )}
 
@@ -111,10 +115,23 @@ export function SponsoredCard({ entry, viewerId, onHide }) {
           </ul>
 
           <div className="mt-3 flex flex-wrap items-center gap-1">
-            <Button size="sm" onClick={openAd}>
-              {ad.cta}
-              <ArrowUpRight data-icon="inline-end" />
-            </Button>
+            {ad.url ? (
+              <a
+                href={ad.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => track(ad, "click", match)}
+                className={buttonVariants({ size: "sm" })}
+              >
+                {ad.cta}
+                <ArrowUpRight data-icon="inline-end" />
+              </a>
+            ) : (
+              <Button size="sm" onClick={openAd}>
+                {ad.cta}
+                <ArrowUpRight data-icon="inline-end" />
+              </Button>
+            )}
             <Button
               size="sm"
               variant="ghost"
