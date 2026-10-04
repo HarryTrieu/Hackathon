@@ -67,8 +67,8 @@ function SessionRequest({ mentor, persona }) {
       toast(`Session request sent to ${first}`);
       setNote(
         data.persisted
-          ? `Sent. Once ${first} accepts, they'll message you in Messages to agree a time and place. Listed rate: $${mentor.rate_per_hour}/h.`
-          : `Sent for this session only (database table not set up). Listed rate: $${mentor.rate_per_hour}/h.`
+          ? `Sent. Once ${first} accepts, they'll message you in Messages to agree a time and place. Listed price: $${mentor.rate_per_hour} a session.`
+          : `Sent for this session only (database table not set up). Listed price: $${mentor.rate_per_hour} a session.`
       );
     } catch {
       setState("idle");
@@ -91,7 +91,7 @@ function SessionRequest({ mentor, persona }) {
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm">
             <span className="font-semibold">Good fit?</span>{" "}
-            <span className="text-muted-foreground">Book the real {first} at ${mentor.rate_per_hour}/h.</span>
+            <span className="text-muted-foreground">Book the real {first} for ${mentor.rate_per_hour} a session.</span>
           </p>
           <div className="flex shrink-0 flex-wrap justify-end gap-2">
             <MessageButton profile={mentor.profile} />
@@ -220,7 +220,7 @@ function MentorDetail() {
         </div>
 
         <p className="mt-4 text-sm text-muted-foreground">
-          <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span>/hour
+          <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
           {mentor.availability && <> · Usually free: {mentor.availability}</>}
         </p>
 

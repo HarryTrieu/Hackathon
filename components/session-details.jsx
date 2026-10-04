@@ -168,7 +168,7 @@ export function EndSession({ request, menteeId, mentorName, onSaved }) {
       />
       {pay && !lateRating && (
         <p className="text-xs text-muted-foreground">
-          Ending the session pays {first} {aud(pay.price)} for one hour. Demo payment: no card is charged.
+          Ending the session pays {first} {aud(pay.price)}, their listed price for a session. Demo payment: no card is charged.
         </p>
       )}
       {error && <p className="text-xs text-destructive">{error}</p>}
@@ -253,12 +253,12 @@ export function PaymentReceipt({ request, side, otherName }) {
   const rows =
     side === "mentor"
       ? [
-          ["Session (1 hour)", aud(pay.price)],
+          ["Session price", aud(pay.price)],
           [`Sodu fee (${Math.round(SODU_CUT * 100)}%)`, `-${aud(pay.fee)}`],
           ["You receive", aud(pay.payout)],
         ]
       : [
-          [`Session with ${first} (1 hour)`, aud(pay.price)],
+          [`Session with ${first}`, aud(pay.price)],
           ["Total paid", aud(pay.price)],
         ];
   return (

@@ -116,7 +116,7 @@ export function SessionPrompt({ me, other, listings, onHide }) {
             <span className="text-muted-foreground">
               {" "}
               for {units.join(", ")}
-              {listing.rate_per_hour ? ` · A$${listing.rate_per_hour}/hour` : ""}. Hitting it off? Book a session with{" "}
+              {listing.rate_per_hour ? ` · A$${listing.rate_per_hour} a session` : ""}. Hitting it off? Book a session with{" "}
               {first} right here.
             </span>
           </p>

@@ -485,7 +485,7 @@ export default function NotificationsPage() {
                           <span className="font-semibold">{mentee.name}</span>
                           <span className="text-muted-foreground">
                             <span className="font-mono">{r.unit_code}</span>
-                            {r.rate_per_hour ? ` · $${r.rate_per_hour}/h` : ""} · {timeAgo(r.created_at)}
+                            {r.rate_per_hour ? ` · $${r.rate_per_hour} a session` : ""} · {timeAgo(r.created_at)}
                           </span>
                           <StatusBadge status={r.status} />
                         </div>
@@ -549,7 +549,7 @@ export default function NotificationsPage() {
                         <span className="font-semibold">{mentor.name}</span>
                         <span className="text-muted-foreground">
                           <span className="font-mono">{r.unit_code}</span>
-                          {r.rate_per_hour ? ` · $${r.rate_per_hour}/h` : ""} · {timeAgo(r.created_at)}
+                          {r.rate_per_hour ? ` · $${r.rate_per_hour} a session` : ""} · {timeAgo(r.created_at)}
                         </span>
                         <StatusBadge status={r.status} />
                       </div>

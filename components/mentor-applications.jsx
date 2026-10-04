@@ -84,7 +84,7 @@ export function MentorApplications() {
                     Deakin email
                   </Badge>
                 )}
-                <span className="text-sm text-muted-foreground">${app.rate_per_hour}/h</span>
+                <span className="text-sm text-muted-foreground">${app.rate_per_hour} a session</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 {app.style.tone} · {app.style.teaching} · {app.style.languages.join(", ")}

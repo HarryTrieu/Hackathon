@@ -337,7 +337,7 @@ function ApplyForm() {
 
       <Section step={4} title="Rate and profile highlights">
         <label className="flex items-center gap-3 text-sm">
-          <span className="font-medium">Hourly rate (AUD)</span>
+          <span className="font-medium">Price per session (AUD)</span>
           <input
             type="number"
             min={10}

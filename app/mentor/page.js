@@ -304,7 +304,7 @@ function UnitCard({ listing: l, member }) {
             <p className="truncate text-sm text-muted-foreground">{l.unit_name}</p>
           </div>
           {l.rate_per_hour ? (
-            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">A${l.rate_per_hour}/h</span>
+            <span className="shrink-0 rounded-full bg-muted px-2 py-0.5 text-xs font-medium">A${l.rate_per_hour} a session</span>
           ) : null}
         </div>
         <Steps listing={l} member={member} />
