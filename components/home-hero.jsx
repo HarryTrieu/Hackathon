@@ -69,7 +69,7 @@ export function HomeHero() {
   }
 
   return (
-    <section className="space-y-3 border-b bg-gradient-to-br from-primary/[0.07] via-transparent to-transparent px-4 py-4 sm:space-y-4 sm:py-5">
+    <section className="space-y-3 border-b px-4 py-4 sm:space-y-4 sm:py-5">
       <div className="flex items-start gap-2">
         <p className="flex-1 text-base font-bold leading-snug sm:text-lg">
           Find a Deakin peer who already passed your unit, try their AI first, then book the real person.
