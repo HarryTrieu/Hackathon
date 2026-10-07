@@ -414,7 +414,7 @@ function Demand({ demand }) {
                     </div>
                   ))}
                 </div>
-                <p className="flex items-center gap-1 text-xs font-medium text-primary opacity-0 transition-opacity duration-300 group-hover/card:opacity-100">
+                <p className="flex items-center gap-1 text-xs font-medium text-primary transition-opacity duration-300 md:opacity-0 md:group-hover/card:opacity-100">
                   Open the {d.unit_code} community
                   <ArrowUpRight className="size-3.5 transition-transform duration-300 group-hover/card:translate-x-0.5 group-hover/card:-translate-y-0.5" />
                 </p>
