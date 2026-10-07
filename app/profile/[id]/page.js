@@ -16,7 +16,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { MentorSection } from "@/components/mentor-section";
-import { PostCard } from "@/components/post-card";
+import { ProfilePosts } from "@/components/profile-posts";
 import { SavedTabContent, SavedTabTrigger } from "@/components/saved-posts";
 import { StatRow } from "@/components/stat-row";
 import { MessageButton } from "@/components/message-button";
@@ -177,9 +177,7 @@ export default async function ProfilePage({ params, searchParams }) {
               </EmptyHeader>
             </Empty>
           ) : (
-            posts.map((post) => (
-              <PostCard key={post.id} post={post} author={profile} reason={null} />
-            ))
+            <ProfilePosts posts={posts} author={profile} />
           )}
         </TabsContent>
 

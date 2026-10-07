@@ -18,7 +18,7 @@ import { useHiddenAds } from "@/lib/use-hidden-ads";
 import { pinMyNewPosts, unpinMyNewPosts, useMyNewPosts } from "@/lib/my-new-posts";
 import { POSTS } from "@/lib/seed";
 import { rankForYou, rankHot, rankNew } from "@/lib/rank";
-import { IncrementalList } from "@/components/incremental-list";
+import { IncrementalList, forgetListLength } from "@/components/incremental-list";
 import { DemoBanner, GettingStarted } from "@/components/onboarding-cards";
 
 // Feed data from the API, or null when it is unavailable (seed fallback).
@@ -60,16 +60,21 @@ function CaughtUp() {
   );
 }
 
+// The feed as you left it (posts, tab), kept in memory while you move around
+// the app, so coming Back shows the same feed at the same place instead of
+// reloading and jumping. A reload of the page starts fresh.
+const memory = { dbPosts: null, source: "seed", tab: "for-you" };
+
 export function Feed() {
   const { persona } = usePersona();
   const followed = useFollowedTags();
   // null = still loading or unavailable, then the seed is the source of truth.
-  const [dbPosts, setDbPosts] = useState(null);
-  const [source, setSource] = useState("seed");
+  const [dbPosts, setDbPosts] = useState(memory.dbPosts);
+  const [source, setSource] = useState(memory.source);
   // Posts published in this tab, from the feed composer or the left-nav popup.
   const { posts: myNewPosts, pinned } = useMyNewPosts();
   const [hidden, setHidden] = useState([]);
-  const [tab, setTab] = useState("for-you");
+  const [tab, setTab] = useState(memory.tab);
   const [reloading, setReloading] = useState(false);
   // Only the newest request may update the feed, so quick tab clicks
   // cannot let an older response overwrite a newer one.
@@ -80,10 +85,25 @@ export function Feed() {
   const [scrolledFar, setScrolledFar] = useState(false);
 
   useEffect(() => {
+    memory.dbPosts = dbPosts;
+    memory.source = source;
+    memory.tab = tab;
+  }, [dbPosts, source, tab]);
+
+  useEffect(() => {
     let cancelled = false;
     const seq = ++requestSeq.current;
+    // Coming back to a feed we already have: keep it as it was, and offer
+    // anything new as "N new posts" rather than reshuffling under you.
+    const kept = memory.dbPosts;
     fetchPosts().then((data) => {
       if (cancelled || seq !== requestSeq.current || !data?.posts) return;
+      if (kept) {
+        const known = new Set(kept.map((p) => p.id));
+        const count = data.posts.filter((p) => !known.has(p.id)).length;
+        if (count > 0) setWaiting({ data, count });
+        return;
+      }
       setDbPosts(data.posts);
       setSource(data.source);
     });
@@ -122,6 +142,7 @@ export function Feed() {
   // Every tab click refreshes: back to the top, latest posts from the API.
   async function reload() {
     setWaiting(null);
+    for (const key of ["for-you", "hot", "new"]) forgetListLength(`feed:${key}`);
     window.scrollTo({ top: 0, behavior: "instant" });
     // A just-published post is pinned for one look; after a refresh it
     // ranks like any other post.
@@ -264,18 +285,18 @@ export function Feed() {
         <TabsContent value="for-you" className={reloading ? "hidden" : undefined}>
           {/* key on persona so switching re-mounts and fades the new order in */}
           <div key={persona.id} className="animate-in fade-in duration-500">
-            <IncrementalList items={withSponsored(forYou, ads)} render={renderItem} />
+            <IncrementalList items={withSponsored(forYou, ads)} render={renderItem} memoryKey="feed:for-you" />
             <CaughtUp />
           </div>
         </TabsContent>
 
         <TabsContent value="hot" className={reloading ? "hidden" : undefined}>
-          <IncrementalList items={withSponsored(hot, ads)} render={renderItem} />
+          <IncrementalList items={withSponsored(hot, ads)} render={renderItem} memoryKey="feed:hot" />
           <CaughtUp />
         </TabsContent>
 
         <TabsContent value="new" className={reloading ? "hidden" : undefined}>
-          <IncrementalList items={withSponsored(fresh, ads)} render={renderItem} />
+          <IncrementalList items={withSponsored(fresh, ads)} render={renderItem} memoryKey="feed:new" />
           <CaughtUp />
         </TabsContent>
       </Tabs>

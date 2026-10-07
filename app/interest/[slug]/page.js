@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { BackButton } from "@/components/back-button";
 import { Composer } from "@/components/composer";
 import { PostCard } from "@/components/post-card";
+import { IncrementalList } from "@/components/incremental-list";
 import { authorOf, withAuthors } from "@/lib/authors";
 import { getInterest, postsForInterest } from "@/lib/interests";
 import { useMyNewPosts } from "@/lib/my-new-posts";
@@ -127,16 +128,21 @@ export default function InterestPage() {
       {dbPosts !== null && posts.length === 0 && (
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">No posts yet. Start the conversation.</p>
       )}
-      {dbPosts !== null &&
-        posts.map((post) => (
-          <PostCard
-            key={post.id}
-            post={post}
-            author={authorOf(post)}
-            reason={null}
-            onDeleted={(id) => setHidden((prev) => [...prev, id])}
-          />
-        ))}
+      {dbPosts !== null && (
+        <IncrementalList
+          items={posts}
+          memoryKey={`interest:${interest.slug}`}
+          render={(post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              author={authorOf(post)}
+              reason={null}
+              onDeleted={(id) => setHidden((prev) => [...prev, id])}
+            />
+          )}
+        />
+      )}
     </div>
   );
 }

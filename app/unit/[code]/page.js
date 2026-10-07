@@ -14,6 +14,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { PostCard } from "@/components/post-card";
+import { IncrementalList } from "@/components/incremental-list";
 import { UserAvatar } from "@/components/user-avatar";
 import { usePersona } from "@/lib/persona-context";
 import {
@@ -238,11 +239,11 @@ export default function UnitPage() {
         </div>
       </div>
 
-      {unitPosts.map((post) => {
-        const author = authorOf(post);
-        if (!author) return null;
-        return <PostCard key={post.id} post={post} author={author} reason={null} />;
-      })}
+      <IncrementalList
+        items={unitPosts.filter((post) => authorOf(post))}
+        memoryKey={`unit:${unit.code}`}
+        render={(post) => <PostCard key={post.id} post={post} author={authorOf(post)} reason={null} />}
+      />
       {unitPosts.length === 0 && (
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">
           No posts mention {unit.code} yet.
