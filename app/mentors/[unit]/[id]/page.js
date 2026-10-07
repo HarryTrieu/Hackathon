@@ -198,37 +198,36 @@ function MentorDetail() {
       </div>
 
       <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-5">
-        <div className="flex items-start gap-4">
-          <UserAvatar profile={profile} className="size-16 ring-4 ring-background" textClassName="text-xl" />
-          <div className="min-w-0 flex-1 space-y-0.5">
-            <h1 className="text-xl leading-tight font-bold">
-              <Link href={`/profile/${profile.id}`} className="hover:underline">
-                {profile.name}
-              </Link>
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Mentors <span className="font-mono">{code}</span>
-              {unit?.name ? ` · ${unit.name}` : ""}
-            </p>
+        {/* Phones: one centred column, like a profile page. sm and up: photo
+            on the left, everything left-aligned. The unit code only appears
+            once, in the badge. */}
+        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:gap-4 sm:text-left">
+          <UserAvatar profile={profile} className="size-20 ring-4 ring-background sm:size-16" textClassName="text-xl" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <div>
+              <h1 className="text-xl leading-tight font-bold">
+                <Link href={`/profile/${profile.id}`} className="hover:underline">
+                  {profile.name}
+                </Link>
+              </h1>
+              {unit?.name && <p className="text-sm text-muted-foreground">{unit.name} mentor</p>}
+            </div>
+            <Badge>{gradeBand(mentor.grade)} · {code}</Badge>
             <p className="text-xs text-muted-foreground">
               {profile.course} · {profile.year ? `Year ${profile.year}` : "Graduate"}
+              {mentor.is_demo && " · Sample data"}
             </p>
-            <div className="flex flex-wrap items-center gap-2 pt-2">
-              <Badge>{gradeBand(mentor.grade)} · {code}</Badge>
-              {mentor.is_demo && <span className="text-xs text-muted-foreground">Sample data</span>}
-            </div>
           </div>
         </div>
 
-        {/* Price on its own line, availability below it (beside it on wider screens). */}
-        <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+        <div className="mt-5 space-y-1 text-center sm:text-left">
           <p className="text-sm text-muted-foreground">
             <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
           </p>
           {mentor.availability && (
-            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
-              <Clock className="mt-0.5 size-3.5 shrink-0 text-primary" />
-              <span>Usually free: {mentor.availability}</span>
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground sm:justify-start">
+              <Clock className="size-3.5 shrink-0 text-primary" />
+              Usually free: {mentor.availability}
             </p>
           )}
         </div>
@@ -248,7 +247,7 @@ function MentorDetail() {
         />
 
         {/* Trust signals and experience as one quiet line instead of badges. */}
-        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:justify-start">
           {mentor.email_verified && (
             <li className="flex items-center gap-1">
               <BadgeCheck className="size-3.5 text-primary" />
