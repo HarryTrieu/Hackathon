@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
-import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, ShieldCheck } from "lucide-react";
+import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, Clock, ShieldCheck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -200,8 +200,8 @@ function MentorDetail() {
       <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-5">
         <div className="flex items-start gap-4">
           <UserAvatar profile={profile} className="size-16 ring-4 ring-background" textClassName="text-xl" />
-          <div className="min-w-0 flex-1">
-            <h1 className="text-xl font-bold">
+          <div className="min-w-0 flex-1 space-y-0.5">
+            <h1 className="text-xl leading-tight font-bold">
               <Link href={`/profile/${profile.id}`} className="hover:underline">
                 {profile.name}
               </Link>
@@ -213,21 +213,29 @@ function MentorDetail() {
             <p className="text-xs text-muted-foreground">
               {profile.course} · {profile.year ? `Year ${profile.year}` : "Graduate"}
             </p>
-            <div className="mt-2 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 pt-2">
               <Badge>{gradeBand(mentor.grade)} · {code}</Badge>
               {mentor.is_demo && <span className="text-xs text-muted-foreground">Sample data</span>}
             </div>
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-muted-foreground">
-          <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
-          {mentor.availability && <> · Usually free: {mentor.availability}</>}
-        </p>
+        {/* Price on its own line, availability below it (beside it on wider screens). */}
+        <div className="mt-5 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:gap-4">
+          <p className="text-sm text-muted-foreground">
+            <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
+          </p>
+          {mentor.availability && (
+            <p className="flex items-start gap-1.5 text-sm text-muted-foreground">
+              <Clock className="mt-0.5 size-3.5 shrink-0 text-primary" />
+              <span>Usually free: {mentor.availability}</span>
+            </p>
+          )}
+        </div>
 
         {/* Numbers as a stats row, like post / follower counts on social apps. */}
         <StatRow
-          className="mt-3"
+          className="mt-4"
           items={[
             [mentor.reputation, "helpful votes"],
             [mentor.preview_chats ?? 0, "preview chats"],
@@ -240,7 +248,7 @@ function MentorDetail() {
         />
 
         {/* Trust signals and experience as one quiet line instead of badges. */}
-        <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <ul className="mt-4 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           {mentor.email_verified && (
             <li className="flex items-center gap-1">
               <BadgeCheck className="size-3.5 text-primary" />
