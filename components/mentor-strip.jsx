@@ -80,13 +80,6 @@ export function MentorStrip() {
 
   return (
     <section aria-label="Mentors for you" className="group/strip relative border-b py-3">
-      <p className="px-4 pb-2 text-xs font-semibold text-muted-foreground">
-        {followed.length > 0
-          ? "Following"
-          : mentors[0].inYourUnit
-            ? "Mentors in your units"
-            : "Mentors for you"}
-      </p>
       {[
         ["left", -1, ChevronLeft, "left-1"],
         ["right", 1, ChevronRight, "right-1"],
@@ -111,56 +104,74 @@ export function MentorStrip() {
         onScroll={measure}
         className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
-        {followed.map((profile) => (
-          <li key={`f-${profile.id}`} className="shrink-0">
-            <Link href={`/profile/${profile.id}`} className="group flex w-16 flex-col items-center gap-1 text-center">
-              <span className="rounded-full bg-gradient-to-tr from-amber-400 to-primary p-0.5 transition-transform duration-300 ease-out group-hover:scale-105">
-                <span className="block rounded-full bg-background p-0.5">
-                  <UserAvatar profile={profile} className="size-12" textClassName="text-xs" />
-                </span>
-              </span>
-              <span className="w-full truncate text-xs font-medium">{profile.name.split(" ")[0]}</span>
-              <span className="text-[10px] text-muted-foreground">{roleLabel(profile.role)}</span>
-            </Link>
+        {/* Each group has its own label and scrolls with it, so the mentors
+            after the divider aren't mistaken for people you follow. */}
+        {followed.length > 0 && (
+          <li className="shrink-0">
+            <p className="pb-2 text-xs font-semibold text-muted-foreground">Following</p>
+            <ul className="flex gap-3">
+              {followed.map((profile) => (
+                <li key={`f-${profile.id}`} className="shrink-0">
+                  <Link href={`/profile/${profile.id}`} className="group flex w-16 flex-col items-center gap-1 text-center">
+                    <span className="rounded-full bg-gradient-to-tr from-amber-400 to-primary p-0.5 transition-transform duration-300 ease-out group-hover:scale-105">
+                      <span className="block rounded-full bg-background p-0.5">
+                        <UserAvatar profile={profile} className="size-12" textClassName="text-xs" />
+                      </span>
+                    </span>
+                    <span className="w-full truncate text-xs font-medium">{profile.name.split(" ")[0]}</span>
+                    <span className="text-[10px] text-muted-foreground">{roleLabel(profile.role)}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </li>
-        ))}
+        )}
         {followed.length > 0 && mentors.length > 0 && (
           <li aria-hidden className="my-2 w-px shrink-0 self-stretch bg-border" />
         )}
-        {mentors.map(({ listing, profile, inYourUnit }) => (
-          <li key={profile.id} className="shrink-0">
-            <Link
-              href={`/mentors/${listing.unit_code}/${profile.id}`}
-              title={
-                listing.completed_sessions
-                  ? `${listing.completed_sessions} completed session${listing.completed_sessions === 1 ? "" : "s"}${listing.ratings ? ` · ${listing.ratings.average}★` : ""}`
-                  : undefined
-              }
-              className="group relative flex w-16 flex-col items-center gap-1 text-center"
-            >
-              {isTop(listing) && (
-                <span
-                  aria-label="Top mentor"
-                  className="absolute top-0 right-0 z-[1] flex size-5 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-background"
-                >
-                  <Star className="size-3 fill-current" />
-                </span>
-              )}
-              <span
-                className={cn(
-                  "rounded-full p-0.5 transition-transform duration-300 ease-out group-hover:scale-105",
-                  inYourUnit ? "bg-gradient-to-tr from-primary to-sky-400" : "bg-border"
-                )}
-              >
-                <span className="block rounded-full bg-background p-0.5">
-                  <UserAvatar profile={profile} className="size-12" textClassName="text-xs" />
-                </span>
-              </span>
-              <span className="w-full truncate text-xs font-medium">{profile.name.split(" ")[0]}</span>
-              <span className="font-mono text-[10px] text-muted-foreground">{listing.unit_code}</span>
-            </Link>
+        {mentors.length > 0 && (
+          <li className="shrink-0">
+            <p className="pb-2 text-xs font-semibold text-muted-foreground">
+              {mentors[0].inYourUnit ? "Mentors in your units" : "Mentors for you"}
+            </p>
+            <ul className="flex gap-3">
+              {mentors.map(({ listing, profile, inYourUnit }) => (
+                <li key={profile.id} className="shrink-0">
+                  <Link
+                    href={`/mentors/${listing.unit_code}/${profile.id}`}
+                    title={
+                      listing.completed_sessions
+                        ? `${listing.completed_sessions} completed session${listing.completed_sessions === 1 ? "" : "s"}${listing.ratings ? ` · ${listing.ratings.average}★` : ""}`
+                        : undefined
+                    }
+                    className="group relative flex w-16 flex-col items-center gap-1 text-center"
+                  >
+                    {isTop(listing) && (
+                      <span
+                        aria-label="Top mentor"
+                        className="absolute top-0 right-0 z-[1] flex size-5 items-center justify-center rounded-full bg-amber-400 text-white ring-2 ring-background"
+                      >
+                        <Star className="size-3 fill-current" />
+                      </span>
+                    )}
+                    <span
+                      className={cn(
+                        "rounded-full p-0.5 transition-transform duration-300 ease-out group-hover:scale-105",
+                        inYourUnit ? "bg-gradient-to-tr from-primary to-sky-400" : "bg-border"
+                      )}
+                    >
+                      <span className="block rounded-full bg-background p-0.5">
+                        <UserAvatar profile={profile} className="size-12" textClassName="text-xs" />
+                      </span>
+                    </span>
+                    <span className="w-full truncate text-xs font-medium">{profile.name.split(" ")[0]}</span>
+                    <span className="font-mono text-[10px] text-muted-foreground">{listing.unit_code}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </li>
-        ))}
+        )}
       </ul>
     </section>
   );
