@@ -203,4 +203,12 @@
   html[data-scroll="down"] main [data-hide-on-scroll] {
     transform: translateY(-100%);
   }
+  /* Typing (components/mobile-drawer.jsx sets html[data-typing]): no bottom
+     tab bar, and chat composers drop to the bottom, onto the keyboard. */
+  html[data-typing] #mobile-tab-bar {
+    display: none;
+  }
+  html[data-typing] .composer-bar {
+    bottom: 0;
+  }
 }

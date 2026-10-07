@@ -298,7 +298,7 @@ function Conversation() {
         <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
+      <div className="composer-bar sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
         {data?.blocked_me && <p className="text-sm text-muted-foreground">You can&apos;t message this person.</p>}
         {data?.blocked_by_me && (
           <p className="text-sm text-muted-foreground">You blocked {other.name.split(" ")[0]}. Unblock to send messages.</p>

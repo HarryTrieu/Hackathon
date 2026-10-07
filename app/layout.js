@@ -20,6 +20,14 @@ const geistMono = Geist_Mono({
 const THEME_BOOT =
   '(function(){try{var t=localStorage.getItem("sodu-theme");if(t==="dark"||(!t&&window.matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();';
 
+// Android Chrome: the keyboard shrinks the page instead of covering it, so
+// sticky composers stay visible above it.
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
+};
+
 export const metadata = {
   title: "Sodu · study experience feed",
   description:

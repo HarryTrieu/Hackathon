@@ -83,6 +83,7 @@ export function Composer({ value, onChange, onSend, sending, placeholder }) {
         }}
         rows={value.includes("\n") || value.length > 80 ? 3 : 1}
         maxLength={2000}
+        enterKeyHint="send"
         placeholder={placeholder}
         className="min-h-10 flex-1 resize-none rounded-2xl border bg-transparent px-4 py-2 text-base outline-none focus:border-primary/50 md:text-sm"
       />

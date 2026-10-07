@@ -68,6 +68,26 @@ export function MobileTopBar() {
     };
   }, []);
 
+  // While you type (keyboard open on a phone), <html data-typing> hides the
+  // bottom tab bar so the message box sits right on the keyboard. See
+  // app/globals.css.
+  useEffect(() => {
+    const isText = (el) =>
+      el?.tagName === "TEXTAREA" ||
+      (el?.tagName === "INPUT" && !["checkbox", "radio", "button", "submit", "file", "range"].includes(el.type));
+    const onIn = (e) => {
+      if (isText(e.target)) document.documentElement.dataset.typing = "1";
+    };
+    const onOut = () => delete document.documentElement.dataset.typing;
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
+    return () => {
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
+      delete document.documentElement.dataset.typing;
+    };
+  }, []);
+
   const items = [
     { href: `/profile/${persona.id}`, label: "Profile", icon: User },
     ...(persona.id.startsWith("u-") ? [{ href: "/welcome", label: "Edit profile", icon: Pencil }] : []),

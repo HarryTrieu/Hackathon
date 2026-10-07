@@ -292,7 +292,7 @@ function SessionRoom() {
         <div ref={endRef} />
       </div>
 
-      <div className="sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
+      <div className="composer-bar sticky bottom-16 border-t bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur md:bottom-0">
         {current &&
           (current.can_send ? (
             <Composer

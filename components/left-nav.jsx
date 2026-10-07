@@ -123,6 +123,7 @@ export function MobileNav() {
 
   return (
     <nav
+      id="mobile-tab-bar"
       aria-label="Mobile"
       className="fixed inset-x-0 bottom-0 z-10 flex items-center justify-around border-t bg-background md:bg-background/95 py-2 md:backdrop-blur md:hidden"
     >
