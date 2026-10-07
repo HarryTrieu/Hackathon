@@ -14,14 +14,19 @@ export function RealtimeListener() {
   const id = persona.id;
 
   useEffect(() => {
-    const supabase = browserSupabase();
-    if (!supabase || !id) return;
+    if (!id) return;
+    let supabase = null;
     let channel = null;
     let cancelled = false;
-    fetch(`/api/realtime?profile_id=${encodeURIComponent(id)}`, { cache: "no-store" })
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
-        if (cancelled || !data?.topic) return;
+    Promise.all([
+      browserSupabase(),
+      fetch(`/api/realtime?profile_id=${encodeURIComponent(id)}`, { cache: "no-store" }).then((res) =>
+        res.ok ? res.json() : null
+      ),
+    ])
+      .then(([client, data]) => {
+        supabase = client;
+        if (cancelled || !supabase || !data?.topic) return;
         channel = supabase
           .channel(data.topic)
           .on("broadcast", { event: "changed" }, ({ payload }) => {
@@ -34,7 +39,7 @@ export function RealtimeListener() {
       .catch(() => {});
     return () => {
       cancelled = true;
-      if (channel) supabase.removeChannel(channel);
+      if (channel) supabase?.removeChannel(channel);
     };
   }, [id]);
 
