@@ -97,6 +97,10 @@ export default async function ProfilePage({ params, searchParams }) {
           aria-hidden
           className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl dark:bg-primary/10"
         />
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-24 -left-24 size-48 rounded-full bg-primary/10 blur-3xl dark:bg-primary/[0.07]"
+        />
         <BackButton className="relative -ml-2 mb-2" />
         {/* One centred column, like the mentor page. */}
         <div className="relative flex flex-col items-center gap-3 text-center">
