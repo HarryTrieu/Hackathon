@@ -240,13 +240,13 @@ export function Feed() {
             </Badge>
           </div>
           <TabsList variant="line" className="w-full gap-0 px-0">
-            <TabsTrigger value="for-you" onClick={() => refreshIfActive("for-you")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
+            <TabsTrigger value="for-you" onClick={() => refreshIfActive("for-you")} className="flex-1 px-3 py-2">
               For you
             </TabsTrigger>
-            <TabsTrigger value="hot" onClick={() => refreshIfActive("hot")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
+            <TabsTrigger value="hot" onClick={() => refreshIfActive("hot")} className="flex-1 px-3 py-2">
               Hot
             </TabsTrigger>
-            <TabsTrigger value="new" onClick={() => refreshIfActive("new")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
+            <TabsTrigger value="new" onClick={() => refreshIfActive("new")} className="flex-1 px-3 py-2">
               New
             </TabsTrigger>
           </TabsList>
