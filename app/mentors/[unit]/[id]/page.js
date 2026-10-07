@@ -197,12 +197,11 @@ function MentorDetail() {
         {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
 
-      <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 py-5">
-        {/* Phones: one centred column, like a profile page. sm and up: photo
-            on the left, everything left-aligned. The unit code only appears
-            once, in the badge. */}
-        <div className="flex flex-col items-center gap-3 text-center sm:flex-row sm:items-start sm:gap-4 sm:text-left">
-          <UserAvatar profile={profile} className="size-20 ring-4 ring-background sm:size-16" textClassName="text-xl" />
+      <div className="border-b px-4 py-5">
+        {/* One centred column, like a profile page. The unit code only
+            appears once, in the badge. */}
+        <div className="flex flex-col items-center gap-3 text-center">
+          <UserAvatar profile={profile} className="size-20 ring-4 ring-background" textClassName="text-xl" />
           <div className="min-w-0 flex-1 space-y-1.5">
             <div>
               <h1 className="text-xl leading-tight font-bold">
@@ -220,12 +219,12 @@ function MentorDetail() {
           </div>
         </div>
 
-        <div className="mt-5 space-y-1 text-center sm:text-left">
+        <div className="mt-5 space-y-1 text-center">
           <p className="text-sm text-muted-foreground">
             <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
           </p>
           {mentor.availability && (
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground sm:justify-start">
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
               <Clock className="size-3.5 shrink-0 text-primary" />
               Usually free: {mentor.availability}
             </p>
@@ -247,7 +246,7 @@ function MentorDetail() {
         />
 
         {/* Trust signals and experience as one quiet line instead of badges. */}
-        <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground sm:justify-start">
+        <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           {mentor.email_verified && (
             <li className="flex items-center gap-1">
               <BadgeCheck className="size-3.5 text-primary" />

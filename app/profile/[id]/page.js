@@ -92,7 +92,7 @@ export default async function ProfilePage({ params, searchParams }) {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="border-b bg-gradient-to-b from-primary/[0.06] to-transparent px-4 pt-3 pb-6">
+      <div className="border-b px-4 pt-3 pb-6">
         <BackButton className="-ml-2 mb-2" />
         <div className="flex items-start gap-4">
           <UserAvatar
