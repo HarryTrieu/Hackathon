@@ -35,8 +35,11 @@ export default function MentorsPage() {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="sticky top-0 z-10 border-b bg-background md:bg-background/95 px-4 py-3 md:backdrop-blur">
-        <MentoringTabs />
+      <div className="sticky top-0 z-10 bg-background md:bg-background/95 px-4 pt-3 md:backdrop-blur">
+        <MentoringTabs className="mb-0" />
+      </div>
+      {/* The intro and university picker scroll away; only the tabs stay. */}
+      <div className="border-b px-4 py-3">
         <h1 className="text-lg font-bold max-md:sr-only">Find a mentor</h1>
         <p className="text-sm text-muted-foreground">
           Peer mentors who scored Distinction or above. Chat with their AI first, then book the real person.
