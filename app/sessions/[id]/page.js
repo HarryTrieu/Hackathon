@@ -238,7 +238,7 @@ function SessionRoom() {
     : [];
 
   return (
-    <div className="flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
+    <div className="chat-page flex min-h-[calc(100svh-4rem)] flex-col pb-16 md:min-h-svh md:pb-0">
       <div className="sticky top-0 z-10 flex items-center gap-3 border-b bg-background md:bg-background/95 px-4 py-2.5 md:backdrop-blur">
         <BackArrow fallback="/messages?tab=sessions" />
         {current ? (

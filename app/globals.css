@@ -211,4 +211,9 @@
   html[data-typing] .composer-bar {
     bottom: 0;
   }
+  /* ...and the space chat pages keep for the tab bar goes too, or it shows
+     as a gap between the message box and the keyboard. */
+  html[data-typing] .chat-page {
+    padding-bottom: 0;
+  }
 }
