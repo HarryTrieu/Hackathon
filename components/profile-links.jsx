@@ -55,7 +55,7 @@ export function ProfileLinks({ profileId, links = [] }) {
 
   if (editing) {
     return (
-      <div className="mt-3 space-y-2 rounded-xl border bg-background/70 p-3 text-sm">
+      <div className="mt-3 space-y-2 rounded-xl border bg-background/70 p-3 text-left text-sm">
         <p className="font-semibold">Your links</p>
         {draft.length === 0 && <p className="text-xs text-muted-foreground">No links yet.</p>}
         <ul className="space-y-1.5">
@@ -114,7 +114,7 @@ export function ProfileLinks({ profileId, links = [] }) {
   }
 
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5">
+    <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
       {links.map((l) => (
         <a
           key={l.url}

@@ -92,24 +92,23 @@ export default async function ProfilePage({ params, searchParams }) {
 
   return (
     <div className="pb-16 md:pb-0">
-      <div className="border-b px-4 pt-3 pb-6">
-        <BackButton className="-ml-2 mb-2" />
-        <div className="flex items-start gap-4">
+      <div className="relative overflow-hidden border-b px-4 pt-3 pb-6">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl dark:bg-primary/10"
+        />
+        <BackButton className="relative -ml-2 mb-2" />
+        {/* One centred column, like the mentor page. */}
+        <div className="relative flex flex-col items-center gap-3 text-center">
           <UserAvatar
             profile={profile}
-            className="size-16 ring-4 ring-background"
+            className="size-20 ring-4 ring-background"
             textClassName="text-xl"
           />
-          <div className="min-w-0 flex-1">
-            <div className="flex items-start justify-between gap-2">
-              <h1 className="text-xl font-bold">{profile.name}</h1>
-              <div className="flex shrink-0 gap-2">
-                <FollowButton profile={profile} />
-                <MessageButton profile={profile} />
-              </div>
-            </div>
+          <div className="min-w-0">
+            <h1 className="text-xl leading-tight font-bold">{profile.name}</h1>
             <p className="text-sm text-muted-foreground">@{profile.handle}</p>
-            <div className="mt-2 flex flex-wrap gap-1.5">
+            <div className="mt-2 flex flex-wrap justify-center gap-1.5">
               <Badge>{roleLabel(profile.role)}</Badge>
               {/* Moderator is a permission, separate from mentee / mentor. */}
               {profile.moderator && (
@@ -130,17 +129,21 @@ export default async function ProfilePage({ params, searchParams }) {
               )}
             </div>
             {profile.outcome && (
-              <p className="mt-3 flex items-center gap-1.5 text-sm">
-                <Briefcase className="size-4 text-primary" />
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-sm">
+                <Briefcase className="size-4 shrink-0 text-primary" />
                 {profile.outcome}
               </p>
             )}
             <ProfileLinks profileId={profile.id} links={profile.links ?? []} />
           </div>
+          <div className="flex flex-wrap justify-center gap-2 empty:hidden">
+            <FollowButton profile={profile} />
+            <MessageButton profile={profile} />
+          </div>
         </div>
         {profile.role !== "admin" && (
           <StatRow
-            className="mt-4"
+            className="relative mt-4"
             items={[
               [posts.length, plural(posts.length, "post")],
               [follows.followers, plural(follows.followers, "follower")],

@@ -197,10 +197,14 @@ function MentorDetail() {
         {mentor && <ReportButton targetType="mentor" targetId={mentor.id} />}
       </div>
 
-      <div className="border-b px-4 py-5">
+      <div className="relative overflow-hidden border-b px-4 py-5">
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl dark:bg-primary/10"
+        />
         {/* One centred column, like a profile page. The unit code only
             appears once, in the badge. */}
-        <div className="flex flex-col items-center gap-3 text-center">
+        <div className="relative flex flex-col items-center gap-3 text-center">
           <UserAvatar profile={profile} className="size-20 ring-4 ring-background" textClassName="text-xl" />
           <div className="min-w-0 flex-1 space-y-1.5">
             <div>
@@ -219,7 +223,7 @@ function MentorDetail() {
           </div>
         </div>
 
-        <div className="mt-5 space-y-1 text-center">
+        <div className="relative mt-5 space-y-1 text-center">
           <p className="text-sm text-muted-foreground">
             <span className="text-2xl font-bold text-foreground">${mentor.rate_per_hour}</span> a session
           </p>
@@ -233,7 +237,7 @@ function MentorDetail() {
 
         {/* Numbers as a stats row, like post / follower counts on social apps. */}
         <StatRow
-          className="mt-4"
+          className="relative mt-4"
           items={[
             [mentor.reputation, "helpful votes"],
             [mentor.preview_chats ?? 0, "preview chats"],
@@ -246,7 +250,7 @@ function MentorDetail() {
         />
 
         {/* Trust signals and experience as one quiet line instead of badges. */}
-        <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
+        <ul className="relative mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5 text-xs text-muted-foreground">
           {mentor.email_verified && (
             <li className="flex items-center gap-1">
               <BadgeCheck className="size-3.5 text-primary" />
