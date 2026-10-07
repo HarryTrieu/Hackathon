@@ -32,10 +32,11 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
                 <span className="sr-only">Deakin email verified</span>
               </span>
             )}
-            <Badge>{gradeBand(mentor.grade)} · {mentor.unit_code}</Badge>
           </div>
+          {/* Its own line, with the same space above (name) and below (price). */}
+          <Badge className="my-1.5">{gradeBand(mentor.grade)} · {mentor.unit_code}</Badge>
           {/* Availability and experience live on the mentor page. */}
-          <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
+          <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
             <span>
               <span className="font-medium text-foreground">${mentor.rate_per_hour}</span> a session
             </span>

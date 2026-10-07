@@ -168,7 +168,7 @@ export function MentorChat({ mentor, persona, unitName }) {
                   type="button"
                   onClick={() => send(q)}
                   disabled={sending}
-                  className="rounded-full border px-2.5 py-1 text-sm transition-colors sm:text-xs duration-300 hover:border-primary/40 hover:bg-primary/[0.05] disabled:opacity-50"
+                  className="rounded-full border px-2.5 py-1 text-left text-sm transition-colors sm:text-xs duration-300 hover:border-primary/40 hover:bg-primary/[0.05] disabled:opacity-50"
                 >
                   {q}
                 </button>
