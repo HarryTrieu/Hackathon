@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { Send, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,10 +73,36 @@ export function ChatItems({ items, meId, onDelete }) {
 }
 
 // Enter sends, Shift+Enter adds a line.
+// Phones: the keyboard covers the bottom of the page (iPhones) or shrinks it
+// (Android), so when the message box is tapped, and again as the keyboard
+// finishes opening, scroll to the newest message so it sits right above the
+// box. Closing the keyboard leaves the chat where it is.
+function showLatest() {
+  const go = () => window.scrollTo({ top: document.documentElement.scrollHeight, behavior: "instant" });
+  go();
+  setTimeout(go, 150);
+  setTimeout(go, 400);
+}
+
 export function Composer({ value, onChange, onSend, sending, placeholder }) {
+  const box = useRef(null);
+
+  useEffect(() => {
+    const viewport = window.visualViewport;
+    if (!viewport) return;
+    // The keyboard opening or closing resizes the visual viewport.
+    const onResize = () => {
+      if (document.activeElement === box.current) showLatest();
+    };
+    viewport.addEventListener("resize", onResize);
+    return () => viewport.removeEventListener("resize", onResize);
+  }, []);
+
   return (
     <form onSubmit={onSend} className="flex items-end gap-2">
       <textarea
+        ref={box}
+        onFocus={showLatest}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
