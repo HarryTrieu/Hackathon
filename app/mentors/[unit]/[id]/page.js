@@ -88,17 +88,18 @@ function SessionRequest({ mentor, persona }) {
   return (
     <div className="rounded-xl border p-4">
       {!open ? (
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-sm">
-            <span className="font-semibold">Good fit?</span>{" "}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-center text-sm sm:text-left">
+            <span className="block font-semibold sm:inline">Good fit?</span>{" "}
             <span className="text-muted-foreground">Book the real {first} for ${mentor.rate_per_hour} a session.</span>
           </p>
-          <div className="flex shrink-0 flex-wrap justify-end gap-2">
-            <MessageButton profile={mentor.profile} />
-            <Button className="rounded-full" onClick={() => setOpen(true)}>
+          {/* Phones: the main action first, each on its own full-width line. */}
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row-reverse">
+            <Button className="w-full rounded-full sm:w-auto" onClick={() => setOpen(true)}>
               <CalendarCheck data-icon="inline-start" />
               Request a session
             </Button>
+            <MessageButton profile={mentor.profile} className="h-9 w-full sm:h-8 sm:w-auto" />
           </div>
         </div>
       ) : (

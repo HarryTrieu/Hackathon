@@ -168,7 +168,7 @@ export function MentorChat({ mentor, persona, unitName }) {
                   type="button"
                   onClick={() => send(q)}
                   disabled={sending}
-                  className="rounded-full border px-2.5 py-1 text-xs transition-colors duration-300 hover:border-primary/40 hover:bg-primary/[0.05] disabled:opacity-50"
+                  className="rounded-full border px-2.5 py-1 text-sm transition-colors sm:text-xs duration-300 hover:border-primary/40 hover:bg-primary/[0.05] disabled:opacity-50"
                 >
                   {q}
                 </button>
@@ -185,7 +185,7 @@ export function MentorChat({ mentor, persona, unitName }) {
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
-              placeholder={`Ask ${first}'s AI anything about ${mentor.unit_code}...`}
+              placeholder={`Ask ${first}'s AI about ${mentor.unit_code}`}
               maxLength={500}
               className="h-10 min-w-0 flex-1 rounded-full border bg-transparent px-4 text-sm outline-none transition-colors focus:border-primary/50"
             />

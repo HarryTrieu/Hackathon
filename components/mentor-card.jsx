@@ -32,11 +32,13 @@ export function MentorCard({ mentor, reason = null, rank = null, className }) {
                 <span className="sr-only">Deakin email verified</span>
               </span>
             )}
-            <Badge className="ml-auto">{gradeBand(mentor.grade)} · {mentor.unit_code}</Badge>
+            <Badge>{gradeBand(mentor.grade)} · {mentor.unit_code}</Badge>
           </div>
           {/* Availability and experience live on the mentor page. */}
           <p className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-sm text-muted-foreground">
-            <span className="font-medium text-foreground">${mentor.rate_per_hour}</span> a session
+            <span>
+              <span className="font-medium text-foreground">${mentor.rate_per_hour}</span> a session
+            </span>
             <span className="flex items-center gap-1">
               <Heart className="size-3.5" />
               {mentor.reputation} helpful
