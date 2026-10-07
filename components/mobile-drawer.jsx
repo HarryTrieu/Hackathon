@@ -70,21 +70,46 @@ export function MobileTopBar() {
 
   // While you type (keyboard open on a phone), <html data-typing> hides the
   // bottom tab bar so the message box sits right on the keyboard. See
-  // app/globals.css.
+  // app/globals.css. Closing the keyboard doesn't always take focus off the
+  // box (Android's Back, iPhone's swipe down), so the keyboard is also read
+  // from the visible height: when it grows back, the tab bar comes back.
   useEffect(() => {
+    const root = document.documentElement;
+    const viewport = window.visualViewport;
     const isText = (el) =>
       el?.tagName === "TEXTAREA" ||
       (el?.tagName === "INPUT" && !["checkbox", "radio", "button", "submit", "file", "range"].includes(el.type));
-    const onIn = (e) => {
-      if (isText(e.target)) document.documentElement.dataset.typing = "1";
+    // Tallest visible height seen with the keyboard closed (reset on rotate).
+    let full = viewport?.height ?? window.innerHeight;
+    const keyboardOpen = () => (viewport ? full - viewport.height > 150 : true);
+    const typing = (on) => {
+      if (on) root.dataset.typing = "1";
+      else delete root.dataset.typing;
     };
-    const onOut = () => delete document.documentElement.dataset.typing;
+    const onIn = (e) => {
+      if (isText(e.target)) typing(true);
+    };
+    const onOut = () => typing(false);
+    const onResize = () => {
+      full = Math.max(full, viewport.height);
+      typing(isText(document.activeElement) && keyboardOpen());
+    };
+    const onRotate = () => {
+      full = 0;
+      setTimeout(() => {
+        full = viewport?.height ?? window.innerHeight;
+      }, 500);
+    };
     document.addEventListener("focusin", onIn);
     document.addEventListener("focusout", onOut);
+    viewport?.addEventListener("resize", onResize);
+    window.addEventListener("orientationchange", onRotate);
     return () => {
       document.removeEventListener("focusin", onIn);
       document.removeEventListener("focusout", onOut);
-      delete document.documentElement.dataset.typing;
+      viewport?.removeEventListener("resize", onResize);
+      window.removeEventListener("orientationchange", onRotate);
+      typing(false);
     };
   }, []);
 
