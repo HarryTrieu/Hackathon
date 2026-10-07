@@ -239,14 +239,14 @@ export function Feed() {
               {source === "supabase" ? "Live data" : "Demo data"}
             </Badge>
           </div>
-          <TabsList variant="line" className="w-full justify-start px-2">
-            <TabsTrigger value="for-you" onClick={() => refreshIfActive("for-you")} className="flex-none px-3 py-2">
+          <TabsList variant="line" className="w-full gap-0 px-0">
+            <TabsTrigger value="for-you" onClick={() => refreshIfActive("for-you")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
               For you
             </TabsTrigger>
-            <TabsTrigger value="hot" onClick={() => refreshIfActive("hot")} className="flex-none px-3 py-2">
+            <TabsTrigger value="hot" onClick={() => refreshIfActive("hot")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
               Hot
             </TabsTrigger>
-            <TabsTrigger value="new" onClick={() => refreshIfActive("new")} className="flex-none px-3 py-2">
+            <TabsTrigger value="new" onClick={() => refreshIfActive("new")} className="flex-1 px-3 py-2 group-data-horizontal/tabs:after:inset-x-[calc(50%-1.75rem)]">
               New
             </TabsTrigger>
           </TabsList>
