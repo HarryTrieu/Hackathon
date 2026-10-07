@@ -200,15 +200,15 @@ function MentorDetail() {
       <div className="relative overflow-hidden border-b px-4 py-5">
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/15 blur-3xl dark:bg-primary/10"
+          className="pointer-events-none absolute -top-20 -right-20 size-56 rounded-full bg-primary/20 blur-3xl dark:bg-primary/30"
         />
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-24 -left-24 size-48 rounded-full bg-primary/10 blur-3xl dark:bg-primary/[0.07]"
+          className="pointer-events-none absolute -top-24 -left-24 size-48 rounded-full bg-primary/15 blur-3xl dark:bg-primary/25"
         />
         <span
           aria-hidden
-          className="pointer-events-none absolute -top-28 left-1/2 h-44 w-4/5 -translate-x-1/2 rounded-full bg-primary/10 blur-3xl dark:bg-primary/[0.07]"
+          className="pointer-events-none absolute -top-28 left-1/2 h-44 w-4/5 -translate-x-1/2 rounded-full bg-primary/15 blur-3xl dark:bg-primary/25"
         />
         {/* One centred column, like a profile page. The unit code only
             appears once, in the badge. */}
